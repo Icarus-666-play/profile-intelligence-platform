@@ -127,6 +127,13 @@ export type Analytics = {
   import_trend: PeriodCount[]
 }
 
+export type UrlSnapshot = {
+  path: string
+  source: string
+  content_type: string | null
+  from_cache: boolean
+}
+
 export type ImportSummary = {
   path: string
   plugin: string
@@ -140,6 +147,11 @@ export type ImportSummary = {
   url?: string
   downloaded_path?: string
   status?: string
+  snapshot?: UrlSnapshot
+  pipeline?: string[]
+  stages_run?: string[]
+  stage?: string
+  percent?: number
 }
 
 export type ImportPreview = {
@@ -156,6 +168,10 @@ export type ImportPreview = {
   rows: ImportPreviewRow[]
   url?: string
   downloaded_path?: string
+  snapshot?: UrlSnapshot
+  pipeline?: string[]
+  stage?: string
+  percent?: number
 }
 
 export type ImportPreviewRow = {
@@ -187,6 +203,9 @@ export type ImportActivity = {
     message: string
     started_at: string
     percent: number
+    stages_run?: string[]
+    pipeline?: string[]
+    snapshot?: UrlSnapshot | null
   } | null
   errors: { url: string; message: string; at: string }[]
   completed: {
@@ -199,6 +218,8 @@ export type ImportActivity = {
     message: string | null
     at: string
   }[]
+  pipeline?: string[]
+  stage_labels?: Record<string, string>
 }
 
 export type AuthStatus = {

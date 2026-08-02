@@ -6,6 +6,10 @@ import {
   type ImportSummary,
 } from '../api'
 import ProfilePreviewCard from '../components/ProfilePreviewCard'
+import UrlImportPipeline, {
+  DEFAULT_LABELS,
+  DEFAULT_PIPELINE,
+} from '../components/UrlImportPipeline'
 
 type PanelKey = 'recent' | 'queue' | 'progress' | 'errors' | 'completed'
 
@@ -27,6 +31,8 @@ export default function ImportPage() {
   const [lastImport, setLastImport] = useState<ImportSummary | null>(null)
   const [activity, setActivity] = useState<ImportActivity | null>(null)
   const [panel, setPanel] = useState<PanelKey>('recent')
+  const [activeStage, setActiveStage] = useState<string | null>(null)
+  const [stagesRun, setStagesRun] = useState<string[]>([])
 
   const refreshActivity = useCallback(async () => {
     try {
@@ -40,15 +46,25 @@ export default function ImportPage() {
     void refreshActivity()
     const timer = window.setInterval(() => {
       void refreshActivity()
-    }, 4000)
+    }, 1500)
     return () => window.clearInterval(timer)
   }, [refreshActivity])
+
+  useEffect(() => {
+    if (activity?.progress) {
+      setActiveStage(activity.progress.stage)
+      setStagesRun(activity.progress.stages_run ?? [])
+    }
+  }, [activity?.progress])
 
   async function runPreview(event?: FormEvent) {
     event?.preventDefault()
     setBusy(true)
     setError(null)
     setLastImport(null)
+    setActiveStage('url')
+    setStagesRun(['url'])
+    setPanel('progress')
     try {
       const result = await api.previewUrl({
         url: url.trim(),
@@ -56,9 +72,9 @@ export default function ImportPage() {
         source: source.trim() || undefined,
       })
       setPreview(result)
-      setPanel('progress')
+      setActiveStage(result.stage || 'preview')
+      setStagesRun(result.stages_run?.length ? result.stages_run : [...DEFAULT_PIPELINE].slice(0, 8))
       await refreshActivity()
-      setPanel('recent')
     } catch (err) {
       setPreview(null)
       setError(err instanceof Error ? err.message : String(err))
@@ -73,6 +89,9 @@ export default function ImportPage() {
     event?.preventDefault()
     setBusy(true)
     setError(null)
+    setActiveStage('url')
+    setStagesRun(['url'])
+    setPanel('progress')
     try {
       const result = await api.importUrl({
         url: url.trim(),
@@ -81,6 +100,8 @@ export default function ImportPage() {
       })
       setLastImport(result)
       setPreview(null)
+      setActiveStage(result.stage || 'import')
+      setStagesRun(result.stages_run?.length ? result.stages_run : [...DEFAULT_PIPELINE])
       setPanel('completed')
       await refreshActivity()
     } catch (err) {
@@ -105,12 +126,32 @@ export default function ImportPage() {
     )
   }, [preview])
 
+  const pipeline = activity?.pipeline?.length
+    ? activity.pipeline
+    : [...DEFAULT_PIPELINE]
+  const stageLabels = activity?.stage_labels ?? DEFAULT_LABELS
+  const progressStage = activity?.progress?.stage || activeStage
+  const progressStagesRun = activity?.progress?.stages_run?.length
+    ? activity.progress.stages_run
+    : stagesRun
+
   return (
     <section>
       <h1 className="page-title">Import</h1>
       <p className="page-lead">
-        Paste a URL, preview the extract, then import into SQLite.
+        URL → Downloader → Snapshot → Parser → Extractor → Normalizer →
+        Validator → Preview → Import
       </p>
+
+      <div className="panel import-pipeline-panel">
+        <h2>Pipeline</h2>
+        <UrlImportPipeline
+          pipeline={pipeline}
+          labels={stageLabels}
+          currentStage={progressStage}
+          stagesRun={progressStagesRun}
+        />
+      </div>
 
       <div className="panel import-url-panel">
         <h2>URL</h2>
@@ -326,16 +367,34 @@ export default function ImportPage() {
           {panel === 'progress' && (
             <>
               <h2>Progress</h2>
-              {!activity?.progress && (
+              <UrlImportPipeline
+                pipeline={pipeline}
+                labels={stageLabels}
+                currentStage={progressStage}
+                stagesRun={progressStagesRun}
+              />
+              {!activity?.progress && !busy && (
                 <p className="muted">No import in progress.</p>
               )}
               {activity?.progress && (
                 <div className="progress-block">
                   <p>
-                    <strong>{activity.progress.stage}</strong> —{' '}
-                    {activity.progress.message}
+                    <strong>
+                      {stageLabels[activity.progress.stage] ||
+                        activity.progress.stage}
+                    </strong>{' '}
+                    — {activity.progress.message}
                   </p>
                   <p className="url-cell muted">{activity.progress.url}</p>
+                  {activity.progress.snapshot && (
+                    <p className="muted">
+                      Snapshot:{' '}
+                      <code>{activity.progress.snapshot.path}</code>
+                      {activity.progress.snapshot.from_cache
+                        ? ' (cached)'
+                        : ''}
+                    </p>
+                  )}
                   <div className="progress-bar" aria-hidden="true">
                     <span style={{ width: `${activity.progress.percent}%` }} />
                   </div>

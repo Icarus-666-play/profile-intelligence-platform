@@ -2,6 +2,31 @@
 
 End-to-end path from a local file to SQLite (and optional media / daily automation).
 
+## URL import flow (React Import page)
+
+```
+URL
+ ↓
+Downloader
+ ↓
+Snapshot
+ ↓
+Parser
+ ↓
+Extractor
+ ↓
+Normalizer
+ ↓
+Validator
+ ↓
+Preview
+ ↓
+Import
+```
+
+Constants: `domain/value_objects/url_import.py` (`URL_IMPORT_STAGES`).  
+Progress is reported on `GET /api/import/activity` while Preview/Import run.
+
 ## Operator flow
 
 Staged control surface for CLI / Dashboard UI (`ImportFlow`):

@@ -28,6 +28,9 @@ class ImportProgress:
     message: str
     started_at: str
     percent: int = 0
+    stages_run: list[str] = field(default_factory=list)
+    pipeline: list[str] = field(default_factory=list)
+    snapshot: dict[str, Any] | None = None
 
 
 @dataclass(slots=True)
@@ -93,17 +96,51 @@ class ImportActivityStore:
         stage: str,
         message: str,
         percent: int = 0,
+        stages_run: list[str] | tuple[str, ...] | None = None,
+        pipeline: list[str] | tuple[str, ...] | None = None,
+        snapshot: dict[str, Any] | None = None,
     ) -> None:
         """Mark an in-flight job for the Progress panel."""
         with self._lock:
             raw = self._load_unlocked()
+            previous = raw.get("progress") or {}
+            merged_snapshot = snapshot
+            if merged_snapshot is None and isinstance(previous, dict):
+                existing = previous.get("snapshot")
+                if isinstance(existing, dict):
+                    merged_snapshot = existing
             raw["progress"] = asdict(
                 ImportProgress(
                     url=url,
                     stage=stage,
                     message=message,
-                    started_at=_now(),
+                    started_at=(
+                        str(previous.get("started_at"))
+                        if isinstance(previous, dict) and previous.get("started_at")
+                        else _now()
+                    ),
                     percent=max(0, min(100, int(percent))),
+                    stages_run=list(
+                        stages_run
+                        if stages_run is not None
+                        else (
+                            previous.get("stages_run")
+                            if isinstance(previous, dict)
+                            else []
+                        )
+                        or []
+                    ),
+                    pipeline=list(
+                        pipeline
+                        if pipeline is not None
+                        else (
+                            previous.get("pipeline")
+                            if isinstance(previous, dict)
+                            else []
+                        )
+                        or []
+                    ),
+                    snapshot=merged_snapshot,
                 )
             )
             self._save_unlocked(raw)

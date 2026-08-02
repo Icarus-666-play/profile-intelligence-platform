@@ -83,20 +83,60 @@ def dispatch(
 
 
 def import_url(ctx: ApiContext, body: dict[str, Any]) -> dict[str, Any]:
-    """POST /api/import/url — Downloader stage then Import."""
+    """POST /api/import/url — URL → … → Import pipeline."""
+    from profile_intelligence.domain.value_objects.url_import import (
+        URL_IMPORT_STAGES,
+        UrlSnapshot,
+        stage_percent,
+        stages_through,
+    )
+
     url, plugin, source = _url_import_args(ctx, body)
     activity = ctx.import_activity
-    if activity is not None:
-        activity.remember_url(url)
-        activity.set_progress(
-            url=url, stage="download", message="Downloading…", percent=15
-        )
+    _url_progress(
+        activity,
+        url=url,
+        stage="url",
+        message="Accepted URL",
+        snapshot=None,
+    )
     try:
+        _url_progress(
+            activity,
+            url=url,
+            stage="downloader",
+            message="Downloading…",
+            snapshot=None,
+        )
         artifact = _download_url(ctx, url)
-        if activity is not None:
-            activity.set_progress(
-                url=url, stage="import", message="Importing…", percent=65
+        snapshot = UrlSnapshot.from_artifact(artifact)
+        _url_progress(
+            activity,
+            url=url,
+            stage="snapshot",
+            message=f"Snapshot ready: {snapshot.path.name}",
+            snapshot=snapshot.to_mapping(),
+        )
+        for stage, message in (
+            ("parser", "Parsing snapshot…"),
+            ("extractor", "Extracting profiles…"),
+            ("normalizer", "Normalizing records…"),
+            ("validator", "Validating rows…"),
+        ):
+            _url_progress(
+                activity,
+                url=url,
+                stage=stage,
+                message=message,
+                snapshot=snapshot.to_mapping(),
             )
+        _url_progress(
+            activity,
+            url=url,
+            stage="import",
+            message="Importing into SQLite…",
+            snapshot=snapshot.to_mapping(),
+        )
         summary = ctx.import_flow.run_import(
             artifact.path, source=source, plugin_name=plugin
         )
@@ -110,6 +150,11 @@ def import_url(ctx: ApiContext, body: dict[str, Any]) -> dict[str, Any]:
     payload = import_summary_to_dict(summary)
     payload["url"] = url
     payload["downloaded_path"] = str(artifact.path)
+    payload["snapshot"] = snapshot.to_mapping()
+    payload["pipeline"] = list(URL_IMPORT_STAGES)
+    payload["stages_run"] = list(stages_through("import"))
+    payload["stage"] = "import"
+    payload["percent"] = stage_percent("import")
     if activity is not None:
         activity.record_completed(
             url=url,
@@ -128,20 +173,60 @@ def import_url(ctx: ApiContext, body: dict[str, Any]) -> dict[str, Any]:
 
 
 def import_url_preview(ctx: ApiContext, body: dict[str, Any]) -> dict[str, Any]:
-    """POST /api/import/url/preview — download then dry-run Preview."""
+    """POST /api/import/url/preview — URL → … → Preview pipeline."""
+    from profile_intelligence.domain.value_objects.url_import import (
+        URL_IMPORT_STAGES,
+        UrlSnapshot,
+        stage_percent,
+        stages_through,
+    )
+
     url, plugin, source = _url_import_args(ctx, body)
     activity = ctx.import_activity
-    if activity is not None:
-        activity.remember_url(url)
-        activity.set_progress(
-            url=url, stage="preview", message="Downloading for preview…", percent=20
-        )
+    _url_progress(
+        activity,
+        url=url,
+        stage="url",
+        message="Accepted URL",
+        snapshot=None,
+    )
     try:
+        _url_progress(
+            activity,
+            url=url,
+            stage="downloader",
+            message="Downloading…",
+            snapshot=None,
+        )
         artifact = _download_url(ctx, url)
-        if activity is not None:
-            activity.set_progress(
-                url=url, stage="preview", message="Building preview…", percent=70
+        snapshot = UrlSnapshot.from_artifact(artifact)
+        _url_progress(
+            activity,
+            url=url,
+            stage="snapshot",
+            message=f"Snapshot ready: {snapshot.path.name}",
+            snapshot=snapshot.to_mapping(),
+        )
+        for stage, message in (
+            ("parser", "Parsing snapshot…"),
+            ("extractor", "Extracting profiles…"),
+            ("normalizer", "Normalizing records…"),
+            ("validator", "Validating rows…"),
+        ):
+            _url_progress(
+                activity,
+                url=url,
+                stage=stage,
+                message=message,
+                snapshot=snapshot.to_mapping(),
             )
+        _url_progress(
+            activity,
+            url=url,
+            stage="preview",
+            message="Building preview…",
+            snapshot=snapshot.to_mapping(),
+        )
         preview = ctx.import_flow.preview(
             artifact.path, source=source, plugin_name=plugin
         )
@@ -153,15 +238,33 @@ def import_url_preview(ctx: ApiContext, body: dict[str, Any]) -> dict[str, Any]:
         raise ApiError(str(exc), status=400) from exc
 
     if activity is not None:
-        activity.clear_progress()
+        # Keep the completed Preview stage visible briefly for the Progress panel.
+        _url_progress(
+            activity,
+            url=url,
+            stage="preview",
+            message="Preview ready",
+            snapshot=snapshot.to_mapping(),
+            percent_override=stage_percent("preview"),
+        )
     payload = preview_result_to_dict(preview)
     payload["url"] = url
     payload["downloaded_path"] = str(artifact.path)
+    payload["snapshot"] = snapshot.to_mapping()
+    payload["pipeline"] = list(URL_IMPORT_STAGES)
+    payload["stages_run"] = list(stages_through("preview"))
+    payload["stage"] = "preview"
+    payload["percent"] = stage_percent("preview")
     return payload
 
 
 def import_activity(ctx: ApiContext) -> dict[str, Any]:
     """GET /api/import/activity — Recent URLs, Queue, Progress, Errors, Completed."""
+    from profile_intelligence.domain.value_objects.url_import import (
+        URL_IMPORT_STAGE_LABELS,
+        URL_IMPORT_STAGES,
+    )
+
     if ctx.import_activity is None:
         return {
             "recent_urls": [],
@@ -169,6 +272,8 @@ def import_activity(ctx: ApiContext) -> dict[str, Any]:
             "progress": None,
             "errors": [],
             "completed": [],
+            "pipeline": list(URL_IMPORT_STAGES),
+            "stage_labels": dict(URL_IMPORT_STAGE_LABELS),
         }
     snap = ctx.import_activity.snapshot()
     return {
@@ -177,7 +282,43 @@ def import_activity(ctx: ApiContext) -> dict[str, Any]:
         "progress": snap.progress,
         "errors": snap.errors,
         "completed": snap.completed,
+        "pipeline": list(URL_IMPORT_STAGES),
+        "stage_labels": dict(URL_IMPORT_STAGE_LABELS),
     }
+
+
+def _url_progress(
+    activity: Any,
+    *,
+    url: str,
+    stage: str,
+    message: str,
+    snapshot: dict[str, Any] | None,
+    percent_override: int | None = None,
+) -> None:
+    from profile_intelligence.domain.value_objects.url_import import (
+        URL_IMPORT_STAGES,
+        stage_percent,
+        stages_through,
+    )
+
+    if activity is None:
+        return
+    if stage == "url":
+        activity.remember_url(url)
+    activity.set_progress(
+        url=url,
+        stage=stage,
+        message=message,
+        percent=(
+            percent_override
+            if percent_override is not None
+            else stage_percent(stage)
+        ),
+        stages_run=list(stages_through(stage)),
+        pipeline=list(URL_IMPORT_STAGES),
+        snapshot=snapshot,
+    )
 
 
 def _url_import_args(

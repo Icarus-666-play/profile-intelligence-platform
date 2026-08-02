@@ -126,17 +126,36 @@ def test_import_url_preview_and_import_activity_api(temp_root: Path) -> None:
         assert body["ok"] is True
         assert body["accepted_count"] >= 1
         assert body["url"] == "https://example.com/people.csv"
+        assert body["stage"] == "preview"
+        assert body["pipeline"][:3] == ["url", "downloader", "snapshot"]
+        assert "preview" in body["stages_run"]
+        assert body["snapshot"]["path"]
 
         imported = client.post(
             "/api/import/url",
             json={"url": "https://example.com/people.csv", "plugin": "csv"},
         )
         assert imported.status_code == 200
-        assert imported.json()["created"] >= 1
+        imported_body = imported.json()
+        assert imported_body["created"] >= 1
+        assert imported_body["stage"] == "import"
+        assert imported_body["stages_run"][-1] == "import"
 
         activity = client.get("/api/import/activity")
         assert activity.status_code == 200
         payload = activity.json()
+        assert payload["pipeline"] == [
+            "url",
+            "downloader",
+            "snapshot",
+            "parser",
+            "extractor",
+            "normalizer",
+            "validator",
+            "preview",
+            "import",
+        ]
+        assert payload["stage_labels"]["snapshot"] == "Snapshot"
         assert any(
             item["url"] == "https://example.com/people.csv"
             for item in payload["recent_urls"]
