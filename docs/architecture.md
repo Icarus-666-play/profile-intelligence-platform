@@ -22,7 +22,7 @@ src/profile_intelligence/
 
 Supporting trees:
 
-- `config/` — YAML defaults
+- `config/` — `settings.yaml`, `logging.yaml`, `scoring.yaml`
 - `docs/` — developer documentation
 - `scripts/` — convenience launchers
 - `tests/` — unit and integration tests

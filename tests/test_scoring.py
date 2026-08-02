@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from profile_intelligence.core.config import ScoringSection
 from profile_intelligence.extractors import ProfileDraft
 from profile_intelligence.scoring import CompletenessScorer
 
@@ -28,3 +29,13 @@ def test_score_full_profile() -> None:
     assert scorer.score(draft) == 100
     assert scorer.apply(draft) == 100
     assert draft.score == 100
+
+
+def test_score_uses_config_weights() -> None:
+    scoring = ScoringSection(
+        max_score=50,
+        weights={"display_name": 40, "email": 10},
+    )
+    scorer = CompletenessScorer(scoring)
+    draft = ProfileDraft(display_name="Ada", email="ada@example.com")
+    assert scorer.score(draft) == 50

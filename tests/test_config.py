@@ -18,17 +18,37 @@ def test_load_default_config(temp_root: Path) -> None:
     assert config.app.environment == "test"
     assert config.database_path == (temp_root / "data" / "pip.sqlite3").resolve()
     assert config.logging.level == "DEBUG"
+    assert config.scoring.weights["email"] == 20
+    assert config.config_dir == temp_root / "config"
 
 
-def test_local_override(temp_root: Path) -> None:
-    override = {"logging": {"level": "WARNING"}, "app": {"environment": "production"}}
-    (temp_root / "config" / "local.yaml").write_text(
+def test_local_settings_override(temp_root: Path) -> None:
+    override = {"app": {"environment": "production"}}
+    (temp_root / "config" / "settings.local.yaml").write_text(
         yaml.safe_dump(override),
         encoding="utf-8",
     )
     config = load_config(root_dir=temp_root)
-    assert config.logging.level == "WARNING"
     assert config.app.environment == "production"
+
+
+def test_local_logging_override(temp_root: Path) -> None:
+    (temp_root / "config" / "logging.local.yaml").write_text(
+        yaml.safe_dump({"level": "WARNING"}),
+        encoding="utf-8",
+    )
+    config = load_config(root_dir=temp_root)
+    assert config.logging.level == "WARNING"
+
+
+def test_local_scoring_override(temp_root: Path) -> None:
+    (temp_root / "config" / "scoring.local.yaml").write_text(
+        yaml.safe_dump({"weights": {"email": 30}}),
+        encoding="utf-8",
+    )
+    config = load_config(root_dir=temp_root)
+    assert config.scoring.weights["email"] == 30
+    assert config.scoring.weights["display_name"] == 25
 
 
 def test_explicit_config_path(temp_root: Path, tmp_path: Path) -> None:
@@ -50,8 +70,8 @@ def test_env_log_level_override(
     assert config.logging.level == "ERROR"
 
 
-def test_missing_default_raises(tmp_path: Path) -> None:
-    with pytest.raises(ConfigurationError, match="Default configuration missing"):
+def test_missing_required_files_raises(tmp_path: Path) -> None:
+    with pytest.raises(ConfigurationError, match="Missing required configuration"):
         load_config(root_dir=tmp_path)
 
 
@@ -64,14 +84,13 @@ def test_ensure_directories(app_config) -> None:
 
 
 def test_invalid_yaml(temp_root: Path) -> None:
-    bad = temp_root / "config" / "local.yaml"
+    bad = temp_root / "config" / "settings.local.yaml"
     bad.write_text("app: [\n", encoding="utf-8")
     with pytest.raises(ConfigurationError, match="Invalid YAML"):
         load_config(root_dir=temp_root)
 
 
 def test_env_cleanup(monkeypatch: pytest.MonkeyPatch) -> None:
-    # Ensure tests do not leak PIP_* into other cases unexpectedly.
     for key in list(os.environ):
         if key.startswith("PIP_"):
             monkeypatch.delenv(key, raising=False)

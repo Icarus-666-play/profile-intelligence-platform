@@ -35,7 +35,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--config",
         dest="config_path",
         default=None,
-        help="Path to a YAML config override (default: config/local.yaml if present)",
+        help="Optional settings YAML merged over config/settings.yaml",
     )
 
     subparsers = parser.add_subparsers(dest="command")

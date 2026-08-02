@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from profile_intelligence.core.config import AppConfig, load_config
+from profile_intelligence.core.config import AppConfig, ScoringSection, load_config
 from profile_intelligence.core.container import Container
 from profile_intelligence.core.exceptions import (
     ConfigurationError,
@@ -26,6 +26,7 @@ __all__ = [
     "PipError",
     "PluginError",
     "RepositoryError",
+    "ScoringSection",
     "ValidationError",
     "configure_logging",
     "get_logger",

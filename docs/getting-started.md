@@ -32,13 +32,21 @@ pip install -e .
 
 ## Configuration
 
-Default settings live in [`config/default.yaml`](../config/default.yaml).
+Shipped config files:
 
-Optional local overrides:
+- [`config/settings.yaml`](../config/settings.yaml)
+- [`config/logging.yaml`](../config/logging.yaml)
+- [`config/scoring.yaml`](../config/scoring.yaml)
 
-1. Copy [`config/local.yaml.example`](../config/local.yaml.example) to `config/local.yaml`, or
-2. Set `PIP_CONFIG_PATH` to a YAML file, or
-3. Pass `--config path/to/config.yaml` to the launcher
+Optional local overlays (gitignored):
+
+```bash
+cp config/settings.local.yaml.example config/settings.local.yaml
+cp config/logging.local.yaml.example config/logging.local.yaml
+cp config/scoring.local.yaml.example config/scoring.local.yaml
+```
+
+Or set `PIP_CONFIG_PATH` / pass `--config` for a settings merge override.
 
 Environment overrides:
 

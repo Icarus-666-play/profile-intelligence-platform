@@ -47,7 +47,7 @@ def build_container(
     )
     container.register(
         CompletenessScorer,
-        CompletenessScorer,
+        lambda: CompletenessScorer(container.resolve(AppConfig).scoring),
         name="scorer",
     )
     container.register(

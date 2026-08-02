@@ -41,7 +41,7 @@ See [docs/getting-started.md](docs/getting-started.md) and [docs/milestones.md](
 ## Project structure
 
 ```
-├── config/                 # YAML defaults
+├── config/                 # settings.yaml, logging.yaml, scoring.yaml
 ├── docs/                   # Architecture & guides
 ├── scripts/                # run_app.py, migrate.py
 ├── src/profile_intelligence/

@@ -2,9 +2,23 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Protocol
 
+from profile_intelligence.core.config import ScoringSection
 from profile_intelligence.core.exceptions import ScoringError
+
+_DEFAULT_WEIGHTS: Mapping[str, int] = {
+    "display_name": 25,
+    "email": 20,
+    "phone": 10,
+    "title": 10,
+    "organization": 10,
+    "location": 10,
+    "tags": 5,
+    "notes": 5,
+    "external_id": 5,
+}
 
 
 class ScoreableProfile(Protocol):
@@ -21,32 +35,31 @@ class ScoreableProfile(Protocol):
     external_id: str | None
 
 
-# Weighted fields summing to 100.
-_FIELD_WEIGHTS: tuple[tuple[str, int], ...] = (
-    ("display_name", 25),
-    ("email", 20),
-    ("phone", 10),
-    ("title", 10),
-    ("organization", 10),
-    ("location", 10),
-    ("tags", 5),
-    ("notes", 5),
-    ("external_id", 5),
-)
-
-
 class CompletenessScorer:
     """Score a profile from 0-100 based on populated fields."""
 
+    def __init__(
+        self,
+        scoring: ScoringSection | None = None,
+        *,
+        weights: Mapping[str, int] | None = None,
+        max_score: int | None = None,
+    ) -> None:
+        section = scoring or ScoringSection()
+        self._weights = dict(weights if weights is not None else section.weights)
+        self._max_score = (
+            max_score if max_score is not None else section.max_score
+        )
+
     def score(self, profile: ScoreableProfile) -> int:
-        """Return an integer completeness score in ``[0, 100]``."""
+        """Return an integer completeness score in ``[0, max_score]``."""
         try:
             total = 0
-            for field_name, weight in _FIELD_WEIGHTS:
+            for field_name, weight in self._weights.items():
                 value = getattr(profile, field_name, None)
                 if _has_value(value):
-                    total += weight
-            return min(total, 100)
+                    total += int(weight)
+            return min(total, self._max_score)
         except Exception as exc:
             raise ScoringError(
                 "Failed to compute completeness score",

@@ -23,10 +23,11 @@ def _reset_logging_state() -> Iterator[None]:
 
 @pytest.fixture
 def temp_root(tmp_path: Path) -> Path:
-    """Create a minimal install root with default config for tests."""
+    """Create a minimal install root with split config files for tests."""
     config_dir = tmp_path / "config"
     config_dir.mkdir()
-    default = {
+
+    settings = {
         "app": {
             "name": "Profile Intelligence Platform",
             "short_name": "PIP",
@@ -46,22 +47,46 @@ def temp_root(tmp_path: Path) -> Path:
             "check_same_thread": False,
             "foreign_keys": True,
         },
-        "logging": {
-            "level": "DEBUG",
-            "console": False,
-            "file": True,
-            "filename": "pip-test.log",
-            "max_bytes": 1_000_000,
-            "backup_count": 1,
-        },
         "importers": {"auto_discover": True, "enabled": []},
         "excel": {"default_sheet_name": "Profiles", "date_format": "YYYY-MM-DD"},
         "ai": {"enabled": False, "provider": None, "model": None},
         "search": {"default_limit": 50, "fuzzy": True},
         "dashboard": {"refresh_seconds": 30},
     }
-    (config_dir / "default.yaml").write_text(
-        yaml.safe_dump(default),
+    logging_cfg = {
+        "level": "DEBUG",
+        "console": False,
+        "file": True,
+        "filename": "pip-test.log",
+        "max_bytes": 1_000_000,
+        "backup_count": 1,
+    }
+    scoring_cfg = {
+        "method": "completeness",
+        "max_score": 100,
+        "weights": {
+            "display_name": 25,
+            "email": 20,
+            "phone": 10,
+            "title": 10,
+            "organization": 10,
+            "location": 10,
+            "tags": 5,
+            "notes": 5,
+            "external_id": 5,
+        },
+    }
+
+    (config_dir / "settings.yaml").write_text(
+        yaml.safe_dump(settings),
+        encoding="utf-8",
+    )
+    (config_dir / "logging.yaml").write_text(
+        yaml.safe_dump(logging_cfg),
+        encoding="utf-8",
+    )
+    (config_dir / "scoring.yaml").write_text(
+        yaml.safe_dump(scoring_cfg),
         encoding="utf-8",
     )
     return tmp_path

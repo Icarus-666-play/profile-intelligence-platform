@@ -1,0 +1,5 @@
+# Copy to config/scoring.local.yaml and customize.
+
+weights:
+  email: 25
+  phone: 15

@@ -1,0 +1,8 @@
+# Copy to config/settings.local.yaml and customize.
+# *.local.yaml files are gitignored.
+
+app:
+  environment: development
+
+# paths:
+#   data_dir: D:/PIP/data

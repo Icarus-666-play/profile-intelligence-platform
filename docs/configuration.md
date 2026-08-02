@@ -1,19 +1,20 @@
 # Configuration
 
-PIP uses YAML configuration with typed dataclasses (`AppConfig` and nested sections).
+PIP uses split YAML configuration with typed dataclasses (`AppConfig` and nested sections).
 
 ## Files
 
 | File | Role |
 |------|------|
-| `config/default.yaml` | Shipped defaults (required) |
-| `config/local.yaml` | Optional developer/machine overrides |
-| path in `PIP_CONFIG_PATH` | Optional explicit override |
-| `--config` CLI flag | Optional explicit override |
+| `config/settings.yaml` | App, paths, database, importers, excel, ai, search, dashboard |
+| `config/logging.yaml` | Logging options |
+| `config/scoring.yaml` | Completeness scoring method/weights |
+| `config/*.local.yaml` | Optional machine-local overlays (gitignored) |
+| path in `PIP_CONFIG_PATH` / `--config` | Optional settings override merge |
 
-Load order: **defaults → override file → environment variables**.
+Load order per domain: **shipped file → `*.local.yaml` → settings override path → environment variables**.
 
-## Sections
+## `settings.yaml`
 
 ### `app`
 
@@ -36,12 +37,6 @@ Relative paths resolve against the repository / install root.
 - `check_same_thread` — sqlite3 connect arg
 - `foreign_keys` — enable `PRAGMA foreign_keys=ON`
 
-### `logging`
-
-- `level`, `console`, `file`, `filename`
-- `max_bytes`, `backup_count`
-- `format` (mapped to `log_format` in code), `date_format`
-
 ### `importers`
 
 - `auto_discover` — discover plugins on startup
@@ -51,6 +46,39 @@ Relative paths resolve against the repository / install root.
 
 Scaffold settings for upcoming modules. AI remains disabled unless `ai.enabled: true`.
 
+## `logging.yaml`
+
+Flat file (not nested under a `logging:` key):
+
+- `level`, `console`, `file`, `filename`
+- `max_bytes`, `backup_count`
+- `format` (mapped to `log_format` in code), `date_format`
+
+## `scoring.yaml`
+
+- `method` — currently `completeness`
+- `max_score` — upper bound (default 100)
+- `weights` — field → integer weight map
+
+Weights are applied by `CompletenessScorer` at runtime.
+
+## Local overrides
+
+```bash
+cp config/settings.local.yaml.example config/settings.local.yaml
+cp config/logging.local.yaml.example config/logging.local.yaml
+cp config/scoring.local.yaml.example config/scoring.local.yaml
+```
+
+## Environment variables
+
+| Variable | Purpose |
+|----------|---------|
+| `PIP_CONFIG_PATH` | YAML merged into settings |
+| `PIP_DATA_DIR` | Override data directory |
+| `PIP_LOG_LEVEL` | Override log level |
+| `PIP_ENVIRONMENT` | Override `app.environment` |
+
 ## Programmatic access
 
 ```python
@@ -58,5 +86,6 @@ from profile_intelligence.core.config import load_config
 
 config = load_config()
 print(config.database_path)
+print(config.scoring.weights)
 config.ensure_directories()
 ```
