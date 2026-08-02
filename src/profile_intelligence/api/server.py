@@ -5,7 +5,7 @@ from __future__ import annotations
 import webbrowser
 
 from profile_intelligence.api.context import ApiContext
-from profile_intelligence.api.fastapi_app import create_fastapi_app
+from profile_intelligence.api.main import create_app
 from profile_intelligence.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -22,7 +22,7 @@ def serve_fastapi(
     """Serve React + FastAPI until interrupted."""
     import uvicorn
 
-    app = create_fastapi_app(api_context, serve_spa=serve_spa)
+    app = create_app(api_context, serve_spa=serve_spa)
     url = f"http://{host}:{port}/"
     logger.info("FastAPI + React listening on %s", url)
     print("Profile Intelligence Platform — React + FastAPI")

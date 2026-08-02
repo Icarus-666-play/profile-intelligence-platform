@@ -6,7 +6,8 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from profile_intelligence.api import ApiContext, create_fastapi_app
+from profile_intelligence.api import ApiContext, create_app, create_fastapi_app
+from profile_intelligence.api.main import create_app as create_app_from_main
 from profile_intelligence.application.use_cases.application import ApplicationService
 from profile_intelligence.application.use_cases.compare_service import CompareService
 from profile_intelligence.application.use_cases.import_flow import ImportFlow
@@ -60,6 +61,18 @@ def test_file_storage_roots(temp_root: Path) -> None:
     assert nested.parent == storage.inbox_dir
 
 
+def test_api_main_create_app_alias(temp_root: Path) -> None:
+    assert create_app is create_fastapi_app
+    assert create_app_from_main is create_app
+    ctx, app_svc = _api_context(temp_root)
+    try:
+        app = create_app_from_main(ctx, serve_spa=False)
+        client = TestClient(app)
+        assert client.get("/api/health").json()["stack"] == "fastapi"
+    finally:
+        app_svc.shutdown()
+
+
 def test_fastapi_health_and_dashboard(temp_root: Path) -> None:
     ctx, app_svc = _api_context(temp_root)
     try:
@@ -71,7 +84,7 @@ def test_fastapi_health_and_dashboard(temp_root: Path) -> None:
                 score=91,
             )
         )
-        app = create_fastapi_app(ctx, serve_spa=False)
+        app = create_app(ctx, serve_spa=False)
         client = TestClient(app)
         health = client.get("/api/health")
         assert health.status_code == 200

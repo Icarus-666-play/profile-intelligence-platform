@@ -14,7 +14,7 @@ Default bind: `127.0.0.1:8765` (loopback). No authentication layer — see [SECU
 
 ## REST API
 
-Served by FastAPI (`create_fastapi_app`). Handlers live in
+Served by FastAPI (`profile_intelligence.api.main.create_app`). Handlers live in
 `profile_intelligence.api.routes` and are shared with the legacy WSGI `ApiApp`.
 
 ```
@@ -41,7 +41,7 @@ POST   /api/plugins/reload
 
 Auth supports the React entry flow **Login (optional) → Home → Dashboard**. Default `auth.enabled: false` (guest continue).
 
-Implementation: `src/profile_intelligence/api/` (FastAPI in `fastapi_app.py`).
+Implementation: `src/profile_intelligence/api/` (FastAPI entry in `main.py`).
 
 ### Conventions
 

@@ -27,7 +27,7 @@ src/profile_intelligence/
     scoring/           # Confidence Score (0-100) via completeness engine
     dashboard/         # Console dashboard adapter / snapshot metrics
     reporting/         # Email report stub (future)
-  api/                 # FastAPI REST (+ legacy WSGI ApiApp)
+  api/                 # FastAPI REST (`main.py` entry + legacy WSGI ApiApp)
   web/dist/            # Built React SPA served by FastAPI
   ui/                  # Legacy WSGI HTML UI (`pip-app ui --legacy-wsgi`)
   core/                # Shared kernel: config, logging, DI, exceptions
