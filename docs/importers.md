@@ -1,7 +1,16 @@
 # Importer Plugin Framework
 
 Importers convert external files into raw row records. The import service then
-extracts, scores, and persists profiles.
+extracts, scores, and persists profiles:
+
+```
+Importer
+   ↓
+Database
+```
+
+`ImportService.import_path()` runs that pipeline end-to-end
+(`run_importer()` → `write_to_database()`).
 
 ## Built-in plugins (Milestone 1)
 

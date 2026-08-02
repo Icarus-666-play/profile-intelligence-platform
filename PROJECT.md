@@ -50,4 +50,12 @@ See [docs/milestones.md](docs/milestones.md).
 
 ## Status
 
-Milestones 0 and 1 are complete. The local import → extract → persist → search → score → Excel export loop is operational via CLI.
+Milestones 0 and 1 are complete. Core flow:
+
+```
+Importer
+   ↓
+Database
+```
+
+The local import → extract → persist → search → score → Excel export loop is operational via CLI.

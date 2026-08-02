@@ -55,16 +55,29 @@ main()
       → ImporterRegistry.discover()
 ```
 
-## Milestone 1 data pipeline
+## Core data flow
 
 ```
-file.csv/.xlsx
-  → ImporterPlugin.import_file()          # raw row dicts
-  → ProfileExtractor.extract_many()       # ProfileDraft
-  → CompletenessScorer.score()            # 0-100
-  → ProfileRepository.upsert_draft()      # SQLite
-  → ProfileSearchService / ExcelExporter  # query & report
+Importer
+   ↓
+Database
 ```
+
+`ImportService` is the bridge:
+
+```
+file.csv / .xlsx / plugin export
+        ↓
+ProfileImporter.import_file()     # Importer stage — raw row dicts
+        ↓
+ProfileExtractor + CompletenessScorer
+        ↓
+ProfileRepository.upsert_draft()  # Database stage — SQLite
+        ↓
+ProfileSearchService / ExcelExporter
+```
+
+Stages are also callable separately: `run_importer()` then `write_to_database()`.
 
 ## Error model
 
