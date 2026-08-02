@@ -6,7 +6,7 @@ Profile Intelligence Platform (PIP) is a **local-first**, modular Python desktop
 
 ```
 src/profile_intelligence/
-  core/          # config, logging, DI, exceptions
+  core/          # config, config_manager, logging, DI, exceptions
   database/      # connection, models, repository, migrate, seed
   importers/     # plugin interface + registry + built-in plugins
   extractors/    # field/normalization pipelines (scaffold)
@@ -45,7 +45,7 @@ Supporting trees:
 ```
 main()
   → build_container()
-      → ConfigManager().load()
+      → ConfigManager().load()   # core/config_manager.py
       → configure_logging()
       → create_database()
       → register services

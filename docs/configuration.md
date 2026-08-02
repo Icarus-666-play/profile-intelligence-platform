@@ -81,10 +81,10 @@ cp config/scoring.local.yaml.example config/scoring.local.yaml
 
 ## Programmatic access
 
-Prefer :class:`ConfigManager`:
+Prefer :class:`ConfigManager` (`core/config_manager.py`):
 
 ```python
-from profile_intelligence.core.config import ConfigManager
+from profile_intelligence.core.config_manager import ConfigManager
 
 manager = ConfigManager()
 config = manager.load()
@@ -99,7 +99,7 @@ manager.reload()
 Convenience wrapper (still supported):
 
 ```python
-from profile_intelligence.core.config import load_config
+from profile_intelligence.core.config_manager import load_config
 
 config = load_config()
 ```

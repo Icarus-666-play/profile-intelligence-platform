@@ -5,7 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 
 from profile_intelligence.bootstrap import build_container
-from profile_intelligence.core.config import AppConfig, ConfigManager
+from profile_intelligence.core.config import AppConfig
+from profile_intelligence.core.config_manager import ConfigManager
 from profile_intelligence.database.connection import Database
 from profile_intelligence.importers.registry import ImporterRegistry
 from profile_intelligence.services.application import ApplicationService

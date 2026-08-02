@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from profile_intelligence.core.config import AppConfig, ConfigManager
+from profile_intelligence.core.config import AppConfig
+from profile_intelligence.core.config_manager import ConfigManager
 from profile_intelligence.core.container import Container
 from profile_intelligence.core.logging import configure_logging, get_logger
 from profile_intelligence.core.types import PathLike

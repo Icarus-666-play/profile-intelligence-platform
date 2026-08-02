@@ -2,12 +2,8 @@
 
 from __future__ import annotations
 
-from profile_intelligence.core.config import (
-    AppConfig,
-    ConfigManager,
-    ScoringSection,
-    load_config,
-)
+from profile_intelligence.core.config import AppConfig, ScoringSection
+from profile_intelligence.core.config_manager import ConfigManager, load_config
 from profile_intelligence.core.container import Container
 from profile_intelligence.core.exceptions import (
     ConfigurationError,

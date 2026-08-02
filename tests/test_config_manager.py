@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from profile_intelligence.core.config import ConfigManager
+from profile_intelligence.core.config_manager import ConfigManager
 from profile_intelligence.core.exceptions import ConfigurationError
 
 
