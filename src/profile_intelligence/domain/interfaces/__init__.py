@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+from profile_intelligence.domain.interfaces.events import (
+    EventHandler,
+    IEventBus,
+    IEventPublisher,
+)
 from profile_intelligence.domain.interfaces.importers import (
     ImporterPlugin,
     ProfileImporter,
@@ -19,6 +24,9 @@ from profile_intelligence.domain.interfaces.repositories import (
 )
 
 __all__ = [
+    "EventHandler",
+    "IEventBus",
+    "IEventPublisher",
     "IPhotoRepository",
     "IProfileRepository",
     "IRateRepository",

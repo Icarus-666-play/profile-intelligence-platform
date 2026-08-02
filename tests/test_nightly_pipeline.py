@@ -19,6 +19,7 @@ def test_nightly_stages_order() -> None:
         "import",
         "update_database",
         "recalculate_scores",
+        "extract_images",
         "generate_excel_report",
         "export_dashboard",
     )
@@ -45,6 +46,14 @@ def test_nightly_pipeline_end_to_end(temp_root: Path) -> None:
     assert result.created == 2
     assert result.profile_count == 2
     assert result.rescored == 2
+    assert result.images_extracted >= 0
+    assert result.event_names == (
+        "ProfileImported",
+        "ScoreCalculated",
+        "ImagesExtracted",
+        "ExcelExported",
+        "DashboardUpdated",
+    )
     assert result.excel_path is not None
     assert Path(result.excel_path).is_file()
     assert result.dashboard_path is not None

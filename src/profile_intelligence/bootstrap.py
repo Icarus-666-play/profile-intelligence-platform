@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from profile_intelligence.application.events import InMemoryEventBus
 from profile_intelligence.application.use_cases import ImportPipeline
 from profile_intelligence.application.use_cases.application import ApplicationService
 from profile_intelligence.application.use_cases.compare_service import CompareService
@@ -14,6 +15,7 @@ from profile_intelligence.core.container import Container
 from profile_intelligence.core.logging import configure_logging, get_logger
 from profile_intelligence.core.types import PathLike
 from profile_intelligence.domain.entities.profile import ProfileExtractor
+from profile_intelligence.domain.interfaces.events import IEventBus
 from profile_intelligence.domain.interfaces.repositories import (
     IPhotoRepository,
     IProfileRepository,
@@ -197,6 +199,16 @@ def build_container(
         name="dashboard",
     )
     container.register(
+        InMemoryEventBus,
+        lambda: InMemoryEventBus(),
+        name="event_bus",
+    )
+    container.register(
+        IEventBus,
+        lambda: container.resolve(InMemoryEventBus),
+        name="ievent_bus",
+    )
+    container.register(
         NightlyPipeline,
         lambda: NightlyPipeline(
             config=container.resolve(AppConfig),
@@ -205,6 +217,9 @@ def build_container(
             dashboard=container.resolve(DashboardService),
             database=container.resolve(Database),
             registry=container.resolve(ImporterRegistry),
+            event_bus=container.resolve(IEventBus),
+            photo_repository=container.resolve(IPhotoRepository),
+            image_repository=container.resolve(ImageRepository),
         ),
         name="nightly",
     )

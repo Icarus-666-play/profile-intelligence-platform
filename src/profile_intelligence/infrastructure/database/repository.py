@@ -13,7 +13,6 @@ from profile_intelligence.core.logging import get_logger
 from profile_intelligence.domain.entities.profile import ProfileDraft
 from profile_intelligence.domain.interfaces.repositories import (
     IProfileRepository,
-    ProfileEntity,
     Repository,
 )
 from profile_intelligence.infrastructure.database.child_repositories import (
@@ -50,7 +49,7 @@ class SqlAlchemyProfileRepository(DatabaseRepository[Profile]):
 
     backend: str = "sqlalchemy"
 
-    def get_by_id(self, entity_id: int) -> ProfileEntity | None:
+    def get_by_id(self, entity_id: int) -> Profile | None:
         try:
             with self._database.session() as session:
                 return session.get(Profile, entity_id)
@@ -60,9 +59,7 @@ class SqlAlchemyProfileRepository(DatabaseRepository[Profile]):
                 cause=exc,
             ) from exc
 
-    def list_all(
-        self, *, limit: int = 100, offset: int = 0
-    ) -> Sequence[ProfileEntity]:
+    def list_all(self, *, limit: int = 100, offset: int = 0) -> Sequence[Profile]:
         if limit < 0 or offset < 0:
             raise RepositoryError("limit and offset must be non-negative")
         try:
@@ -132,7 +129,7 @@ class SqlAlchemyProfileRepository(DatabaseRepository[Profile]):
                 cause=exc,
             ) from exc
 
-    def find_existing(self, draft: ProfileDraft) -> ProfileEntity | None:
+    def find_existing(self, draft: ProfileDraft) -> Profile | None:
         """Return an existing profile matching *draft*, if any.
 
         Match order: ``external_id``, then ``display_name`` + ``source``.
@@ -150,7 +147,7 @@ class SqlAlchemyProfileRepository(DatabaseRepository[Profile]):
                 cause=exc,
             ) from exc
 
-    def upsert_draft(self, draft: ProfileDraft) -> tuple[ProfileEntity, bool]:
+    def upsert_draft(self, draft: ProfileDraft) -> tuple[Profile, bool]:
         """Insert or update a profile and replace its child collections.
 
         Match order: ``external_id``, then ``display_name`` + ``source``.

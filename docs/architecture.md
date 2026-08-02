@@ -9,10 +9,12 @@ src/profile_intelligence/
   domain/
     entities/          # ProfileDraft (+ Rate→…→Availability), ProfileExtractor
     value_objects/     # RawDocument, ImportResult, Rate/Service/Review/Photo/Availability
-    interfaces/        # ImporterPlugin, IProfile/IRate/IService/IReview/IPhotoRepository
+    events/            # ProfileImported → … → DashboardUpdated
+    interfaces/        # ImporterPlugin, repository ports, IEventBus
   application/
     pipeline/          # Parser → Normalizer → Validator
-    use_cases/         # Import, search, compare, export, dashboard
+    events/            # InMemoryEventBus
+    use_cases/         # Import, search, compare, export, dashboard, nightly
   infrastructure/
     database/          # SQLite connection, ORM models, repository, migrate, seed
     importers/         # Registry + built-in plugins (csv, excel, webarchive)
@@ -44,6 +46,7 @@ Supporting trees:
 | Clean architecture | Domain ← Application ← Infrastructure |
 | Plugin importers | `ProfileImporter` port + `ImporterRegistry` discovery |
 | Repository pattern | `IProfileRepository` → `SQLiteProfileRepository` / `PostgreSQLProfileRepository` |
+| Domain events | `ProfileImported` → … → `DashboardUpdated` via `IEventBus` |
 | Dependency injection | Lightweight `Container` in `core.container` |
 | Typed | Python 3.12 + `py.typed`, mypy strict |
 | Configurable | YAML + env overrides |
@@ -100,9 +103,23 @@ Full persist path is `ImportPipeline` (`application/use_cases/`), exposed via `I
 
 All platform errors inherit from `PipError`. Domain-specific subclasses (`ConfigurationError`, `DatabaseError`, `MigrationError`, `PluginError`, …) allow precise handling without catching unrelated exceptions.
 
-## Nightly automation
+## Nightly automation + workflow events
 
-`NightlyPipeline` (`application/use_cases/nightly_pipeline.py`) runs:
+`NightlyPipeline` (`application/use_cases/nightly_pipeline.py`) runs stages and publishes domain events:
+
+```
+ProfileImported
+ ↓
+ScoreCalculated
+ ↓
+ImagesExtracted
+ ↓
+ExcelExported
+ ↓
+DashboardUpdated
+```
+
+Operational stages:
 
 ```
 Import every night
@@ -111,6 +128,8 @@ Update database
  ↓
 Recalculate scores
  ↓
+Extract images
+ ↓
 Generate Excel report
  ↓
 Export dashboard
@@ -118,6 +137,7 @@ Export dashboard
 
 CLI: `pip-app nightly` (cron / Task Scheduler via `scripts/run_nightly.py`).
 Config section: `nightly:` in `config/settings.yaml` (`import_dir`, report paths).
+Event bus: `InMemoryEventBus` implementing `IEventBus`.
 
 ## Extension points
 
