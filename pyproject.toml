@@ -38,6 +38,7 @@ dependencies = [
     "SQLAlchemy>=2.0.36",
     "openpyxl>=3.1.5",
     "Pillow>=11.0.0",
+    "beautifulsoup4>=4.12.3",
     "typing-extensions>=4.12.2",
 ]
 
@@ -67,7 +68,8 @@ profile_intelligence = ["py.typed"]
 [tool.pytest.ini_options]
 minversion = "8.0"
 testpaths = ["tests"]
-pythonpath = ["src"]
+python_files = ["test_*.py", "tests.py"]
+pythonpath = ["src", "plugins"]
 addopts = [
     "-ra",
     "--strict-markers",
@@ -80,6 +82,11 @@ filterwarnings = [
 [tool.coverage.run]
 branch = true
 source = ["profile_intelligence"]
+omit = [
+    "*/tests.py",
+    "*/conftest.py",
+    "*/test_*.py",
+]
 
 [tool.coverage.report]
 show_missing = true
@@ -101,6 +108,10 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = ["PIL.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["bs4.*"]
 ignore_missing_imports = true
 
 [tool.ruff]
@@ -131,6 +142,8 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["S101", "ANN", "T201"]
+"plugins/**/tests.py" = ["S101", "ANN", "T201", "E501"]
+"plugins/**/conftest.py" = ["S101", "ANN", "T201"]
 "scripts/**/*.py" = ["T201", "E402"]
 "src/profile_intelligence/main.py" = ["T201"]
 

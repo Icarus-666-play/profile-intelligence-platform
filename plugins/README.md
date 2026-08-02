@@ -7,14 +7,25 @@ startup from `paths.plugins_dir` (default: this directory).
 
 ```
 plugins/
-  eurogirls/     # EuroGirls directory export importer (scaffold)
+  eurogirls/     # Sprint 1 — Safari .webarchive importer (production)
   eros/          # Eros directory export importer (scaffold)
   custom/        # Template for your own importers
 ```
 
+### EuroGirls (Sprint 1)
+
+```
+eurogirls/
+  plugin.py       # EuroGirlsImporter
+  parser.py       # .webarchive → HTML
+  extractor.py    # BeautifulSoup structured extract
+  normalizer.py   # → platform RawRecord
+  tests.py
+```
+
 Each subdirectory is a Python package. Put an `ImporterPlugin` subclass in
-`importer.py` (imported from `__init__.py`), or add top-level `*.py` modules
-directly under `plugins/`.
+`plugin.py` / `importer.py` (imported from `__init__.py`), or add top-level
+`*.py` modules directly under `plugins/`.
 
 ## Discovery rules
 

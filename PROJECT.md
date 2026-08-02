@@ -51,6 +51,16 @@ media/
   image_repository.py
 ```
 
+EuroGirls Sprint 1 (`plugins/eurogirls/`):
+
+```
+plugin.py
+parser.py
+normalizer.py
+extractor.py
+tests.py
+```
+
 ## Milestones
 
 See [docs/milestones.md](docs/milestones.md).

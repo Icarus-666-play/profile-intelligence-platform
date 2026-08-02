@@ -24,6 +24,31 @@ end-to-end via `ProcessingChain`. Parser uses a `ProfileImporter` plugin.
 | `excel` | `.xlsx` | First worksheet (or `--` sheet via options) |
 | `webarchive` | `.webarchive` | Safari webarchive → HTML profile fields |
 
+## External: EuroGirls (Sprint 1)
+
+Package: `plugins/eurogirls/`
+
+| File | Role |
+|------|------|
+| `plugin.py` | `EuroGirlsImporter` (`ProfileImporter`) |
+| `parser.py` | Safari `.webarchive` → HTML + subresources |
+| `extractor.py` | BeautifulSoup → general / physical / rates / services / photos |
+| `normalizer.py` | Structured data → platform `RawRecord` |
+| `tests.py` | Unit + pipeline tests |
+
+Pipeline:
+
+```
+.webarchive → RawDocument → BeautifulSoup Parser → Extract → Normalize
+→ Validate → Domain Profile → Repository → SQLite
+```
+
+Sample archives: `samples/eurogirls/*.webarchive`
+
+```bash
+pip-app import samples/eurogirls/sophia_eurogirls.webarchive --plugin eurogirls
+```
+
 ## Interface
 
 Prefer subclassing `ProfileImporter` (builds on `ImporterPlugin`) and implement
