@@ -51,7 +51,9 @@ Implementation: `src/profile_intelligence/api/` (FastAPI in `fastapi_app.py`).
 
 ### `POST /api/import/url`
 
-Download a remote file and run Import.
+Run the URL import pipeline through Import:
+
+`URL → Downloader → Snapshot → Parser → Extractor → Normalizer → Validator → Preview → Import`
 
 ```json
 {
@@ -61,24 +63,34 @@ Download a remote file and run Import.
 }
 ```
 
-Requires `media.allow_remote_download: true`. Response: import summary (+ `url`).
+Requires `media.allow_remote_download: true`.  
+Response: import summary (+ `url`, `snapshot`, `pipeline`, `stages_run`, `stage`).  
 Records Recent URLs / Completed (or Errors) via import activity.
 
 ### `POST /api/import/url/preview`
 
-Same download as above, then dry-run Preview (no repository write).
+Same pipeline through Preview (no repository write).
 
-Response: preview rows + counts (+ `url`, `downloaded_path`).
+Response: preview rows + counts (+ `url`, `downloaded_path`, `snapshot`, `pipeline`, `stages_run`).
 
 ### `GET /api/import/activity`
 
-Import page panels:
+Import page panels + pipeline metadata:
 
 ```json
 {
+  "pipeline": ["url", "downloader", "snapshot", "parser", "extractor", "normalizer", "validator", "preview", "import"],
+  "stage_labels": { "snapshot": "Snapshot" },
   "recent_urls": [{ "url": "https://…", "at": "…" }],
   "import_queue": [{ "name": "a.csv", "path": "…", "file_size": 123 }],
-  "progress": { "url": "…", "stage": "import", "percent": 65, "message": "…" },
+  "progress": {
+    "url": "…",
+    "stage": "validator",
+    "percent": 75,
+    "message": "…",
+    "stages_run": ["url", "downloader", "snapshot"],
+    "snapshot": { "path": "…", "from_cache": false }
+  },
   "errors": [{ "url": "…", "message": "…", "at": "…" }],
   "completed": [{ "url": "…", "created": 1, "success": true, "at": "…" }]
 }
