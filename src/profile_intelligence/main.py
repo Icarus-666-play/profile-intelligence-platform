@@ -37,6 +37,7 @@ from profile_intelligence.domain.interfaces.repositories import IProfileReposito
 from profile_intelligence.infrastructure.analysis import AnalysisService
 from profile_intelligence.infrastructure.dashboard import DashboardService
 from profile_intelligence.infrastructure.database.seed import DatabaseSeeder
+from profile_intelligence.infrastructure.download import DocumentDownloader
 from profile_intelligence.infrastructure.importers.registry import ImporterRegistry
 from profile_intelligence.ui import UiContext, serve_ui
 
@@ -646,6 +647,7 @@ def _cmd_ui(args: argparse.Namespace, container: Container) -> int:
         dashboard=container.resolve(DashboardService),
         analysis=container.resolve(AnalysisService),
         importers=container.resolve(ImporterRegistry),
+        downloader=container.resolve(DocumentDownloader),
     )
     serve_ui(
         context,

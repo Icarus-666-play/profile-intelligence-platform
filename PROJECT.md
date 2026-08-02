@@ -130,13 +130,30 @@ Thumbnail
 Storage
 ```
 
-EuroGirls Sprint 1 (`plugins/eurogirls/`):
+Plugin ingest chain:
+
+```
+Downloader
+ ↓
+Parser
+ ↓
+Extractor
+ ↓
+Normalizer
+ ↓
+Validator
+ ↓
+Importer
+```
+
+EuroGirls (`plugins/eurogirls/`):
 
 ```
 plugin.py
 parser.py
-normalizer.py
 extractor.py
+normalizer.py
+validator.py
 tests.py
 ```
 

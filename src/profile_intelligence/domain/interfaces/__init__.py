@@ -14,6 +14,16 @@ from profile_intelligence.domain.interfaces.importers import (
     ProfileImporter,
     ProfileParseOutcome,
 )
+from profile_intelligence.domain.interfaces.plugin_pipeline import (
+    PLUGIN_PIPELINE_STAGES,
+    DownloadArtifact,
+    IDocumentDownloader,
+    ISourceExtractor,
+    ISourceNormalizer,
+    ISourceParser,
+    ISourceValidator,
+    StageValidationResult,
+)
 from profile_intelligence.domain.interfaces.repositories import (
     IPhotoRepository,
     IProfileRepository,
@@ -26,9 +36,12 @@ from profile_intelligence.domain.interfaces.repositories import (
 )
 
 __all__ = [
+    "PLUGIN_PIPELINE_STAGES",
+    "DownloadArtifact",
     "EventHandler",
     "IAIProvider",
     "ICache",
+    "IDocumentDownloader",
     "IEventBus",
     "IEventPublisher",
     "IPhotoRepository",
@@ -36,10 +49,15 @@ __all__ = [
     "IRateRepository",
     "IReviewRepository",
     "IServiceRepository",
+    "ISourceExtractor",
+    "ISourceNormalizer",
+    "ISourceParser",
+    "ISourceValidator",
     "ImporterPlugin",
     "ProfileEntity",
     "ProfileImporter",
     "ProfileParseOutcome",
     "ProfileRepositoryPort",
     "Repository",
+    "StageValidationResult",
 ]

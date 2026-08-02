@@ -1,20 +1,18 @@
 """EuroGirls Safari ``.webarchive`` importer plugin.
 
-Pipeline::
-
-    .webarchive
-         ↓
-    RawDocument (via ImportPipeline / DocumentParser)
-         ↓
-    BeautifulSoup Parser  (this plugin)
-         ↓
-    Extract structured data
-         ↓
-    Normalize
-         ↓
-    Validate
-         ↓
-    Domain Profile → SQLiteProfileRepository → SQLite
+```
+Downloader
+ ↓
+Parser
+ ↓
+Extractor
+ ↓
+Normalizer
+ ↓
+Validator
+ ↓
+Importer
+```
 """
 
 from __future__ import annotations
@@ -22,10 +20,11 @@ from __future__ import annotations
 from pathlib import Path
 from typing import ClassVar
 
-from eurogirls.extractor import EuroGirlsExtractor, ExtractedProfile
+from eurogirls.extractor import EuroGirlsExtractor
 from eurogirls.normalizer import EuroGirlsNormalizer
 from eurogirls.parser import PARSER_VERSION, WebArchiveParser
-from profile_intelligence.core.exceptions import ImporterError
+from eurogirls.validator import EuroGirlsValidator
+from profile_intelligence.application.pipeline.plugin_pipeline import PluginPipeline
 from profile_intelligence.core.logging import get_logger
 from profile_intelligence.core.types import PathLike
 from profile_intelligence.infrastructure.importers.base import ImportResult
@@ -38,13 +37,14 @@ logger = get_logger("importers.external.eurogirls")
 
 
 class EuroGirlsImporter(ProfileImporter):
-    """Production EuroGirls ``.webarchive`` importer.
+    """EuroGirls ``.webarchive`` importer via :class:`PluginPipeline`.
 
-    Dependencies are injectable for tests / SOLID composition:
+    Dependencies are injectable for tests:
 
     - :class:`WebArchiveParser`
     - :class:`EuroGirlsExtractor`
     - :class:`EuroGirlsNormalizer`
+    - :class:`EuroGirlsValidator`
     """
 
     name: ClassVar[str] = "eurogirls"
@@ -61,10 +61,19 @@ class EuroGirlsImporter(ProfileImporter):
         parser: WebArchiveParser | None = None,
         extractor: EuroGirlsExtractor | None = None,
         normalizer: EuroGirlsNormalizer | None = None,
+        validator: EuroGirlsValidator | None = None,
+        pipeline: PluginPipeline | None = None,
     ) -> None:
         self._parser = parser or WebArchiveParser()
         self._extractor = extractor or EuroGirlsExtractor()
         self._normalizer = normalizer or EuroGirlsNormalizer()
+        self._validator = validator or EuroGirlsValidator()
+        self._pipeline = pipeline or PluginPipeline(
+            parser=self._parser,
+            extractor=self._extractor,
+            normalizer=self._normalizer,
+            validator=self._validator,
+        )
 
     def can_handle(self, path: PathLike) -> bool:
         """Accept EuroGirls-marked or EuroGirls-content webarchives."""
@@ -73,7 +82,6 @@ class EuroGirlsImporter(ProfileImporter):
             return False
         if self.matches_source_marker(resolved):
             return True
-        # Content sniff — never crash on unreadable files.
         try:
             parsed = self._parser.parse(resolved)
         except Exception as exc:  # noqa: BLE001 — sniff must never raise
@@ -90,57 +98,31 @@ class EuroGirlsImporter(ProfileImporter):
         path: Path,
         **options: object,
     ) -> ProfileParseOutcome:
-        """Parse one EuroGirls webarchive into a normalized raw record."""
-        try:
-            archive = self._parser.parse(path)
-        except ImporterError as exc:
-            logger.warning("EuroGirls parse failed for %s: %s", path, exc)
-            return ImportResult.failure(str(exc))
-        except Exception as exc:
-            logger.exception("Unexpected EuroGirls parse error for %s", path)
-            return ImportResult.failure(
-                f"Unexpected EuroGirls parse error: {exc}"
-            )
+        """Parser → Extractor → Normalizer → Validator → records."""
+        if not self.matches_source_marker(path):
+            try:
+                archive = self._parser.parse(path)
+            except Exception as exc:  # noqa: BLE001 — sniff/parse must not crash import
+                return ImportResult.failure(
+                    f"Unexpected EuroGirls parse error: {exc}"
+                )
+            if not self._parser.looks_like_eurogirls(archive):
+                return ImportResult.failure(
+                    "Document is not a EuroGirls profile webarchive"
+                )
 
-        if not archive.is_complete:
-            logger.warning("Incomplete webarchive document: %s", path)
-            return ImportResult.failure(
-                "Incomplete webarchive document (empty HTML)"
-            )
-
-        if not (
-            self.matches_source_marker(path)
-            or self._parser.looks_like_eurogirls(archive)
-        ):
-            logger.warning(
-                "Document does not look like a EuroGirls profile: %s",
-                path,
-            )
-            return ImportResult.failure(
-                "Document is not a EuroGirls profile webarchive"
-            )
-
-        try:
-            extracted = self._extractor.extract(archive)
-        except Exception as exc:
-            logger.exception("EuroGirls extraction failed for %s", path)
-            return ImportResult.failure(f"EuroGirls extraction failed: {exc}")
-
-        for warning in extracted.warnings:
+        result = self._pipeline.run(path)
+        for warning in result.warnings:
             logger.warning("EuroGirls %s: %s", path.name, warning)
-
-        if not self._validate_extracted(extracted):
-            return ImportResult.failure(
-                "Rejected incomplete EuroGirls document "
-                "(name is required)"
+        if not result.records:
+            message = (
+                result.errors[0]
+                if result.errors
+                else "Rejected incomplete EuroGirls document (name is required)"
             )
+            return ImportResult.failure(message)
 
-        try:
-            record = self._normalizer.normalize(extracted, archive)
-        except Exception as exc:
-            logger.exception("EuroGirls normalize failed for %s", path)
-            return ImportResult.failure(f"EuroGirls normalize failed: {exc}")
-
+        record = result.records[0]
         logger.info(
             "EuroGirls imported %s name=%r id=%r rates=%d services=%d photos=%d",
             path.name,
@@ -150,9 +132,4 @@ class EuroGirlsImporter(ProfileImporter):
             len(record.get("services") or []),
             len(record.get("photos") or []),
         )
-        return [record], 0
-
-    @staticmethod
-    def _validate_extracted(extracted: ExtractedProfile) -> bool:
-        """Reject incomplete documents; warnings are non-fatal."""
-        return extracted.is_complete
+        return list(result.records), result.skipped

@@ -1,4 +1,6 @@
-"""Configurable import processing chain.
+"""Configurable import processing chains.
+
+Platform persistence chain::
 
 ```
 pipeline:
@@ -8,6 +10,22 @@ pipeline:
   - duplicate_detector
   - scorer
   - repository
+```
+
+Plugin ingest chain::
+
+```
+Downloader
+ ↓
+Parser
+ ↓
+Extractor
+ ↓
+Normalizer
+ ↓
+Validator
+ ↓
+Importer
 ```
 """
 
@@ -25,6 +43,11 @@ from profile_intelligence.application.pipeline.duplicate_detector import (
 )
 from profile_intelligence.application.pipeline.normalizer import ProfileNormalizer
 from profile_intelligence.application.pipeline.parser import DocumentParser
+from profile_intelligence.application.pipeline.plugin_pipeline import (
+    PLUGIN_PIPELINE_STAGES,
+    PluginPipeline,
+    PluginPipelineResult,
+)
 from profile_intelligence.application.pipeline.repository_stage import (
     RepositoryStage,
     RepositoryStageResult,
@@ -34,10 +57,13 @@ from profile_intelligence.application.pipeline.validator import ProfileValidator
 
 __all__ = [
     "DEFAULT_PIPELINE_STAGES",
+    "PLUGIN_PIPELINE_STAGES",
     "DocumentParser",
     "DuplicateDetector",
     "DuplicateFilterResult",
     "DuplicateMatch",
+    "PluginPipeline",
+    "PluginPipelineResult",
     "ProcessingChain",
     "ProcessingResult",
     "ProfileNormalizer",

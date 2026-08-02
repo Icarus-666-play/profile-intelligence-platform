@@ -26,24 +26,44 @@ Import
 Implementation: `application/use_cases/import_flow.py`  
 Value objects: `domain/value_objects/import_flow.py`
 
-## Internal transform stages
+## Plugin ingest stages
+
+Site plugins (EuroGirls, NewWebsite, …) implement:
 
 ```
-File
+Downloader
  ↓
-RawDocument          (importer plugin)
+Parser
  ↓
-parser
+Extractor
  ↓
-normalizer
+Normalizer
+ ↓
+Validator
+ ↓
+Importer
+```
+
+`DocumentDownloader` materializes URLs/files; `PluginPipeline` runs Parser→…→Validator and returns RawRecords for the Importer (`ProfileImporter.parse_profiles`).
+
+## Platform transform stages
+
+After the plugin Importer emits RawRecords:
+
+```
+File / RawDocument
+ ↓
+parser                 (resolve plugin + load records)
+ ↓
+normalizer             (RawRecord → ProfileDraft)
  ↓
 validator
  ↓
 duplicate_detector
  ↓
-scorer               (Confidence Score 0–100)
+scorer                 (Confidence Score 0–100)
  ↓
-repository           (upsert Profile + children)
+repository             (upsert Profile + children)
  ↓
 SQLite
 ```

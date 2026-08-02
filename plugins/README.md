@@ -7,20 +7,27 @@ startup from `paths.plugins_dir` (default: this directory).
 
 ```
 plugins/
-  eurogirls/     # Sprint 1 — Safari .webarchive importer (production)
-  newwebsite/    # HTML/JSON importer (parser → extract → validate → normalize)
+  eurogirls/     # Safari .webarchive importer (production)
+  newwebsite/    # HTML/JSON importer
   eros/          # Eros directory export importer (scaffold)
   custom/        # Template for your own importers
 ```
 
-### EuroGirls (Sprint 1)
+Canonical ingest chain (via `PluginPipeline`):
+
+```
+Downloader → Parser → Extractor → Normalizer → Validator → Importer
+```
+
+### EuroGirls
 
 ```
 eurogirls/
   plugin.py       # EuroGirlsImporter
-  parser.py       # .webarchive → HTML
-  extractor.py    # BeautifulSoup structured extract
-  normalizer.py   # → platform RawRecord
+  parser.py
+  extractor.py
+  normalizer.py
+  validator.py
   tests.py
 ```
 

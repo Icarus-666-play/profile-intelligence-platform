@@ -12,6 +12,7 @@ from profile_intelligence.core.config import AppConfig
 from profile_intelligence.domain.interfaces.repositories import IProfileRepository
 from profile_intelligence.infrastructure.analysis import AnalysisService
 from profile_intelligence.infrastructure.dashboard import DashboardService
+from profile_intelligence.infrastructure.download import DocumentDownloader
 from profile_intelligence.infrastructure.importers.registry import ImporterRegistry
 
 
@@ -28,6 +29,7 @@ class ApiContext:
     dashboard: DashboardService
     analysis: AnalysisService
     importers: ImporterRegistry
+    downloader: DocumentDownloader | None = None
 
 
 __all__ = ["ApiContext"]

@@ -151,6 +151,7 @@ ignore = [
 "src/profile_intelligence/main.py" = ["T201"]
 "src/profile_intelligence/ui/**" = ["E501", "T201"]
 "src/profile_intelligence/api/routes.py" = ["S310"]
+"src/profile_intelligence/infrastructure/download/**" = ["S310"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["profile_intelligence"]

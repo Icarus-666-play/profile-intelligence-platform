@@ -1,6 +1,22 @@
 """NewWebsite importer plugin.
 
 ```
+Downloader
+ ↓
+Parser
+ ↓
+Extractor
+ ↓
+Normalizer
+ ↓
+Validator
+ ↓
+Importer
+```
+
+Package layout::
+
+```
 plugins/
   newwebsite/
     plugin.py
@@ -9,20 +25,6 @@ plugins/
     normalizer.py
     validator.py
 ```
-
-Pipeline::
-
-    HTML / JSON
-         ↓
-    Parser
-         ↓
-    Extractor
-         ↓
-    Validator
-         ↓
-    Normalizer
-         ↓
-    Domain Profile → repository
 """
 
 from __future__ import annotations
@@ -33,8 +35,9 @@ from typing import ClassVar
 from newwebsite.extractor import NewWebsiteExtractor
 from newwebsite.normalizer import NewWebsiteNormalizer
 from newwebsite.parser import PARSER_VERSION, NewWebsiteParser
+from newwebsite.stage_validator import NewWebsiteStageValidator
 from newwebsite.validator import NewWebsiteValidator
-from profile_intelligence.core.exceptions import ImporterError
+from profile_intelligence.application.pipeline.plugin_pipeline import PluginPipeline
 from profile_intelligence.core.logging import get_logger
 from profile_intelligence.core.types import PathLike
 from profile_intelligence.infrastructure.importers.base import ImportResult
@@ -47,14 +50,14 @@ logger = get_logger("importers.external.newwebsite")
 
 
 class NewWebsiteImporter(ProfileImporter):
-    """Scaffold / production-ready NewWebsite HTML+JSON importer.
+    """NewWebsite HTML/JSON importer via :class:`PluginPipeline`.
 
     Dependencies are injectable for tests:
 
     - :class:`NewWebsiteParser`
     - :class:`NewWebsiteExtractor`
-    - :class:`NewWebsiteValidator`
     - :class:`NewWebsiteNormalizer`
+    - :class:`NewWebsiteValidator`
     """
 
     name: ClassVar[str] = "newwebsite"
@@ -75,11 +78,18 @@ class NewWebsiteImporter(ProfileImporter):
         extractor: NewWebsiteExtractor | None = None,
         validator: NewWebsiteValidator | None = None,
         normalizer: NewWebsiteNormalizer | None = None,
+        pipeline: PluginPipeline | None = None,
     ) -> None:
         self._parser = parser or NewWebsiteParser()
         self._extractor = extractor or NewWebsiteExtractor()
         self._validator = validator or NewWebsiteValidator()
         self._normalizer = normalizer or NewWebsiteNormalizer()
+        self._pipeline = pipeline or PluginPipeline(
+            parser=self._parser,
+            extractor=self._extractor,
+            normalizer=self._normalizer,
+            validator=NewWebsiteStageValidator(self._validator),
+        )
 
     def can_handle(self, path: PathLike) -> bool:
         """Accept NewWebsite-marked files or sniffable NewWebsite content."""
@@ -107,56 +117,36 @@ class NewWebsiteImporter(ProfileImporter):
         path: Path,
         **options: object,
     ) -> ProfileParseOutcome:
-        """Parse one NewWebsite source into normalized raw records."""
-        try:
-            document = self._parser.parse(path)
-        except ImporterError as exc:
-            logger.warning("NewWebsite parse failed for %s: %s", path, exc)
-            return ImportResult.failure(str(exc))
-        except Exception as exc:
-            logger.exception("Unexpected NewWebsite parse error for %s", path)
-            return ImportResult.failure(
-                f"Unexpected NewWebsite parse error: {exc}"
-            )
-
-        if not document.is_complete:
-            return ImportResult.failure("Incomplete NewWebsite document")
-
+        """Parser → Extractor → Normalizer → Validator → records."""
         if not (
             self.matches_source_marker(path)
             or path.name.lower().endswith((".newwebsite.html", ".newwebsite.json"))
-            or self._parser.looks_like_newwebsite(document)
         ):
-            return ImportResult.failure(
-                "Document does not look like a NewWebsite profile"
-            )
-
-        records = []
-        skipped = 0
-        for extracted in self._extractor.extract_many(document):
-            validation = self._validator.validate(extracted)
-            for warning in validation.warnings:
-                logger.warning("NewWebsite %s: %s", path.name, warning)
-            if not validation.is_valid:
-                skipped += 1
-                continue
             try:
-                records.append(self._normalizer.normalize(extracted, document))
-            except Exception as exc:
-                logger.exception("NewWebsite normalize failed for %s", path)
+                document = self._parser.parse(path)
+            except Exception as exc:  # noqa: BLE001 — sniff/parse must not crash import
+                return ImportResult.failure(f"Unexpected NewWebsite parse error: {exc}")
+            if not self._parser.looks_like_newwebsite(document):
                 return ImportResult.failure(
-                    f"NewWebsite normalize failed: {exc}"
+                    "Document does not look like a NewWebsite profile"
                 )
 
-        if not records:
-            return ImportResult.failure(
-                "No valid NewWebsite profiles found (name is required)"
+        result = self._pipeline.run(path)
+        for warning in result.warnings:
+            logger.warning("NewWebsite %s: %s", path.name, warning)
+        if not result.records:
+            message = (
+                result.errors[0]
+                if result.errors
+                else "No valid NewWebsite profiles found (name is required)"
             )
+            return ImportResult.failure(message)
 
         logger.info(
-            "NewWebsite imported %s records=%d skipped=%d",
+            "NewWebsite imported %s records=%d skipped=%d stages=%s",
             path.name,
-            len(records),
-            skipped,
+            len(result.records),
+            result.skipped,
+            "→".join(result.stages_run),
         )
-        return records, skipped
+        return list(result.records), result.skipped

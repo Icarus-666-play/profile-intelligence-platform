@@ -134,6 +134,12 @@ class EuroGirlsExtractor:
     def __init__(self, *, hash_algorithm: str = "sha256") -> None:
         self._hash_algorithm = hash_algorithm
 
+    def extract_many(
+        self, archive: ParsedWebArchive
+    ) -> tuple[ExtractedProfile, ...]:
+        """Return extracted profiles (EuroGirls is one profile per archive)."""
+        return (self.extract(archive),)
+
     def extract(self, archive: ParsedWebArchive) -> ExtractedProfile:
         """Parse HTML with BeautifulSoup and return structured data."""
         soup = BeautifulSoup(archive.html, "html.parser")

@@ -55,6 +55,7 @@ from profile_intelligence.infrastructure.database.repository import (
     create_profile_repository,
 )
 from profile_intelligence.infrastructure.database.seed import DatabaseSeeder
+from profile_intelligence.infrastructure.download import DocumentDownloader
 from profile_intelligence.infrastructure.excel.exporter import ExcelExporter
 from profile_intelligence.infrastructure.importers.import_ledger import ImportFileLedger
 from profile_intelligence.infrastructure.importers.registry import ImporterRegistry
@@ -176,6 +177,17 @@ def build_container(
             ).media.download_timeout_seconds,
         ),
         name="image_downloader",
+    )
+    container.register(
+        DocumentDownloader,
+        lambda: DocumentDownloader(
+            container.resolve(AppConfig).data_dir / "inbox" / "downloads",
+            allow_remote=container.resolve(AppConfig).media.allow_remote_download,
+            timeout_seconds=container.resolve(
+                AppConfig
+            ).media.download_timeout_seconds,
+        ),
+        name="document_downloader",
     )
     container.register(
         ImageRepository,

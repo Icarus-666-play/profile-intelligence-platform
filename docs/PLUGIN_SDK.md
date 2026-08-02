@@ -6,7 +6,29 @@ Also see the shorter operator guide: [importers.md](importers.md) and `plugins/R
 
 ## Concepts
 
-An **importer plugin** turns a local file into raw profile row records (`RawRecord` dicts). The core pipeline then normalizes, validates, deduplicates, scores, and persists.
+An **importer plugin** turns a local file into raw profile row records (`RawRecord` dicts). Prefer the canonical site ingest chain:
+
+```
+Downloader
+ ↓
+Parser
+ ↓
+Extractor
+ ↓
+Normalizer
+ ↓
+Validator
+ ↓
+Importer
+```
+
+Orchestrator: `PluginPipeline` (`application/pipeline/plugin_pipeline.py`)  
+Ports: `domain/interfaces/plugin_pipeline.py`  
+Downloader: `infrastructure/download/DocumentDownloader`
+
+The platform persistence chain then continues:
+
+`parser → normalizer → validator → duplicate_detector → scorer → repository`
 
 Prefer subclassing `ProfileImporter` from:
 
@@ -52,11 +74,11 @@ External packages live under repository `plugins/<name>/`:
 ```
 plugins/mysite/
   __init__.py
-  plugin.py          # Importer class (required discovery entry)
-  parser.py          # optional
-  extractor.py       # optional
-  normalizer.py      # optional
-  validator.py       # optional
+  plugin.py          # Importer (composes PluginPipeline)
+  parser.py          # Parser stage
+  extractor.py       # Extractor stage
+  normalizer.py      # Normalizer stage
+  validator.py       # Validator stage
   tests.py           # pytest module (pythonpath includes plugins/)
 ```
 

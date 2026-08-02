@@ -5,8 +5,6 @@ from __future__ import annotations
 import base64
 import re
 import tempfile
-import urllib.error
-import urllib.request
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -22,6 +20,7 @@ from profile_intelligence.api.serializers import (
 )
 from profile_intelligence.core.exceptions import PipError, ValidationError
 from profile_intelligence.core.logging import get_logger
+from profile_intelligence.infrastructure.download import DocumentDownloader
 
 logger = get_logger(__name__)
 
@@ -60,7 +59,7 @@ def dispatch(
 
 
 def import_url(ctx: ApiContext, body: dict[str, Any]) -> dict[str, Any]:
-    """POST /api/import/url — download a URL then run Import."""
+    """POST /api/import/url — Downloader stage then Import."""
     url = str(body.get("url") or "").strip()
     if not url:
         raise ApiError("Field 'url' is required", status=400)
@@ -75,28 +74,22 @@ def import_url(ctx: ApiContext, body: dict[str, Any]) -> dict[str, Any]:
 
     plugin = _optional_str(body, "plugin")
     source = _optional_str(body, "source")
-    timeout = float(ctx.config.media.download_timeout_seconds)
-
-    suffix = Path(parsed.path).suffix or ".bin"
+    downloader = ctx.downloader or DocumentDownloader(
+        ctx.config.data_dir / "inbox" / "downloads",
+        allow_remote=ctx.config.media.allow_remote_download,
+        timeout_seconds=float(ctx.config.media.download_timeout_seconds),
+    )
     try:
-        content = _download_http(url, timeout=timeout)
-    except (urllib.error.URLError, TimeoutError, ValueError, OSError) as exc:
-        raise ApiError(f"Failed to download url: {exc}", status=400) from exc
-
-    inbox = ctx.config.data_dir / "inbox" / "api-url"
-    inbox.mkdir(parents=True, exist_ok=True)
-    target = inbox / f"download{suffix}"
-    target.write_bytes(content)
-
-    try:
+        artifact = downloader.download(url)
         summary = ctx.import_flow.run_import(
-            target, source=source, plugin_name=plugin
+            artifact.path, source=source, plugin_name=plugin
         )
     except (OSError, PipError, ValueError) as exc:
         raise ApiError(str(exc), status=400) from exc
 
     payload = import_summary_to_dict(summary)
     payload["url"] = url
+    payload["downloaded_path"] = str(artifact.path)
     return payload
 
 
@@ -291,16 +284,6 @@ def reload_plugins(ctx: ApiContext) -> dict[str, Any]:
         "reloaded": count,
         "items": [plugin_to_dict(plugin) for plugin in ctx.importers.list_plugins()],
     }
-
-
-def _download_http(url: str, *, timeout: float) -> bytes:
-    """Fetch an http(s) URL into memory (scheme pre-validated by caller)."""
-    request = urllib.request.Request(
-        url,
-        headers={"User-Agent": "ProfileIntelligencePlatform/0.1"},
-    )
-    with urllib.request.urlopen(request, timeout=timeout) as response:
-        return bytes(response.read())
 
 
 def _optional_str(body: dict[str, Any], key: str) -> str | None:
