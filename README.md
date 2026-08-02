@@ -23,7 +23,7 @@ Local-first desktop application for profile analysis, scoring, Excel reporting, 
 
 ### Milestone 2 — Dashboard UI
 - Local multi-page UI: Dashboard, Search, Import, Compare, Reports, Settings, Plugins, Logs, About
-- Launch: `pip-app ui` (default `http://127.0.0.1:8765/`)
+- Launch: `./start.sh` or `pip-app ui` (default `http://127.0.0.1:8765/`)
 
 ## Quick start
 
@@ -39,6 +39,9 @@ pip-app migrate
 pip-app import samples/profile.webarchive
 pip-app list
 pip-app search melinda
+
+./start.sh
+# uvicorn profile_intelligence.api.main:app --reload
 ```
 
 See [docs/getting-started.md](docs/getting-started.md) and [docs/milestones.md](docs/milestones.md).

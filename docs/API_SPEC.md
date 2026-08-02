@@ -31,6 +31,8 @@ app = create_fastapi_app(create_api_context())
 ```
 
 ```bash
+./start.sh
+# or:
 uvicorn profile_intelligence.api.main:app --reload
 ```
 

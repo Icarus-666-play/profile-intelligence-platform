@@ -90,6 +90,8 @@ pip-app import samples/profiles.csv
 pip-app compare 1 2
 pip-app export
 pip-app dashboard
+./start.sh
+# or:
 pip-app ui
 # or:
 uvicorn profile_intelligence.api.main:app --reload
@@ -104,7 +106,8 @@ uvicorn profile_intelligence.api.main:app --reload
 | `compare <id_a> <id_b>` | Side-by-side profile diff |
 | `export` | Write Excel report under `exports/` |
 | `dashboard` | Console dashboard summary |
-| `ui` | Local Dashboard UI (Dashboard…About) |
+| `./start.sh` | Local FastAPI + React UI (`uvicorn …main:app --reload`) |
+| `ui` | Same stack via `pip-app ui` |
 | `uvicorn …main:app` | Same FastAPI + React stack with `--reload` |
 
 Additional utilities: `seed`, `score`, `importers`.
