@@ -1,4 +1,4 @@
-"""Normalize raw import rows into typed profile drafts."""
+"""Domain profile entity (draft) and field-mapping extractor."""
 
 from __future__ import annotations
 
