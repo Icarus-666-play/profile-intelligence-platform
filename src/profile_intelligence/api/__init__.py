@@ -4,6 +4,7 @@
 Browser → React → REST API → FastAPI → Application → Repository → SQLite → Files
 ```
 
+Bootstrap: :func:`profile_intelligence.bootstrap.create_application_context`.  
 Factory: :func:`profile_intelligence.api.fastapi_app.create_fastapi_app`.  
 ASGI entry: ``uvicorn profile_intelligence.api.main:app --reload``.
 

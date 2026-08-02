@@ -630,9 +630,9 @@ def _cmd_import(args: argparse.Namespace, container: Container) -> int:
 
 
 def _cmd_ui(args: argparse.Namespace, container: Container) -> int:
-    from profile_intelligence.api.context import create_api_context
+    from profile_intelligence.bootstrap import create_application_context
 
-    api_context = create_api_context(container=container, start=False)
+    api_context = create_application_context(container=container, start=False)
     if bool(getattr(args, "legacy_wsgi", False)):
         context = UiContext(
             config=container.resolve(AppConfig),

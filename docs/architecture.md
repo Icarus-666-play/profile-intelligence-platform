@@ -61,27 +61,22 @@ unchanged; React talks only to REST. File blobs live under `FileStorage`
 (`data/media`, `data/inbox`, `exports/`) beside the SQLite database.
 
 ```python
-from profile_intelligence.api.context import create_api_context
+from profile_intelligence.bootstrap import create_application_context
 from profile_intelligence.api.fastapi_app import create_fastapi_app
 
-ctx = create_api_context()
+ctx = create_application_context()
 app = create_fastapi_app(ctx)
 ```
 
-`api/main.py` (uvicorn target) is the same assignment:
-
-```python
-app = create_fastapi_app(create_api_context())
-```
+`api/main.py` is exactly that assignment (official ASGI entry).
 
 ```bash
-make run          # ./start.sh
-make backend      # uvicorn profile_intelligence.api.main:app --reload
-make frontend     # cd frontend && npm run dev
-make build-ui     # cd frontend && npm run build
+./scripts/start.sh   # backend :8000 + frontend :5173
+make run / make backend / make frontend / make build-ui
+uvicorn profile_intelligence.api.main:app --reload
 ```
 
-Source for the SPA: `frontend/` (Vite + React).
+See [BOOTSTRAP.md](BOOTSTRAP.md). Source for the SPA: `frontend/` (Vite + React).
 
 React entry + navigation:
 

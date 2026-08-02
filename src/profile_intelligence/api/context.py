@@ -1,11 +1,13 @@
 """Shared dependencies for the local REST API.
 
+Context construction lives in :func:`profile_intelligence.bootstrap.create_application_context`.
+
 Typical wiring::
 
-    from profile_intelligence.api.context import create_api_context
+    from profile_intelligence.bootstrap import create_application_context
     from profile_intelligence.api.fastapi_app import create_fastapi_app
 
-    ctx = create_api_context()
+    ctx = create_application_context()
     app = create_fastapi_app(ctx)
 """
 
@@ -13,7 +15,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from profile_intelligence.application.use_cases.application import ApplicationService
 from profile_intelligence.application.use_cases.compare_service import CompareService
 from profile_intelligence.application.use_cases.daily_pipeline import DailyPipeline
 from profile_intelligence.application.use_cases.import_flow import ImportFlow
@@ -71,38 +72,14 @@ def create_api_context(
     root_dir: PathLike | None = None,
     start: bool = True,
 ) -> ApiContext:
-    """Build an :class:`ApiContext` from the DI container.
+    """Backward-compatible alias for :func:`create_application_context`."""
+    from profile_intelligence.bootstrap import create_application_context
 
-    When *container* is omitted, :func:`build_container` wires a fresh stack
-    under *root_dir* (or the process default). With ``start=True`` (default),
-    migrations run and importer plugins are discovered.
-    """
-    if container is None:
-        from profile_intelligence.bootstrap import build_container
-
-        container = build_container(config_path=config_path, root_dir=root_dir)
-
-    if start:
-        container.resolve(ApplicationService).start()
-
-    return ApiContext(
-        config=container.resolve(AppConfig),
-        profiles=container.resolve(ProfileService),
-        repository=container.resolve(IProfileRepository),
-        imports=container.resolve(ImportService),
-        import_flow=container.resolve(ImportFlow),
-        compare=container.resolve(CompareService),
-        dashboard=container.resolve(DashboardService),
-        analysis=container.resolve(AnalysisService),
-        importers=container.resolve(ImporterRegistry),
-        downloader=container.resolve(DocumentDownloader),
-        auth=container.resolve(LocalAuthService),
-        import_activity=container.resolve(ImportActivityStore),
-        database=container.resolve(Database),
-        reports_analytics=container.resolve(ReportsAnalyticsService),
-        backups=container.resolve(BackupService),
-        daily=container.resolve(DailyPipeline),
-        daily_activity=container.resolve(DailyActivityStore),
+    return create_application_context(
+        container=container,
+        config_path=config_path,
+        root_dir=root_dir,
+        start=start,
     )
 
 

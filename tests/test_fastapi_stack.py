@@ -73,39 +73,37 @@ def test_create_fastapi_app_alias(temp_root: Path) -> None:
         app_svc.shutdown()
 
 
-def test_create_api_context_and_fastapi_app(temp_root: Path) -> None:
+def test_create_application_context_and_fastapi_app(temp_root: Path) -> None:
     """Exact wiring used by the FastAPI entry docs."""
-    from profile_intelligence.api.context import create_api_context
     from profile_intelligence.api.fastapi_app import create_fastapi_app as build_app
+    from profile_intelligence.bootstrap import create_application_context
 
-    ctx = create_api_context(root_dir=temp_root)
+    ctx = create_application_context(root_dir=temp_root)
     app = build_app(ctx, serve_spa=False)
     client = TestClient(app)
     assert client.get("/api/health").status_code == 200
+    assert client.get("/api/health").json()["status"] == "ok"
     assert ctx.daily is not None
     assert ctx.database is not None
 
 
 def test_uvicorn_main_app_entry(temp_root: Path, monkeypatch: object) -> None:
-    """``main.py`` assigns ``app = create_fastapi_app(...)``."""
-    from profile_intelligence.api.context import create_api_context
+    """``main.py`` assigns ``app = create_fastapi_app(ctx)``."""
     import profile_intelligence.api.main as main_mod
+    from profile_intelligence.bootstrap import create_application_context
 
-    # Rebuild the module-level app against the temp root (import already
-    # created one against the process default).
+    ctx = create_application_context(root_dir=temp_root)
+    monkeypatch.setattr(main_mod, "ctx", ctx)
     monkeypatch.setattr(
         main_mod,
         "app",
-        create_fastapi_app(
-            create_api_context(root_dir=temp_root),
-            serve_spa=False,
-        ),
+        create_fastapi_app(ctx, serve_spa=False),
     )
     client = TestClient(main_mod.app)
-    assert client.get("/api/health").json()["stack"] == "fastapi"
-    assert "create_fastapi_app" in Path(main_mod.__file__).read_text(
-        encoding="utf-8"
-    )
+    assert client.get("/api/health").json()["status"] == "ok"
+    source = Path(main_mod.__file__).read_text(encoding="utf-8")
+    assert "create_application_context" in source
+    assert "create_fastapi_app" in source
 
 
 def test_fastapi_health_and_dashboard(temp_root: Path) -> None:

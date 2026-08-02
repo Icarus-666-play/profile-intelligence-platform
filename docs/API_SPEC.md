@@ -17,22 +17,17 @@ Default bind: `127.0.0.1:8765` (loopback). No authentication layer — see [SECU
 Served by FastAPI. Typical wiring:
 
 ```python
-from profile_intelligence.api.context import create_api_context
+from profile_intelligence.bootstrap import create_application_context
 from profile_intelligence.api.fastapi_app import create_fastapi_app
 
-ctx = create_api_context()
+ctx = create_application_context()
 app = create_fastapi_app(ctx)
 ```
 
-`api/main.py` assigns the same ASGI app for uvicorn:
-
-```python
-app = create_fastapi_app(create_api_context())
-```
+`api/main.py` is the official ASGI entry (same two lines).
 
 ```bash
-./start.sh
-# or:
+./scripts/start.sh
 uvicorn profile_intelligence.api.main:app --reload
 ```
 
@@ -63,8 +58,8 @@ POST   /api/plugins/reload
 
 Auth supports the React entry flow **Login (optional) → Home → Dashboard**. Default `auth.enabled: false` (guest continue).
 
-Implementation: `src/profile_intelligence/api/` (`fastapi_app.py` factory;
-`main.py` assigns `app = create_fastapi_app(create_api_context())`).
+Implementation: `bootstrap.create_application_context()` + `api/fastapi_app.py`
+factory; ASGI entry `api/main.py`. See [BOOTSTRAP.md](BOOTSTRAP.md).
 
 ### Conventions
 

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from profile_intelligence.application.events import InMemoryEventBus
 from profile_intelligence.application.use_cases import ImportPipeline
 from profile_intelligence.application.use_cases.application import ApplicationService
@@ -81,6 +83,9 @@ from profile_intelligence.infrastructure.scoring.completeness import Completenes
 from profile_intelligence.infrastructure.scoring.confidence import ConfidenceScorer
 from profile_intelligence.infrastructure.search.service import ProfileSearchService
 from profile_intelligence.infrastructure.storage import FileStorage
+
+if TYPE_CHECKING:
+    from profile_intelligence.api.context import ApiContext
 
 logger = get_logger(__name__)
 
@@ -443,3 +448,47 @@ def build_container(
 
     logger.debug("Dependency container built")
     return container
+
+
+def create_application_context(
+    *,
+    container: Container | None = None,
+    config_path: PathLike | None = None,
+    root_dir: PathLike | None = None,
+    start: bool = True,
+) -> ApiContext:
+    """Build a fully initialized :class:`~profile_intelligence.api.context.ApiContext`.
+
+    This is the single composition entry for FastAPI / uvicorn / ``pip-app ui``.
+    When *container* is omitted, :func:`build_container` wires a fresh stack.
+    With ``start=True`` (default), migrations run and importer plugins are
+    discovered via :class:`ApplicationService`.
+    """
+    # Late import avoids a package-level cycle (api.context ↔ bootstrap).
+    from profile_intelligence.api.context import ApiContext
+
+    if container is None:
+        container = build_container(config_path=config_path, root_dir=root_dir)
+
+    if start:
+        container.resolve(ApplicationService).start()
+
+    return ApiContext(
+        config=container.resolve(AppConfig),
+        profiles=container.resolve(ProfileService),
+        repository=container.resolve(IProfileRepository),
+        imports=container.resolve(ImportService),
+        import_flow=container.resolve(ImportFlow),
+        compare=container.resolve(CompareService),
+        dashboard=container.resolve(DashboardService),
+        analysis=container.resolve(AnalysisService),
+        importers=container.resolve(ImporterRegistry),
+        downloader=container.resolve(DocumentDownloader),
+        auth=container.resolve(LocalAuthService),
+        import_activity=container.resolve(ImportActivityStore),
+        database=container.resolve(Database),
+        reports_analytics=container.resolve(ReportsAnalyticsService),
+        backups=container.resolve(BackupService),
+        daily=container.resolve(DailyPipeline),
+        daily_activity=container.resolve(DailyActivityStore),
+    )

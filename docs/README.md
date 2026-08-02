@@ -35,6 +35,7 @@ docs/
 
 ## Engineering guides
 
+- [Bootstrap & startup](BOOTSTRAP.md)
 - [Getting Started](getting-started.md)
 - [Architecture](architecture.md)
 - [Configuration](configuration.md)

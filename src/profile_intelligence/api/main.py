@@ -1,4 +1,4 @@
-"""ASGI entrypoint for uvicorn.
+"""Official ASGI entry point for Uvicorn.
 
 ```
 Browser → React → REST API → FastAPI → Application → Repository → SQLite → File Storage
@@ -11,9 +11,10 @@ Run::
 
 from __future__ import annotations
 
-from profile_intelligence.api.context import create_api_context
 from profile_intelligence.api.fastapi_app import create_fastapi_app
+from profile_intelligence.bootstrap import create_application_context
 
-app = create_fastapi_app(create_api_context())
+ctx = create_application_context()
+app = create_fastapi_app(ctx)
 
-__all__ = ["app"]
+__all__ = ["app", "ctx"]

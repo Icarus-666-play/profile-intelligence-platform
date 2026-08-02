@@ -6,23 +6,29 @@ import webbrowser
 
 from profile_intelligence.api.context import ApiContext
 from profile_intelligence.api.fastapi_app import create_fastapi_app
+from profile_intelligence.bootstrap import create_application_context
 from profile_intelligence.core.logging import get_logger
 
 logger = get_logger(__name__)
 
 
 def serve_fastapi(
-    api_context: ApiContext,
+    api_context: ApiContext | None = None,
     *,
     host: str = "127.0.0.1",
     port: int = 8765,
     open_browser: bool = True,
     serve_spa: bool = True,
 ) -> None:
-    """Serve React + FastAPI until interrupted."""
+    """Serve React + FastAPI until interrupted.
+
+    When *api_context* is omitted, builds one via
+    :func:`~profile_intelligence.bootstrap.create_application_context`.
+    """
     import uvicorn
 
-    app = create_fastapi_app(api_context, serve_spa=serve_spa)
+    ctx = api_context or create_application_context()
+    app = create_fastapi_app(ctx, serve_spa=serve_spa)
     url = f"http://{host}:{port}/"
     logger.info("FastAPI + React listening on %s", url)
     print("Profile Intelligence Platform — React + FastAPI")

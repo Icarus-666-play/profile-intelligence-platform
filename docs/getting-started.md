@@ -90,14 +90,14 @@ pip-app import samples/profiles.csv
 pip-app compare 1 2
 pip-app export
 pip-app dashboard
-./start.sh
-# or:
-make run
-# or:
-pip-app ui
-# or:
-uvicorn profile_intelligence.api.main:app --reload
+./scripts/start.sh
+# Windows: scripts\start.bat
+# or: make run
+# or: pip-app ui
+# or: uvicorn profile_intelligence.api.main:app --reload
 ```
+
+See [BOOTSTRAP.md](BOOTSTRAP.md) for the DI / ASGI startup sequence.
 
 | Command | Purpose |
 |---------|---------|
@@ -108,12 +108,12 @@ uvicorn profile_intelligence.api.main:app --reload
 | `compare <id_a> <id_b>` | Side-by-side profile diff |
 | `export` | Write Excel report under `exports/` |
 | `dashboard` | Console dashboard summary |
-| `./start.sh` / `make run` | Local FastAPI + React UI (`uvicorn …main:app --reload`) |
-| `make backend` | API only via uvicorn `--reload` |
-| `make frontend` | Vite React dev server |
-| `make build-ui` | Build SPA into `web/dist` |
-| `ui` | Same stack via `pip-app ui` |
-| `uvicorn …main:app` | Same FastAPI + React stack with `--reload` |
+| `./scripts/start.sh` / `make run` | Backend `:8000` + React `:5173` |
+| `make backend` | API only via uvicorn `--reload` on `:8000` |
+| `make frontend` | Vite React dev server on `:5173` |
+| `./scripts/build-ui.sh` / `make build-ui` | Build SPA into `web/dist` |
+| `ui` | FastAPI + built SPA via `pip-app ui` (default `:8765`) |
+| `uvicorn …main:app` | Official ASGI entry |
 
 Additional utilities: `seed`, `score`, `importers`.
 

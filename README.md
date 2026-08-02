@@ -23,9 +23,9 @@ Local-first desktop application for profile analysis, scoring, Excel reporting, 
 
 ### Milestone 2 — Dashboard UI
 - Local multi-page UI: Dashboard, Search, Import, Compare, Reports, Settings, Plugins, Logs, About
-- Launch: `./start.sh` or `pip-app ui` (default `http://127.0.0.1:8765/`)
+- Launch: `./scripts/start.sh` (backend `:8000` + React `:5173`) or `pip-app ui`
 
-## Quick start
+## Development
 
 ```bash
 python -m venv .venv
@@ -33,42 +33,64 @@ python -m venv .venv
 source .venv/bin/activate
 
 pip install -U pip
-pip install -e .
+pip install -e ".[dev]"
 
-pip-app migrate
-pip-app import samples/profile.webarchive
-pip-app list
-pip-app search melinda
-
-./start.sh
-# or: make run
+./scripts/start.sh
+# Windows: scripts\start.bat
 ```
 
-Developer targets (`Makefile`):
+This activates the venv, installs missing deps, starts FastAPI, starts the React
+dev server, waits for health, and opens the browser.
+
+| URL | Purpose |
+|-----|---------|
+| http://localhost:5173 | React UI |
+| http://127.0.0.1:8000/api/docs | Swagger |
+| http://127.0.0.1:8000/api/health | Health |
+
+ASGI wiring (`src/profile_intelligence/api/main.py`):
+
+```python
+from profile_intelligence.bootstrap import create_application_context
+from profile_intelligence.api.fastapi_app import create_fastapi_app
+
+ctx = create_application_context()
+app = create_fastapi_app(ctx)
+```
 
 ```bash
-make backend    # uvicorn profile_intelligence.api.main:app --reload
-make frontend   # cd frontend && npm run dev
-make build-ui   # cd frontend && npm run build
-make run        # ./start.sh
+uvicorn profile_intelligence.api.main:app --reload
+pip-app ui
+make backend / make frontend / make build-ui / make run
 ```
 
-See [docs/getting-started.md](docs/getting-started.md) and [docs/milestones.md](docs/milestones.md).
+## Production
+
+```bash
+./scripts/build-ui.sh          # or: cd frontend && npm install && npm run build
+uvicorn profile_intelligence.api.main:app
+```
+
+Serves the built SPA from `src/profile_intelligence/web/dist/` plus `/api`.
+
+See [docs/BOOTSTRAP.md](docs/BOOTSTRAP.md), [docs/getting-started.md](docs/getting-started.md).
 
 ## Project structure
 
 ```
 ├── config/                 # settings.yaml, logging.yaml, scoring.yaml
-├── docs/                   # Architecture & guides
-├── scripts/                # run_app.py, migrate.py
+├── docs/                   # Architecture & guides (incl. BOOTSTRAP.md)
+├── frontend/               # React (Vite) SPA
+├── scripts/                # start.sh / start.bat / build-ui.*
 ├── src/profile_intelligence/
+│   ├── api/                # FastAPI (main.py ASGI entry)
+│   ├── application/        # use cases
+│   ├── bootstrap.py        # DI + create_application_context()
 │   ├── core/               # config, logging, DI, exceptions
-│   ├── database/           # connection, models, repository, migrate, seed
 │   ├── domain/             # entities, value_objects, interfaces
-│   ├── application/        # use_cases (import, search, compare, …)
 │   ├── infrastructure/     # database, importers, excel, search, scoring
-│   └── core/               # config, logging, DI, exceptions
-└── tests/                  # unit & integration tests
+│   └── web/dist/           # Built React SPA
+└── tests/
 ```
 
 ## Documentation
@@ -77,14 +99,12 @@ Product set: [docs/README.md](docs/README.md) (`PRODUCT_VISION` … `ADR/`).
 
 | Document | Description |
 |----------|-------------|
+| [Bootstrap](docs/BOOTSTRAP.md) | Startup, DI, ApiContext, FastAPI, React |
 | [Product Vision](docs/PRODUCT_VISION.md) | Why PIP exists |
-| [Roadmap](docs/ROADMAP.md) | Milestones & next themes |
 | [Getting Started](docs/getting-started.md) | Install, configure, run |
 | [Architecture](docs/architecture.md) | Modules and design |
 | [Plugin SDK](docs/PLUGIN_SDK.md) | Build importer plugins |
-| [Database ERD](docs/DATABASE_ERD.md) | Schema & relationships |
 | [Security](docs/SECURITY.md) | Local-first security |
-| [Milestones](docs/milestones.md) | Acceptance criteria |
 
 ## Development standards
 
@@ -98,9 +118,5 @@ Product set: [docs/README.md](docs/README.md) (`PRODUCT_VISION` … `ADR/`).
 ```bash
 ruff check src tests scripts
 mypy
-pytest --cov=profile_intelligence
+pytest
 ```
-
-## License
-
-MIT — see [LICENSE](LICENSE).

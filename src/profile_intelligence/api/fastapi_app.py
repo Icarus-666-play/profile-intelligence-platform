@@ -20,10 +20,10 @@ File Storage
 
 Typical wiring::
 
-    from profile_intelligence.api.context import create_api_context
+    from profile_intelligence.bootstrap import create_application_context
     from profile_intelligence.api.fastapi_app import create_fastapi_app
 
-    ctx = create_api_context()
+    ctx = create_application_context()
     app = create_fastapi_app(ctx)
 
 Handlers reuse :mod:`profile_intelligence.api.routes` so WSGI and FastAPI
@@ -101,6 +101,8 @@ def create_fastapi_app(
     origins = cors_origins or [
         "http://127.0.0.1:5173",
         "http://localhost:5173",
+        "http://127.0.0.1:8000",
+        "http://localhost:8000",
         "http://127.0.0.1:8765",
         "http://localhost:8765",
     ]
