@@ -64,6 +64,13 @@ def temp_root(tmp_path: Path) -> Path:
             "thumbnail_format": "JPEG",
             "thumbnail_quality": 80,
         },
+        "nightly": {
+            "import_dir": "data/inbox",
+            "excel_path": "exports/nightly-profiles.xlsx",
+            "dashboard_path": "exports/nightly-dashboard.txt",
+            "rescore": True,
+            "recursive": False,
+        },
         "pipeline": [
             "parser",
             "normalizer",

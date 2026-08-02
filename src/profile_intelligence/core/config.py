@@ -173,6 +173,30 @@ class MediaSection:
 
 
 @dataclass(frozen=True, slots=True)
+class NightlySection:
+    """Nightly automation workflow settings.
+
+    Flow::
+
+        Import every night
+         ↓
+        Update database
+         ↓
+        Recalculate scores
+         ↓
+        Generate Excel report
+         ↓
+        Export dashboard
+    """
+
+    import_dir: str = "data/inbox"
+    excel_path: str = "exports/nightly-profiles.xlsx"
+    dashboard_path: str = "exports/nightly-dashboard.txt"
+    rescore: bool = True
+    recursive: bool = False
+
+
+@dataclass(frozen=True, slots=True)
 class ScoringSection:
     """Completeness scoring configuration."""
 
@@ -244,6 +268,7 @@ class AppConfig:
     search: SearchSection = field(default_factory=SearchSection)
     dashboard: DashboardSection = field(default_factory=DashboardSection)
     media: MediaSection = field(default_factory=MediaSection)
+    nightly: NightlySection = field(default_factory=NightlySection)
     pipeline: PipelineSection = field(default_factory=PipelineSection)
     config_dir: Path | None = None
     config_path: Path | None = None
@@ -291,6 +316,21 @@ class AppConfig:
         """Absolute path to the thumbnail storage directory."""
         return self.resolve_path(self.media.thumbnails_dir)
 
+    @property
+    def nightly_import_dir(self) -> Path:
+        """Absolute path to the nightly import inbox."""
+        return self.resolve_path(self.nightly.import_dir)
+
+    @property
+    def nightly_excel_path(self) -> Path:
+        """Absolute path for the nightly Excel report."""
+        return self.resolve_path(self.nightly.excel_path)
+
+    @property
+    def nightly_dashboard_path(self) -> Path:
+        """Absolute path for the nightly dashboard export."""
+        return self.resolve_path(self.nightly.dashboard_path)
+
     def ensure_directories(self) -> None:
         """Create runtime directories if they do not exist."""
         for directory in (
@@ -300,7 +340,10 @@ class AppConfig:
             self.plugins_dir,
             self.media_dir,
             self.thumbnails_dir,
+            self.nightly_import_dir,
             self.database_path.parent,
+            self.nightly_excel_path.parent,
+            self.nightly_dashboard_path.parent,
         ):
             directory.mkdir(parents=True, exist_ok=True)
 
@@ -429,6 +472,7 @@ def _build_config(
     search_defaults = SearchSection()
     dashboard_defaults = DashboardSection()
     media_defaults = MediaSection()
+    nightly_defaults = NightlySection()
 
     app_raw = _section(settings_raw, "app")
     paths_raw = _section(settings_raw, "paths")
@@ -439,6 +483,7 @@ def _build_config(
     search_raw = _section(settings_raw, "search")
     dashboard_raw = _section(settings_raw, "dashboard")
     media_raw = _section(settings_raw, "media")
+    nightly_raw = _section(settings_raw, "nightly")
     pipeline_section = _parse_pipeline(settings_raw.get("pipeline"))
     logging_data = _normalize_logging_raw(logging_raw)
     scoring_data = _normalize_scoring_raw(scoring_raw)
@@ -584,6 +629,23 @@ def _build_config(
                 )
             ),
         ),
+        nightly=NightlySection(
+            import_dir=str(
+                nightly_raw.get("import_dir", nightly_defaults.import_dir)
+            ),
+            excel_path=str(
+                nightly_raw.get("excel_path", nightly_defaults.excel_path)
+            ),
+            dashboard_path=str(
+                nightly_raw.get(
+                    "dashboard_path", nightly_defaults.dashboard_path
+                )
+            ),
+            rescore=bool(nightly_raw.get("rescore", nightly_defaults.rescore)),
+            recursive=bool(
+                nightly_raw.get("recursive", nightly_defaults.recursive)
+            ),
+        ),
         pipeline=pipeline_section,
         config_dir=config_dir,
         config_path=config_path,
@@ -651,6 +713,7 @@ __all__ = [
     "ImportersSection",
     "LoggingSection",
     "MediaSection",
+    "NightlySection",
     "PathsSection",
     "PipelineSection",
     "ScoringSection",

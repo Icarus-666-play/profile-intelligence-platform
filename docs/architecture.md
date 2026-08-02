@@ -100,6 +100,25 @@ Full persist path is `ImportPipeline` (`application/use_cases/`), exposed via `I
 
 All platform errors inherit from `PipError`. Domain-specific subclasses (`ConfigurationError`, `DatabaseError`, `MigrationError`, `PluginError`, …) allow precise handling without catching unrelated exceptions.
 
+## Nightly automation
+
+`NightlyPipeline` (`application/use_cases/nightly_pipeline.py`) runs:
+
+```
+Import every night
+ ↓
+Update database
+ ↓
+Recalculate scores
+ ↓
+Generate Excel report
+ ↓
+Export dashboard
+```
+
+CLI: `pip-app nightly` (cron / Task Scheduler via `scripts/run_nightly.py`).
+Config section: `nightly:` in `config/settings.yaml` (`import_dir`, report paths).
+
 ## Extension points
 
 1. **Importers** — subclass `ProfileImporter`, place under `infrastructure/importers/plugins/` or external `plugins/<name>/`

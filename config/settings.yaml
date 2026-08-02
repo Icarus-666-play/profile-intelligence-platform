@@ -49,6 +49,14 @@ media:
   thumbnail_format: JPEG
   thumbnail_quality: 85
 
+# Nightly automation: import → DB → scores → Excel → dashboard
+nightly:
+  import_dir: data/inbox
+  excel_path: exports/nightly-profiles.xlsx
+  dashboard_path: exports/nightly-dashboard.txt
+  rescore: true
+  recursive: false
+
 # Ordered import stages after File → RawDocument
 pipeline:
   - parser

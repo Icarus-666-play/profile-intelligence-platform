@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
-"""Launch Profile Intelligence Platform from a source checkout."""
+"""Run the nightly automation workflow (for cron / Task Scheduler).
+
+Example crontab (02:15 local time)::
+
+    15 2 * * * /path/to/.venv/bin/python /path/to/scripts/run_nightly.py
+
+Or::
+
+    pip-app nightly
+"""
 
 from __future__ import annotations
 
@@ -14,4 +23,4 @@ if str(SRC) not in sys.path:
 from profile_intelligence.main import main
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(main(["nightly", *sys.argv[1:]]))

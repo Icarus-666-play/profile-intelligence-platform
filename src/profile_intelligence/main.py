@@ -8,6 +8,7 @@ Primary commands::
     pip-app compare
     pip-app export
     pip-app dashboard
+    pip-app nightly
 """
 
 from __future__ import annotations
@@ -20,6 +21,7 @@ from profile_intelligence import __version__
 from profile_intelligence.application.use_cases.application import ApplicationService
 from profile_intelligence.application.use_cases.compare_service import CompareService
 from profile_intelligence.application.use_cases.import_service import ImportService
+from profile_intelligence.application.use_cases.nightly_pipeline import NightlyPipeline
 from profile_intelligence.application.use_cases.profile_service import ProfileService
 from profile_intelligence.bootstrap import build_container
 from profile_intelligence.core.container import Container
@@ -38,6 +40,7 @@ _PRIMARY_COMMANDS = (
     "compare",
     "export",
     "dashboard",
+    "nightly",
 )
 
 
@@ -58,6 +61,7 @@ def build_parser() -> argparse.ArgumentParser:
             "  pip-app compare <id_a> <id_b>\n"
             "  pip-app export\n"
             "  pip-app dashboard\n"
+            "  pip-app nightly\n"
         ),
     )
     parser.add_argument(
@@ -137,6 +141,39 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser(
         "dashboard",
         help="Show a local console dashboard summary",
+    )
+
+    nightly_parser = subparsers.add_parser(
+        "nightly",
+        help=(
+            "Run nightly automation: import → update DB → rescore → "
+            "Excel report → dashboard export"
+        ),
+    )
+    nightly_parser.add_argument(
+        "--import-dir",
+        default=None,
+        help="Inbox directory (default: config nightly.import_dir)",
+    )
+    nightly_parser.add_argument(
+        "--excel-output",
+        default=None,
+        help="Excel report path (default: config nightly.excel_path)",
+    )
+    nightly_parser.add_argument(
+        "--dashboard-output",
+        default=None,
+        help="Dashboard text path (default: config nightly.dashboard_path)",
+    )
+    nightly_parser.add_argument(
+        "--no-rescore",
+        action="store_true",
+        help="Skip the recalculate scores stage",
+    )
+    nightly_parser.add_argument(
+        "--recursive",
+        action="store_true",
+        help="Recurse into subdirectories of the import inbox",
     )
 
     # Additional utilities
@@ -283,6 +320,9 @@ def _dispatch(
         logger.info("Dashboard rendered (%d chars)", len(text))
         return 0
 
+    if command == "nightly":
+        return _cmd_nightly(args, container)
+
     profiles = container.resolve(ProfileService)
 
     if command == "list":
@@ -317,6 +357,30 @@ def _dispatch(
     logger.error("Unknown command: %s", command)
     print(f"error: unknown command: {command}", file=sys.stderr)
     return 2
+
+
+def _cmd_nightly(args: argparse.Namespace, container: Container) -> int:
+    result = container.resolve(NightlyPipeline).run(
+        import_dir=args.import_dir,
+        excel_path=args.excel_output,
+        dashboard_path=args.dashboard_output,
+        rescore=False if args.no_rescore else None,
+        recursive=True if args.recursive else None,
+    )
+    print("Nightly pipeline complete")
+    print(f"  stages:   {' → '.join(result.stages_run)}")
+    print(
+        f"  import:   files={result.files_imported} "
+        f"created={result.created} updated={result.updated} "
+        f"skipped={result.skipped}"
+    )
+    print(f"  database: profiles={result.profile_count}")
+    print(f"  scores:   rescored={result.rescored}")
+    print(f"  excel:    {result.excel_path}")
+    print(f"  dashboard: {result.dashboard_path}")
+    for error in result.errors:
+        print(f"issue: {error}", file=sys.stderr)
+    return 0 if result.success else 1
 
 
 def _cmd_compare(args: argparse.Namespace, container: Container) -> int:

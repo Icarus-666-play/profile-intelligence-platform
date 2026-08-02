@@ -131,7 +131,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["S101", "ANN", "T201"]
-"scripts/**/*.py" = ["T201"]
+"scripts/**/*.py" = ["T201", "E402"]
 "src/profile_intelligence/main.py" = ["T201"]
 
 [tool.ruff.lint.isort]

@@ -6,6 +6,7 @@ from profile_intelligence.application.use_cases import ImportPipeline
 from profile_intelligence.application.use_cases.application import ApplicationService
 from profile_intelligence.application.use_cases.compare_service import CompareService
 from profile_intelligence.application.use_cases.import_service import ImportService
+from profile_intelligence.application.use_cases.nightly_pipeline import NightlyPipeline
 from profile_intelligence.application.use_cases.profile_service import ProfileService
 from profile_intelligence.core.config import AppConfig
 from profile_intelligence.core.config_manager import ConfigManager
@@ -144,6 +145,18 @@ def build_container(
         DashboardService,
         lambda: DashboardService(container.resolve(ProfileRepository)),
         name="dashboard",
+    )
+    container.register(
+        NightlyPipeline,
+        lambda: NightlyPipeline(
+            config=container.resolve(AppConfig),
+            import_service=container.resolve(ImportService),
+            profile_service=container.resolve(ProfileService),
+            dashboard=container.resolve(DashboardService),
+            database=container.resolve(Database),
+            registry=container.resolve(ImporterRegistry),
+        ),
+        name="nightly",
     )
     container.register(
         DatabaseSeeder,

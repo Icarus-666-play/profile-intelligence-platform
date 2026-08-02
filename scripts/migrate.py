@@ -11,7 +11,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from profile_intelligence.main import main  # noqa: E402
+from profile_intelligence.main import main
 
 if __name__ == "__main__":
     raise SystemExit(main(["migrate", *sys.argv[1:]]))

@@ -76,4 +76,18 @@ pipeline:
   - repository
 ```
 
+Nightly automation (`pip-app nightly` / `scripts/run_nightly.py`):
+
+```
+Import every night
+ ↓
+Update database
+ ↓
+Recalculate scores
+ ↓
+Generate Excel report
+ ↓
+Export dashboard
+```
+
 The local import → search → score → Excel export loop is operational via CLI.

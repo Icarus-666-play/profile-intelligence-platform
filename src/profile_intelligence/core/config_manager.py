@@ -56,6 +56,7 @@ class ConfigManager:
             "search",
             "dashboard",
             "media",
+            "nightly",
             "pipeline",
         }
     )

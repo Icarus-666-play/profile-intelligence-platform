@@ -22,6 +22,11 @@ from profile_intelligence.application.use_cases.import_service import (
     ImportService,
     ImportSummary,
 )
+from profile_intelligence.application.use_cases.nightly_pipeline import (
+    NIGHTLY_STAGES,
+    NightlyPipeline,
+    NightlyResult,
+)
 from profile_intelligence.application.use_cases.profile_service import ProfileService
 from profile_intelligence.domain.value_objects.documents import (
     ParsedDocument,
@@ -29,12 +34,15 @@ from profile_intelligence.domain.value_objects.documents import (
 )
 
 __all__ = [
+    "NIGHTLY_STAGES",
     "ApplicationService",
     "CompareService",
     "DocumentParser",
     "ImportPipeline",
     "ImportService",
     "ImportSummary",
+    "NightlyPipeline",
+    "NightlyResult",
     "ParsedDocument",
     "PipelineResult",
     "ProcessingChain",
