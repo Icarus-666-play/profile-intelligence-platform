@@ -33,6 +33,8 @@ class _WsgiApp(Protocol):
 
 API_ROUTES: tuple[tuple[str, str], ...] = (
     ("POST", "/api/import/url"),
+    ("POST", "/api/import/url/preview"),
+    ("GET", "/api/import/activity"),
     ("POST", "/api/import/files"),
     ("GET", "/api/profiles"),
     ("GET", "/api/profiles/{id}"),

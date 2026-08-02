@@ -89,6 +89,69 @@ export type Analytics = {
   }
 }
 
+export type ImportSummary = {
+  path: string
+  plugin: string
+  records_read: number
+  created: number
+  updated: number
+  skipped: number
+  written: number
+  success: boolean
+  errors: string[]
+  url?: string
+  downloaded_path?: string
+  status?: string
+}
+
+export type ImportPreview = {
+  path: string
+  plugin: string
+  records_read: number
+  accepted_count: number
+  rejected_count: number
+  duplicate_count: number
+  update_count: number
+  ok: boolean
+  errors: string[]
+  stages_run: string[]
+  rows: {
+    index: number
+    display_name: string
+    email: string | null
+    organization: string | null
+    source: string | null
+    score: number | null
+    status: string
+    messages: string[]
+  }[]
+  url?: string
+  downloaded_path?: string
+}
+
+export type ImportActivity = {
+  recent_urls: { url: string; at: string }[]
+  import_queue: { path: string; name: string; file_size: number }[]
+  progress: {
+    url: string
+    stage: string
+    message: string
+    started_at: string
+    percent: number
+  } | null
+  errors: { url: string; message: string; at: string }[]
+  completed: {
+    url: string
+    path: string | null
+    plugin: string | null
+    created: number
+    updated: number
+    success: boolean
+    message: string | null
+    at: string
+  }[]
+}
+
 export type AuthStatus = {
   enabled: boolean
   allow_guest: boolean
@@ -157,10 +220,16 @@ export const api = {
       { method: 'POST', body: JSON.stringify(body) },
     ),
   importUrl: (body: { url: string; plugin?: string; source?: string }) =>
-    request<Record<string, unknown>>('/api/import/url', {
+    request<ImportSummary>('/api/import/url', {
       method: 'POST',
       body: JSON.stringify(body),
     }),
+  previewUrl: (body: { url: string; plugin?: string; source?: string }) =>
+    request<ImportPreview>('/api/import/url/preview', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+  importActivity: () => request<ImportActivity>('/api/import/activity'),
   authStatus: () => request<AuthStatus>('/api/auth/status'),
   login: (username: string, password: string) =>
     request<{ session: AuthSession; next: string }>('/api/auth/login', {

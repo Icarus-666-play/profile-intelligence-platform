@@ -25,6 +25,8 @@ POST   /api/auth/guest
 POST   /api/auth/logout
 GET    /api/auth/session
 POST   /api/import/url
+POST   /api/import/url/preview
+GET    /api/import/activity
 POST   /api/import/files
 GET    /api/profiles
 GET    /api/profiles/{id}
@@ -60,6 +62,27 @@ Download a remote file and run Import.
 ```
 
 Requires `media.allow_remote_download: true`. Response: import summary (+ `url`).
+Records Recent URLs / Completed (or Errors) via import activity.
+
+### `POST /api/import/url/preview`
+
+Same download as above, then dry-run Preview (no repository write).
+
+Response: preview rows + counts (+ `url`, `downloaded_path`).
+
+### `GET /api/import/activity`
+
+Import page panels:
+
+```json
+{
+  "recent_urls": [{ "url": "https://…", "at": "…" }],
+  "import_queue": [{ "name": "a.csv", "path": "…", "file_size": 123 }],
+  "progress": { "url": "…", "stage": "import", "percent": 65, "message": "…" },
+  "errors": [{ "url": "…", "message": "…", "at": "…" }],
+  "completed": [{ "url": "…", "created": 1, "success": true, "at": "…" }]
+}
+```
 
 ### `POST /api/import/files`
 

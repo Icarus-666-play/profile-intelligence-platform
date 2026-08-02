@@ -8,6 +8,8 @@ Endpoints::
 
 ```
 POST   /api/import/url
+POST   /api/import/url/preview
+GET    /api/import/activity
 POST   /api/import/files
 GET    /api/profiles
 GET    /api/profiles/{id}

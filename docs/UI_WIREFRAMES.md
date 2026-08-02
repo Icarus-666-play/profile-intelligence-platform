@@ -78,20 +78,21 @@ Results
 
 ```
 Import
-Staged operator flow for local files.
 
-Input → Preview → Validate → Import     ← step indicator
+URL
+_________________________________
+https://
 
-Path        [ /path/to/file ________ ]
-Source      [ optional _____________ ]
-Plugin      [ Auto-detect ▼ ]
-[ ] Recurse folders (Import stage)
-[ Input ] [ Preview ] [ Validate ] [ Import ]
+[ Preview ]   [ Import ]
 
-Preview table / Validate issues (when run)
+----------------------------
+
+Recent URLs | Import Queue | Progress | Errors | Completed
+  …table for active panel…
 ```
 
-POST `action=` → `ImportFlow` (`input` / `preview` / `validate` / `import`).
+React primary surface. APIs: `POST /api/import/url[/preview]`, `GET /api/import/activity`.
+Legacy WSGI page still exposes staged Input → Preview → Validate → Import for local paths.
 
 ### Compare `/compare`
 

@@ -485,6 +485,64 @@ button.secondary,
   padding: 0.4rem 0.6rem;
 }
 
+.import-url-panel {
+  animation: metric-rise 420ms ease-out both;
+}
+
+.import-url-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.import-url-label {
+  width: 100%;
+}
+
+.import-url-input {
+  width: 100%;
+  min-width: 0;
+  font-size: 1.05rem;
+  padding: 0.75rem 0.85rem;
+}
+
+.import-url-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.import-divider {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 1.75rem 0 1.25rem;
+}
+
+.url-cell {
+  max-width: 22rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.progress-block {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.progress-bar {
+  height: 0.55rem;
+  background: rgba(16, 35, 63, 0.08);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.progress-bar > span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--teal), var(--teal-deep));
+  transition: width 240ms ease;
+}
+
 .status {
   margin: 0.75rem 0;
   padding: 0.75rem 0.9rem;

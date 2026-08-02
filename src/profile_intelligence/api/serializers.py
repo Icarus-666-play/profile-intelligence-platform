@@ -11,6 +11,7 @@ from profile_intelligence.application.use_cases.compare_service import (
 from profile_intelligence.application.use_cases.import_service import ImportSummary
 from profile_intelligence.domain.interfaces.importers import ImporterPlugin
 from profile_intelligence.domain.interfaces.repositories import ProfileEntity
+from profile_intelligence.domain.value_objects.import_flow import PreviewResult
 from profile_intelligence.infrastructure.dashboard import DashboardSnapshot
 
 
@@ -136,6 +137,35 @@ def import_summary_to_dict(summary: ImportSummary) -> dict[str, Any]:
             "duplicates": summary.stats.duplicates,
             "execution_seconds": summary.stats.execution_seconds,
         },
+    }
+
+
+def preview_result_to_dict(result: PreviewResult) -> dict[str, Any]:
+    """Serialize an :class:`PreviewResult`."""
+    return {
+        "path": result.path,
+        "plugin": result.plugin,
+        "records_read": result.records_read,
+        "accepted_count": result.accepted_count,
+        "rejected_count": result.rejected_count,
+        "duplicate_count": result.duplicate_count,
+        "update_count": result.update_count,
+        "ok": result.ok,
+        "errors": list(result.errors),
+        "stages_run": list(result.stages_run),
+        "rows": [
+            {
+                "index": row.index,
+                "display_name": row.display_name,
+                "email": row.email,
+                "organization": row.organization,
+                "source": row.source,
+                "score": row.score,
+                "status": row.status,
+                "messages": list(row.messages),
+            }
+            for row in result.rows
+        ],
     }
 
 

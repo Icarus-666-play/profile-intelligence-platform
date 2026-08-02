@@ -16,10 +16,12 @@ from profile_intelligence.api.serializers import (
     dashboard_to_dict,
     import_summary_to_dict,
     plugin_to_dict,
+    preview_result_to_dict,
     profile_to_dict,
 )
 from profile_intelligence.core.exceptions import PipError, ValidationError
 from profile_intelligence.core.logging import get_logger
+from profile_intelligence.domain.interfaces.plugin_pipeline import DownloadArtifact
 from profile_intelligence.infrastructure.auth import LocalAuthService
 from profile_intelligence.infrastructure.download import DocumentDownloader
 
@@ -39,6 +41,10 @@ def dispatch(
     """Route an API call to a handler. Returns ``(status, payload)``."""
     if method == "POST" and path == "/api/import/url":
         return 200, import_url(ctx, body)
+    if method == "POST" and path == "/api/import/url/preview":
+        return 200, import_url_preview(ctx, body)
+    if method == "GET" and path == "/api/import/activity":
+        return 200, import_activity(ctx)
     if method == "POST" and path == "/api/import/files":
         return 200, import_files(ctx, body)
     if method == "GET" and path == "/api/profiles":
@@ -71,6 +77,105 @@ def dispatch(
 
 def import_url(ctx: ApiContext, body: dict[str, Any]) -> dict[str, Any]:
     """POST /api/import/url — Downloader stage then Import."""
+    url, plugin, source = _url_import_args(ctx, body)
+    activity = ctx.import_activity
+    if activity is not None:
+        activity.remember_url(url)
+        activity.set_progress(
+            url=url, stage="download", message="Downloading…", percent=15
+        )
+    try:
+        artifact = _download_url(ctx, url)
+        if activity is not None:
+            activity.set_progress(
+                url=url, stage="import", message="Importing…", percent=65
+            )
+        summary = ctx.import_flow.run_import(
+            artifact.path, source=source, plugin_name=plugin
+        )
+    except (OSError, PipError, ValueError, ApiError) as exc:
+        if activity is not None:
+            activity.record_error(url=url, message=str(exc))
+        if isinstance(exc, ApiError):
+            raise
+        raise ApiError(str(exc), status=400) from exc
+
+    payload = import_summary_to_dict(summary)
+    payload["url"] = url
+    payload["downloaded_path"] = str(artifact.path)
+    if activity is not None:
+        activity.record_completed(
+            url=url,
+            path=str(artifact.path),
+            plugin=summary.plugin,
+            created=summary.created,
+            updated=summary.updated,
+            success=summary.success,
+            message=(
+                None
+                if summary.success
+                else (summary.errors[0] if summary.errors else "import failed")
+            ),
+        )
+    return payload
+
+
+def import_url_preview(ctx: ApiContext, body: dict[str, Any]) -> dict[str, Any]:
+    """POST /api/import/url/preview — download then dry-run Preview."""
+    url, plugin, source = _url_import_args(ctx, body)
+    activity = ctx.import_activity
+    if activity is not None:
+        activity.remember_url(url)
+        activity.set_progress(
+            url=url, stage="preview", message="Downloading for preview…", percent=20
+        )
+    try:
+        artifact = _download_url(ctx, url)
+        if activity is not None:
+            activity.set_progress(
+                url=url, stage="preview", message="Building preview…", percent=70
+            )
+        preview = ctx.import_flow.preview(
+            artifact.path, source=source, plugin_name=plugin
+        )
+    except (OSError, PipError, ValueError, ApiError) as exc:
+        if activity is not None:
+            activity.record_error(url=url, message=str(exc))
+        if isinstance(exc, ApiError):
+            raise
+        raise ApiError(str(exc), status=400) from exc
+
+    if activity is not None:
+        activity.clear_progress()
+    payload = preview_result_to_dict(preview)
+    payload["url"] = url
+    payload["downloaded_path"] = str(artifact.path)
+    return payload
+
+
+def import_activity(ctx: ApiContext) -> dict[str, Any]:
+    """GET /api/import/activity — Recent URLs, Queue, Progress, Errors, Completed."""
+    if ctx.import_activity is None:
+        return {
+            "recent_urls": [],
+            "import_queue": [],
+            "progress": None,
+            "errors": [],
+            "completed": [],
+        }
+    snap = ctx.import_activity.snapshot()
+    return {
+        "recent_urls": snap.recent_urls,
+        "import_queue": snap.import_queue,
+        "progress": snap.progress,
+        "errors": snap.errors,
+        "completed": snap.completed,
+    }
+
+
+def _url_import_args(
+    ctx: ApiContext, body: dict[str, Any]
+) -> tuple[str, str | None, str | None]:
     url = str(body.get("url") or "").strip()
     if not url:
         raise ApiError("Field 'url' is required", status=400)
@@ -82,26 +187,16 @@ def import_url(ctx: ApiContext, body: dict[str, Any]) -> dict[str, Any]:
             "Remote download disabled (media.allow_remote_download=false)",
             status=400,
         )
+    return url, _optional_str(body, "plugin"), _optional_str(body, "source")
 
-    plugin = _optional_str(body, "plugin")
-    source = _optional_str(body, "source")
+
+def _download_url(ctx: ApiContext, url: str) -> DownloadArtifact:
     downloader = ctx.downloader or DocumentDownloader(
         ctx.config.data_dir / "inbox" / "downloads",
         allow_remote=ctx.config.media.allow_remote_download,
         timeout_seconds=float(ctx.config.media.download_timeout_seconds),
     )
-    try:
-        artifact = downloader.download(url)
-        summary = ctx.import_flow.run_import(
-            artifact.path, source=source, plugin_name=plugin
-        )
-    except (OSError, PipError, ValueError) as exc:
-        raise ApiError(str(exc), status=400) from exc
-
-    payload = import_summary_to_dict(summary)
-    payload["url"] = url
-    payload["downloaded_path"] = str(artifact.path)
-    return payload
+    return downloader.download(url)
 
 
 def import_files(ctx: ApiContext, body: dict[str, Any]) -> dict[str, Any]:

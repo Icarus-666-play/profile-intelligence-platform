@@ -39,6 +39,9 @@ from profile_intelligence.infrastructure.auth import LocalAuthService
 from profile_intelligence.infrastructure.dashboard import DashboardService
 from profile_intelligence.infrastructure.database.seed import DatabaseSeeder
 from profile_intelligence.infrastructure.download import DocumentDownloader
+from profile_intelligence.infrastructure.importers.import_activity import (
+    ImportActivityStore,
+)
 from profile_intelligence.infrastructure.importers.registry import ImporterRegistry
 from profile_intelligence.ui import UiContext, serve_ui
 
@@ -646,6 +649,7 @@ def _cmd_ui(args: argparse.Namespace, container: Container) -> int:
         importers=container.resolve(ImporterRegistry),
         downloader=container.resolve(DocumentDownloader),
         auth=container.resolve(LocalAuthService),
+        import_activity=container.resolve(ImportActivityStore),
     )
     if bool(getattr(args, "legacy_wsgi", False)):
         context = UiContext(

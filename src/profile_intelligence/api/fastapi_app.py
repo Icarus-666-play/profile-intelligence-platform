@@ -47,8 +47,10 @@ from profile_intelligence.api.routes import (
     get_analytics,
     get_dashboard,
     get_profile,
+    import_activity,
     import_files,
     import_url,
+    import_url_preview,
     list_plugins,
     list_profiles,
     reload_plugins,
@@ -130,6 +132,15 @@ def create_fastapi_app(
     async def api_import_url(request: Request) -> dict[str, Any]:
         body = await _json_body(request)
         return import_url(ctx, body)
+
+    @app.post("/api/import/url/preview")
+    async def api_import_url_preview(request: Request) -> dict[str, Any]:
+        body = await _json_body(request)
+        return import_url_preview(ctx, body)
+
+    @app.get("/api/import/activity")
+    def api_import_activity() -> dict[str, Any]:
+        return import_activity(ctx)
 
     @app.post("/api/import/files")
     async def api_import_files(request: Request) -> dict[str, Any]:
