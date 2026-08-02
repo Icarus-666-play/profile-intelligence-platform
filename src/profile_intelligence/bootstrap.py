@@ -52,6 +52,7 @@ from profile_intelligence.infrastructure.media import (
     ThumbnailService,
 )
 from profile_intelligence.infrastructure.scoring.completeness import CompletenessScorer
+from profile_intelligence.infrastructure.scoring.confidence import ConfidenceScorer
 from profile_intelligence.infrastructure.search.service import ProfileSearchService
 
 logger = get_logger(__name__)
@@ -119,6 +120,13 @@ def build_container(
     container.register(
         CompletenessScorer,
         lambda: CompletenessScorer(container.resolve(AppConfig).scoring),
+        name="completeness_scorer",
+    )
+    container.register(
+        ConfidenceScorer,
+        lambda: ConfidenceScorer(
+            engine=container.resolve(CompletenessScorer),
+        ),
         name="scorer",
     )
     container.register(
@@ -189,7 +197,7 @@ def build_container(
             repository=container.resolve(IProfileRepository),
             stages=container.resolve(AppConfig).pipeline.stages,
             extractor=container.resolve(ProfileExtractor),
-            scorer=container.resolve(CompletenessScorer),
+            scorer=container.resolve(ConfidenceScorer),
         ),
         name="pipeline",
     )
@@ -199,7 +207,7 @@ def build_container(
             registry=container.resolve(ImporterRegistry),
             repository=container.resolve(IProfileRepository),
             extractor=container.resolve(ProfileExtractor),
-            scorer=container.resolve(CompletenessScorer),
+            scorer=container.resolve(ConfidenceScorer),
             pipeline=container.resolve(ImportPipeline),
         ),
         name="import",
@@ -210,7 +218,7 @@ def build_container(
             repository=container.resolve(IProfileRepository),
             search_service=container.resolve(ProfileSearchService),
             exporter=container.resolve(ExcelExporter),
-            scorer=container.resolve(CompletenessScorer),
+            scorer=container.resolve(ConfidenceScorer),
         ),
         name="profile_service",
     )
@@ -259,7 +267,7 @@ def build_container(
         DatabaseSeeder,
         lambda: DatabaseSeeder(
             repository=container.resolve(IProfileRepository),
-            scorer=container.resolve(CompletenessScorer),
+            scorer=container.resolve(ConfidenceScorer),
         ),
         name="seeder",
     )

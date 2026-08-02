@@ -33,7 +33,7 @@ class ProfileImported(DomainEvent):
 
 @dataclass(frozen=True, slots=True)
 class ScoreCalculated(DomainEvent):
-    """Raised after completeness scores have been recalculated."""
+    """Raised after Confidence Scores (0-100) have been recalculated."""
 
     profile_ids: tuple[int, ...] = ()
     rescored: int = 0

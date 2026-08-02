@@ -96,9 +96,9 @@ class DashboardService:
             f"Profiles: {data.total_profiles}",
             f"Scored:   {data.scored_profiles}",
             (
-                f"Average completeness score: {data.average_score}"
+                f"Average confidence score (0-100): {data.average_score}"
                 if data.average_score is not None
-                else "Average completeness score: n/a"
+                else "Average confidence score (0-100): n/a"
             ),
             "",
             "By source:",
@@ -109,10 +109,10 @@ class DashboardService:
         else:
             lines.append("  (none)")
 
-        lines.extend(["", "Top scored:"])
+        lines.extend(["", "Top confidence:"])
         lines.extend(_profile_lines(data.top_profiles) or ["  (none)"])
 
-        lines.extend(["", "Needs attention (lowest score):"])
+        lines.extend(["", "Needs attention (lowest confidence):"])
         lines.extend(_profile_lines(data.incomplete_profiles) or ["  (none)"])
 
         lines.extend(
@@ -131,6 +131,6 @@ def _profile_lines(profiles: Sequence[ProfileEntity]) -> list[str]:
         score = profile.score if profile.score is not None else "-"
         lines.append(
             f"  [{profile.id}] {profile.display_name} | "
-            f"{profile.source or '-'} | score={score}"
+            f"{profile.source or '-'} | confidence={score}"
         )
     return lines

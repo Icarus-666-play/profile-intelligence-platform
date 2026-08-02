@@ -16,7 +16,7 @@ Deliver a complete local import → extract → persist → search → score →
 | Importers | Built-in **CSV** and **Excel** (`.xlsx`) plugins returning raw row records |
 | Extractors | Header-alias normalization into typed profile drafts |
 | Services | Import orchestration, profile listing, search, rescoring |
-| Scoring | Completeness score (0–100) based on populated fields |
+| Scoring | Confidence Score (0–100) based on populated fields |
 | Excel | Workbook export of stored profiles |
 | CLI | `import`, `list`, `search`, `export`, `score` subcommands |
 | Quality | Unit/integration tests, docs, typed APIs |
@@ -37,5 +37,5 @@ Deliver a complete local import → extract → persist → search → score →
 5. `pip-app compare <id_a> <id_b>` diffs two profiles
 6. `pip-app export` writes an `.xlsx` report under `exports/`
 7. `pip-app dashboard` prints a local summary
-4. Profiles receive a completeness score on import
+4. Profiles receive a Confidence Score (0–100) on import
 5. Tests and static checks pass

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from profile_intelligence.domain.value_objects.confidence import ConfidenceScore
 from profile_intelligence.domain.value_objects.documents import (
     ParsedDocument,
     RawDocument,
@@ -17,6 +18,7 @@ from profile_intelligence.domain.value_objects.profile_children import (
 
 __all__ = [
     "Availability",
+    "ConfidenceScore",
     "ImportResult",
     "ParsedDocument",
     "Photo",

@@ -204,7 +204,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     subparsers.add_parser(
         "score",
-        help="Recompute completeness scores for all profiles",
+        help="Recompute Confidence Scores (0-100) for all profiles",
     )
 
     # Backward-compatible flags from Milestone 0.
@@ -371,7 +371,7 @@ def _dispatch(
 
     if command == "score":
         updated = profiles.rescore_all()
-        message = f"Updated scores for {updated} profile(s)"
+        message = f"Updated confidence scores for {updated} profile(s)"
         logger.info("%s", message)
         print(message)
         return 0
@@ -456,7 +456,10 @@ def _format_profile(profile: object) -> str:
     organization = getattr(profile, "organization", None) or "-"
     score = getattr(profile, "score", None)
     score_text = str(score) if score is not None else "-"
-    return f"[{profile_id}] {name} | {email} | {organization} | score={score_text}"
+    return (
+        f"[{profile_id}] {name} | {email} | {organization} | "
+        f"confidence={score_text}"
+    )
 
 
 if __name__ == "__main__":

@@ -29,7 +29,7 @@ _HEADERS: tuple[str, ...] = (
     "tags",
     "source",
     "notes",
-    "score",
+    "confidence_score",
     "created_at",
     "updated_at",
 )

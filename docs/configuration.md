@@ -8,7 +8,7 @@ PIP uses split YAML configuration with typed dataclasses (`AppConfig` and nested
 |------|------|
 | `config/settings.yaml` | App, paths, database, importers, excel, ai, search, dashboard, media, cache, nightly, pipeline |
 | `config/logging.yaml` | Logging options |
-| `config/scoring.yaml` | Completeness scoring method/weights |
+| `config/scoring.yaml` | Confidence Score (0–100) method/weights |
 | `config/*.local.yaml` | Optional machine-local overlays (gitignored) |
 | path in `PIP_CONFIG_PATH` / `--config` | Optional settings override merge |
 
@@ -92,13 +92,20 @@ Flat file (not nested under a `logging:` key):
 
 Legacy `filename` maps to `files.application` when `files` is omitted.
 
-## `scoring.yaml`
+## `scoring.yaml` — Confidence Score (0–100)
 
-- `method` — currently `completeness`
-- `max_score` — upper bound (default 100)
+```
+Confidence Score
+
+0-100
+```
+
+- `method` — `completeness` (weighted field presence)
+- `max_score` — engine upper bound before normalization (default 100)
 - `weights` — field → integer weight map
 
-Weights are applied by `CompletenessScorer` at runtime.
+`ConfidenceScorer` normalizes the engine total onto the fixed **0–100** scale.
+Stored on profiles as `score` / exported as `confidence_score`.
 
 ## Local overrides
 

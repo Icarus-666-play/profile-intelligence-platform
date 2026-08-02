@@ -60,6 +60,7 @@ from profile_intelligence.domain.value_objects.documents import (
 from profile_intelligence.domain.value_objects.importing import ImportResult
 from profile_intelligence.infrastructure.importers.registry import ImporterRegistry
 from profile_intelligence.infrastructure.scoring.completeness import CompletenessScorer
+from profile_intelligence.infrastructure.scoring.confidence import ConfidenceScorer
 
 logger = get_logger(__name__)
 
@@ -104,7 +105,7 @@ class ImportPipeline:
         validator: ProfileValidator | None = None,
         duplicate_detector: DuplicateDetector | None = None,
         extractor: ProfileExtractor | None = None,
-        scorer: CompletenessScorer | ProfileScorer | None = None,
+        scorer: ConfidenceScorer | CompletenessScorer | ProfileScorer | None = None,
         processing: ProcessingChain | None = None,
     ) -> None:
         self._registry = registry

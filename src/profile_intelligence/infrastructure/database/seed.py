@@ -9,6 +9,7 @@ from profile_intelligence.core.logging import get_logger
 from profile_intelligence.domain.entities.profile import ProfileDraft
 from profile_intelligence.domain.interfaces.repositories import IProfileRepository
 from profile_intelligence.infrastructure.scoring.completeness import CompletenessScorer
+from profile_intelligence.infrastructure.scoring.confidence import ConfidenceScorer
 
 logger = get_logger(__name__)
 
@@ -104,12 +105,17 @@ class DatabaseSeeder:
     def __init__(
         self,
         repository: IProfileRepository,
-        scorer: CompletenessScorer | None = None,
+        scorer: ConfidenceScorer | CompletenessScorer | None = None,
         *,
         source: str = "seed",
     ) -> None:
         self._repository = repository
-        self._scorer = scorer or CompletenessScorer()
+        if isinstance(scorer, ConfidenceScorer):
+            self._scorer = scorer
+        elif isinstance(scorer, CompletenessScorer):
+            self._scorer = ConfidenceScorer(engine=scorer)
+        else:
+            self._scorer = ConfidenceScorer()
         self._source = source
 
     def seed(

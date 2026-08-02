@@ -228,7 +228,16 @@ class NightlySection:
 
 @dataclass(frozen=True, slots=True)
 class ScoringSection:
-    """Completeness scoring configuration."""
+    """Confidence Score (0-100) configuration.
+
+    ```
+    Confidence Score
+
+    0-100
+    ```
+
+    ``method: completeness`` computes the score from weighted populated fields.
+    """
 
     method: str = "completeness"
     max_score: int = 100

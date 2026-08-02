@@ -22,7 +22,7 @@ src/profile_intelligence/
     media/             # download, hash, duplicates, thumbnails, image repository
     excel/             # Excel export adapter
     search/            # SQLite search adapter
-    scoring/           # Completeness scorer
+    scoring/           # Confidence Score (0-100) via completeness engine
     dashboard/         # Console dashboard adapter
   core/                # Shared kernel: config, logging, DI, exceptions
   bootstrap.py         # Composition root
@@ -50,6 +50,7 @@ Supporting trees:
 | Domain events | `ProfileImported` → … → `DashboardUpdated` via `IEventBus` |
 | Caching | `ICache` → Memory / File / SQLite (+ Redis stub) |
 | Image pipeline | Download → Hash → Duplicate Detection → Thumbnail → Storage |
+| Confidence Score | Fixed **0–100** scale (`ConfidenceScorer` / completeness method) |
 | Dependency injection | Lightweight `Container` in `core.container` |
 | Typed | Python 3.12 + `py.typed`, mypy strict |
 | Configurable | YAML + env overrides |

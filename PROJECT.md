@@ -41,6 +41,14 @@ src/profile_intelligence/
 config/ docs/ scripts/ tests/ plugins/
 ```
 
+Confidence Score:
+
+```
+Confidence Score
+
+0-100
+```
+
 Cache package (`infrastructure/cache/`):
 
 ```

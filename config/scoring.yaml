@@ -1,5 +1,10 @@
-# Profile Intelligence Platform — scoring configuration
+# Profile Intelligence Platform — Confidence Score (0-100)
 # Optional override: config/scoring.local.yaml
+#
+# Confidence Score
+# 0-100
+#
+# method: completeness — weighted field presence, normalized to 0-100.
 # Field weights should typically sum to max_score (100).
 
 method: completeness

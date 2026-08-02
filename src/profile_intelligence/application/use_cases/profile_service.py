@@ -13,7 +13,7 @@ from profile_intelligence.domain.interfaces.repositories import (
     ProfileEntity,
 )
 from profile_intelligence.infrastructure.excel.exporter import ExcelExporter
-from profile_intelligence.infrastructure.scoring.completeness import CompletenessScorer
+from profile_intelligence.infrastructure.scoring.confidence import ConfidenceScorer
 from profile_intelligence.infrastructure.search.service import ProfileSearchService
 
 logger = get_logger(__name__)
@@ -27,12 +27,12 @@ class ProfileService:
         repository: IProfileRepository,
         search_service: ProfileSearchService,
         exporter: ExcelExporter,
-        scorer: CompletenessScorer | None = None,
+        scorer: ConfidenceScorer | None = None,
     ) -> None:
         self._repository = repository
         self._search = search_service
         self._excel = exporter
-        self._scorer = scorer or CompletenessScorer()
+        self._scorer = scorer or ConfidenceScorer()
 
     def list_profiles(
         self,
@@ -70,7 +70,7 @@ class ProfileService:
         return self._excel.export(profiles, output_path)
 
     def rescore_all(self, *, limit: int = 100_000) -> int:
-        """Recompute completeness scores for all profiles."""
+        """Recompute Confidence Scores (0-100) for all profiles."""
         profiles = self._repository.list_all(limit=limit, offset=0)
         scores = {
             profile.id: self._scorer.score(profile)

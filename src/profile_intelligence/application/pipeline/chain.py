@@ -45,6 +45,7 @@ from profile_intelligence.domain.value_objects.documents import (
 )
 from profile_intelligence.infrastructure.importers.registry import ImporterRegistry
 from profile_intelligence.infrastructure.scoring.completeness import CompletenessScorer
+from profile_intelligence.infrastructure.scoring.confidence import ConfidenceScorer
 
 logger = get_logger(__name__)
 
@@ -113,7 +114,7 @@ class ProcessingChain:
         normalizer: ProfileNormalizer | None = None,
         validator: ProfileValidator | None = None,
         duplicate_detector: DuplicateDetector | None = None,
-        scorer: ProfileScorer | CompletenessScorer | None = None,
+        scorer: ProfileScorer | ConfidenceScorer | CompletenessScorer | None = None,
         repository_stage: RepositoryStage | None = None,
         extractor: ProfileExtractor | None = None,
     ) -> None:

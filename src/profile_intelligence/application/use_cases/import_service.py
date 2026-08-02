@@ -33,7 +33,7 @@ from profile_intelligence.domain.value_objects.documents import (
 )
 from profile_intelligence.domain.value_objects.importing import ImportResult
 from profile_intelligence.infrastructure.importers.registry import ImporterRegistry
-from profile_intelligence.infrastructure.scoring.completeness import CompletenessScorer
+from profile_intelligence.infrastructure.scoring.confidence import ConfidenceScorer
 
 logger = get_logger(__name__)
 
@@ -76,7 +76,7 @@ class ImportService:
         registry: ImporterRegistry,
         repository: IProfileRepository,
         extractor: ProfileExtractor | None = None,
-        scorer: CompletenessScorer | None = None,
+        scorer: ConfidenceScorer | None = None,
         pipeline: ImportPipeline | None = None,
     ) -> None:
         self._registry = registry

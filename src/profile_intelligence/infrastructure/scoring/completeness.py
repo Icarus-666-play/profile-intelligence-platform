@@ -27,7 +27,7 @@ class ScoreableProfile(Protocol):
 
 
 class CompletenessScorer:
-    """Score a profile from 0-100 based on populated fields."""
+    """Weighted field-completeness engine used for Confidence Score (0-100)."""
 
     def __init__(
         self,
@@ -47,15 +47,20 @@ class CompletenessScorer:
             len(self._weights),
         )
 
+    @property
+    def max_score(self) -> int:
+        """Configured upper bound before normalization to 0-100."""
+        return self._max_score
+
     def score(self, profile: ScoreableProfile) -> int:
-        """Return an integer completeness score in ``[0, max_score]``."""
+        """Return an integer completeness total in ``[0, max_score]``."""
         try:
             total = 0
             for field_name, weight in self._weights.items():
                 value = getattr(profile, field_name, None)
                 if _has_value(value):
                     total += int(weight)
-            return min(total, self._max_score)
+            return min(max(total, 0), self._max_score)
         except Exception as exc:
             raise ScoringError(
                 "Failed to compute completeness score",
