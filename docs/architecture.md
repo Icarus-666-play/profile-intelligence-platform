@@ -45,7 +45,7 @@ Supporting trees:
 ```
 main()
   → build_container()
-      → load_config()
+      → ConfigManager().load()
       → configure_logging()
       → create_database()
       → register services

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from profile_intelligence.core.config import AppConfig, load_config
+from profile_intelligence.core.config import AppConfig, ConfigManager
 from profile_intelligence.core.container import Container
 from profile_intelligence.core.logging import configure_logging, get_logger
 from profile_intelligence.core.types import PathLike
@@ -27,11 +27,13 @@ def build_container(
     root_dir: PathLike | None = None,
 ) -> Container:
     """Load config, configure logging, and wire core services."""
-    config = load_config(config_path, root_dir=root_dir)
+    manager = ConfigManager(config_path, root_dir=root_dir)
+    config = manager.load()
     configure_logging(config)
-    config.ensure_directories()
+    manager.ensure_directories()
 
     container = Container()
+    container.register_instance(ConfigManager, manager, name="config_manager")
     container.register_instance(AppConfig, config, name="config")
 
     database = create_database(config)

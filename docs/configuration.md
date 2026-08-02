@@ -81,11 +81,25 @@ cp config/scoring.local.yaml.example config/scoring.local.yaml
 
 ## Programmatic access
 
+Prefer :class:`ConfigManager`:
+
+```python
+from profile_intelligence.core.config import ConfigManager
+
+manager = ConfigManager()
+config = manager.load()
+print(manager.settings.database_path)
+print(manager.get("scoring").weights)
+manager.ensure_directories()
+
+# Reload from disk after editing YAML
+manager.reload()
+```
+
+Convenience wrapper (still supported):
+
 ```python
 from profile_intelligence.core.config import load_config
 
 config = load_config()
-print(config.database_path)
-print(config.scoring.weights)
-config.ensure_directories()
 ```

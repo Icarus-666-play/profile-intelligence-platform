@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
-from profile_intelligence.core.config import AppConfig, ScoringSection, load_config
+from profile_intelligence.core.config import (
+    AppConfig,
+    ConfigManager,
+    ScoringSection,
+    load_config,
+)
 from profile_intelligence.core.container import Container
 from profile_intelligence.core.exceptions import (
     ConfigurationError,
@@ -18,6 +23,7 @@ from profile_intelligence.core.logging import configure_logging, get_logger
 
 __all__ = [
     "AppConfig",
+    "ConfigManager",
     "ConfigurationError",
     "Container",
     "DatabaseError",
