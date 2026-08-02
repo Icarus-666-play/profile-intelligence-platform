@@ -46,7 +46,7 @@ See [docs/getting-started.md](docs/getting-started.md) and [docs/milestones.md](
 ├── scripts/                # run_app.py, migrate.py
 ├── src/profile_intelligence/
 │   ├── core/               # config, logging, DI, exceptions
-│   ├── database/           # SQLite, models, repos, migrations
+│   ├── database/           # connection, models, repository, migrate, seed
 │   ├── importers/          # plugin framework
 │   ├── extractors/         # scaffold
 │   ├── services/           # application orchestration

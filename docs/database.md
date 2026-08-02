@@ -35,13 +35,24 @@ ORM models live in `database/models.py`:
 
 `ProfileRepository` is the first concrete implementation. Additional repositories should follow the same pattern and wrap persistence errors as `RepositoryError`.
 
+## Package layout
+
+```
+src/profile_intelligence/database/
+  connection.py   # engine + session management
+  models.py       # SQLAlchemy ORM models
+  repository.py   # repository pattern
+  migrate.py      # migration framework + versions
+  seed.py         # demo data seeder
+```
+
 ## Migrations
 
-Custom lightweight framework (no Alembic required for the initial scaffold):
+Defined in `database/migrate.py` (lightweight, no Alembic required):
 
 1. Subclass `Migration` with `version`, `name`, and `up()`
-2. Add the class to `ALL_MIGRATIONS` in `database/migrations/versions/__init__.py`
-3. Run via launcher (`--migrate-only`) or `MigrationRunner.migrate()`
+2. Add the class to `ALL_MIGRATIONS`
+3. Run via launcher or `run_migrations(database)`
 
 Migrations are applied in version order inside a transaction and recorded in `schema_migrations`.
 
@@ -59,9 +70,21 @@ Adds Milestone 1 columns:
 - `email`, `phone`, `title`, `organization`, `location`, `tags`, `raw_json`
 - indexes on `email` and `external_id`
 
+## Seeding
+
+`database/seed.py` upserts built-in demo profiles (source=`seed`):
+
+```python
+from profile_intelligence.database import seed_database, ProfileRepository
+
+seed_database(ProfileRepository(db), only_if_empty=True)
+```
+
 ## CLI
 
 ```bash
 python -m profile_intelligence migrate
+python -m profile_intelligence seed
+python -m profile_intelligence seed --only-if-empty
 python scripts/migrate.py
 ```

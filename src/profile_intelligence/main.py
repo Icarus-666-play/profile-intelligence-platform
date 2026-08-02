@@ -12,6 +12,7 @@ from profile_intelligence.bootstrap import build_container
 from profile_intelligence.core.container import Container
 from profile_intelligence.core.exceptions import PipError
 from profile_intelligence.core.logging import get_logger
+from profile_intelligence.database.seed import DatabaseSeeder
 from profile_intelligence.services.application import ApplicationService
 from profile_intelligence.services.import_service import ImportService
 from profile_intelligence.services.profile_service import ProfileService
@@ -41,6 +42,16 @@ def build_parser() -> argparse.ArgumentParser:
 
     subparsers.add_parser("migrate", help="Run database migrations and exit")
     subparsers.add_parser("importers", help="List discovered importer plugins")
+
+    seed_parser = subparsers.add_parser(
+        "seed",
+        help="Load built-in demo profiles into the database",
+    )
+    seed_parser.add_argument(
+        "--only-if-empty",
+        action="store_true",
+        help="Skip seeding when profiles already exist",
+    )
 
     import_parser = subparsers.add_parser(
         "import",
@@ -135,7 +146,7 @@ def _dispatch(
 ) -> int:
     if command is None:
         logger.info(
-            "%s is ready. Try: import | list | search | export | score",
+            "%s is ready. Try: import | list | search | export | score | seed",
             container.resolve(ApplicationService).config.app.name,
         )
         return 0
@@ -156,6 +167,18 @@ def _dispatch(
                     plugin.description or "(no description)",
                     ", ".join(plugin.supported_extensions) or "n/a",
                 )
+        return 0
+
+    if command == "seed":
+        result = container.resolve(DatabaseSeeder).seed(
+            only_if_empty=args.only_if_empty,
+        )
+        logger.info(
+            "Seeded profiles: created=%d updated=%d skipped=%d",
+            result.created,
+            result.updated,
+            result.skipped,
+        )
         return 0
 
     if command == "import":

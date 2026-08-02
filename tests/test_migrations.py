@@ -6,19 +6,19 @@ from sqlalchemy import text
 
 from profile_intelligence.core.config import AppConfig
 from profile_intelligence.database.connection import create_database
-from profile_intelligence.database.migrations.runner import MigrationRunner
+from profile_intelligence.database.migrate import MigrationRunner, run_migrations
 
 
 def test_migrate_applies_initial_schema(app_config: AppConfig) -> None:
     db = create_database(app_config)
     runner = MigrationRunner(db)
     assert runner.pending()
-    applied = runner.migrate()
+    applied = run_migrations(db)
     assert "001" in applied
     assert "002" in applied
     assert runner.pending() == []
     # Idempotent
-    assert runner.migrate() == []
+    assert run_migrations(db) == []
 
     with db.engine.connect() as connection:
         tables = {

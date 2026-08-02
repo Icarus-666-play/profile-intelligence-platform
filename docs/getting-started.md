@@ -55,6 +55,9 @@ Environment overrides:
 # Apply migrations
 python -m profile_intelligence migrate
 
+# Load built-in demo profiles
+python -m profile_intelligence seed
+
 # List importer plugins (csv, excel)
 python -m profile_intelligence importers
 

@@ -21,10 +21,9 @@ def test_build_container_and_start(temp_root: Path) -> None:
     app.start()
     assert app.is_started
     assert app.config.database_path.exists()
-    assert "001" in __import__(
-        "profile_intelligence.database.migrations.runner",
-        fromlist=["MigrationRunner"],
-    ).MigrationRunner(app.database).applied_versions()
+    from profile_intelligence.database.migrate import MigrationRunner
+
+    assert "001" in MigrationRunner(app.database).applied_versions()
 
     app.shutdown()
     assert not app.is_started

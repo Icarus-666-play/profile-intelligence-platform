@@ -7,7 +7,7 @@ Profile Intelligence Platform (PIP) is a **local-first**, modular Python desktop
 ```
 src/profile_intelligence/
   core/          # config, logging, DI, exceptions
-  database/      # SQLAlchemy engine, models, repositories, migrations
+  database/      # connection, models, repository, migrate, seed
   importers/     # plugin interface + registry + built-in plugins
   extractors/    # field/normalization pipelines (scaffold)
   services/      # application/use-case orchestration
@@ -51,7 +51,7 @@ main()
       → register services
   → ApplicationService.start()
       → ensure directories
-      → MigrationRunner.migrate()
+      → run_migrations()
       → ImporterRegistry.discover()
 ```
 

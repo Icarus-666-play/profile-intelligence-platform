@@ -5,7 +5,7 @@ from __future__ import annotations
 from profile_intelligence.core.config import AppConfig
 from profile_intelligence.core.logging import get_logger
 from profile_intelligence.database.connection import Database
-from profile_intelligence.database.migrations.runner import MigrationRunner
+from profile_intelligence.database.migrate import run_migrations
 from profile_intelligence.importers.registry import ImporterRegistry
 
 logger = get_logger(__name__)
@@ -47,8 +47,7 @@ class ApplicationService:
         if not self.database.is_connected:
             self.database.connect()
 
-        runner = MigrationRunner(self.database)
-        applied = runner.migrate()
+        applied = run_migrations(self.database)
         if applied:
             logger.info("Schema migrations applied: %s", ", ".join(applied))
 

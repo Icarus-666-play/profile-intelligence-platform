@@ -8,6 +8,7 @@ from profile_intelligence.core.logging import configure_logging, get_logger
 from profile_intelligence.core.types import PathLike
 from profile_intelligence.database.connection import Database, create_database
 from profile_intelligence.database.repository import ProfileRepository
+from profile_intelligence.database.seed import DatabaseSeeder
 from profile_intelligence.excel.exporter import ExcelExporter
 from profile_intelligence.extractors.profile import ProfileExtractor
 from profile_intelligence.importers.registry import ImporterRegistry
@@ -86,6 +87,14 @@ def build_container(
             scorer=container.resolve(CompletenessScorer),
         ),
         name="profile_service",
+    )
+    container.register(
+        DatabaseSeeder,
+        lambda: DatabaseSeeder(
+            repository=container.resolve(ProfileRepository),
+            scorer=container.resolve(CompletenessScorer),
+        ),
+        name="seeder",
     )
     container.register(
         ApplicationService,
