@@ -51,14 +51,20 @@ cache/
   Redis (future)
 ```
 
-Media package (`infrastructure/media/`):
+Media / image pipeline (`infrastructure/media/` + `ImagePipeline`):
 
 ```
-media/
-  hashing.py
-  duplicates.py
-  thumbnail_service.py
-  image_repository.py
+Image
+ ↓
+Download
+ ↓
+Hash
+ ↓
+Duplicate Detection
+ ↓
+Thumbnail
+ ↓
+Storage
 ```
 
 EuroGirls Sprint 1 (`plugins/eurogirls/`):

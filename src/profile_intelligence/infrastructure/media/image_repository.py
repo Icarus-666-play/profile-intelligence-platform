@@ -52,11 +52,16 @@ class ImageRepository(DatabaseRepository[MediaAsset]):
         *,
         profile_id: int | None = None,
         create_thumbnail: bool | None = None,
+        thumbnail_path: PathLike | None = None,
     ) -> MediaAsset:
         """Copy *source* into media storage and upsert metadata.
 
         Identical content (same hash) reuses the existing asset and updates
         ``profile_id`` when provided.
+
+        Pass *thumbnail_path* to attach a pre-built thumbnail (for example from
+        the image pipeline Thumbnail stage). When omitted, a thumbnail is
+        generated according to *create_thumbnail* / repository defaults.
         """
         source_path = Path(source)
         if not source_path.is_file():
@@ -82,18 +87,25 @@ class ImageRepository(DatabaseRepository[MediaAsset]):
         content_type, _ = mimetypes.guess_type(str(source_path))
         byte_size = destination.stat().st_size
 
-        should_thumb = (
-            self._create_thumbnails
-            if create_thumbnail is None
-            else create_thumbnail
-        )
-        thumbnail_path: str | None = None
-        if should_thumb:
-            try:
-                thumb = self._thumbnails.make_thumbnail(destination)
-                thumbnail_path = str(thumb)
-            except MediaError as exc:
-                logger.warning("Thumbnail skipped for %s: %s", destination, exc)
+        resolved_thumbnail: str | None = None
+        if thumbnail_path is not None:
+            thumb = Path(thumbnail_path)
+            if thumb.is_file():
+                resolved_thumbnail = str(thumb)
+            else:
+                logger.warning("Provided thumbnail missing: %s", thumb)
+        else:
+            should_thumb = (
+                self._create_thumbnails
+                if create_thumbnail is None
+                else create_thumbnail
+            )
+            if should_thumb:
+                try:
+                    thumb = self._thumbnails.make_thumbnail(destination)
+                    resolved_thumbnail = str(thumb)
+                except MediaError as exc:
+                    logger.warning("Thumbnail skipped for %s: %s", destination, exc)
 
         try:
             with self._database.session() as session:
@@ -111,7 +123,7 @@ class ImageRepository(DatabaseRepository[MediaAsset]):
                         width=width,
                         height=height,
                         storage_path=str(destination),
-                        thumbnail_path=thumbnail_path,
+                        thumbnail_path=resolved_thumbnail,
                     )
                     session.add(asset)
                     session.flush()
@@ -132,8 +144,8 @@ class ImageRepository(DatabaseRepository[MediaAsset]):
                 existing.width = width
                 existing.height = height
                 existing.storage_path = str(destination)
-                if thumbnail_path is not None:
-                    existing.thumbnail_path = thumbnail_path
+                if resolved_thumbnail is not None:
+                    existing.thumbnail_path = resolved_thumbnail
                 session.flush()
                 session.refresh(existing)
                 session.expunge(existing)

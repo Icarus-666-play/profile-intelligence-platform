@@ -59,10 +59,13 @@ def temp_root(tmp_path: Path) -> Path:
         "media": {
             "root_dir": "data/media",
             "thumbnails_dir": "data/media/thumbnails",
+            "downloads_dir": "data/media/downloads",
             "hash_algorithm": "sha256",
             "thumbnail_max_size": 64,
             "thumbnail_format": "JPEG",
             "thumbnail_quality": 80,
+            "allow_remote_download": True,
+            "download_timeout_seconds": 5.0,
         },
         "cache": {
             "backend": "memory",

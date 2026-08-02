@@ -46,13 +46,17 @@ search:
 dashboard:
   refresh_seconds: 30
 
+# Image → Download → Hash → Duplicate Detection → Thumbnail → Storage
 media:
   root_dir: data/media
   thumbnails_dir: data/media/thumbnails
+  downloads_dir: data/media/downloads
   hash_algorithm: sha256
   thumbnail_max_size: 256
   thumbnail_format: JPEG
   thumbnail_quality: 85
+  allow_remote_download: true
+  download_timeout_seconds: 30.0
 
 # cache/
 #   SQLite

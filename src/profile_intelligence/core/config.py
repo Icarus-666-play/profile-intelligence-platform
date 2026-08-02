@@ -164,14 +164,22 @@ class DashboardSection:
 
 @dataclass(frozen=True, slots=True)
 class MediaSection:
-    """Local media / image storage settings."""
+    """Local media / image storage settings.
+
+    Image pipeline::
+
+        Image → Download → Hash → Duplicate Detection → Thumbnail → Storage
+    """
 
     root_dir: str = "data/media"
     thumbnails_dir: str = "data/media/thumbnails"
+    downloads_dir: str = "data/media/downloads"
     hash_algorithm: str = "sha256"
     thumbnail_max_size: int = 256
     thumbnail_format: str = "JPEG"
     thumbnail_quality: int = 85
+    allow_remote_download: bool = True
+    download_timeout_seconds: float = 30.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -340,6 +348,11 @@ class AppConfig:
         return self.resolve_path(self.media.thumbnails_dir)
 
     @property
+    def media_downloads_dir(self) -> Path:
+        """Absolute path to the image download staging directory."""
+        return self.resolve_path(self.media.downloads_dir)
+
+    @property
     def cache_dir(self) -> Path:
         """Absolute path to the file-cache directory."""
         return self.resolve_path(self.cache.file_dir)
@@ -373,6 +386,7 @@ class AppConfig:
             self.plugins_dir,
             self.media_dir,
             self.thumbnails_dir,
+            self.media_downloads_dir,
             self.cache_dir,
             self.cache_sqlite_path.parent,
             self.nightly_import_dir,
@@ -666,6 +680,9 @@ def _build_config(
             thumbnails_dir=str(
                 media_raw.get("thumbnails_dir", media_defaults.thumbnails_dir)
             ),
+            downloads_dir=str(
+                media_raw.get("downloads_dir", media_defaults.downloads_dir)
+            ),
             hash_algorithm=str(
                 media_raw.get("hash_algorithm", media_defaults.hash_algorithm)
             ).lower(),
@@ -682,6 +699,18 @@ def _build_config(
             thumbnail_quality=int(
                 media_raw.get(
                     "thumbnail_quality", media_defaults.thumbnail_quality
+                )
+            ),
+            allow_remote_download=bool(
+                media_raw.get(
+                    "allow_remote_download",
+                    media_defaults.allow_remote_download,
+                )
+            ),
+            download_timeout_seconds=float(
+                media_raw.get(
+                    "download_timeout_seconds",
+                    media_defaults.download_timeout_seconds,
                 )
             ),
         ),

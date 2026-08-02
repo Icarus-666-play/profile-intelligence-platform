@@ -7,6 +7,7 @@ from profile_intelligence.application.use_cases import ImportPipeline
 from profile_intelligence.application.use_cases.application import ApplicationService
 from profile_intelligence.application.use_cases.compare_service import CompareService
 from profile_intelligence.application.use_cases.import_service import ImportService
+from profile_intelligence.application.use_cases.media_pipeline import ImagePipeline
 from profile_intelligence.application.use_cases.nightly_pipeline import NightlyPipeline
 from profile_intelligence.application.use_cases.profile_service import ProfileService
 from profile_intelligence.core.config import AppConfig
@@ -45,6 +46,7 @@ from profile_intelligence.infrastructure.database.seed import DatabaseSeeder
 from profile_intelligence.infrastructure.excel.exporter import ExcelExporter
 from profile_intelligence.infrastructure.importers.registry import ImporterRegistry
 from profile_intelligence.infrastructure.media import (
+    ImageDownloader,
     ImageDuplicateFinder,
     ImageRepository,
     ThumbnailService,
@@ -143,6 +145,17 @@ def build_container(
         name="thumbnails",
     )
     container.register(
+        ImageDownloader,
+        lambda: ImageDownloader(
+            container.resolve(AppConfig).media_downloads_dir,
+            allow_remote=container.resolve(AppConfig).media.allow_remote_download,
+            timeout_seconds=container.resolve(
+                AppConfig
+            ).media.download_timeout_seconds,
+        ),
+        name="image_downloader",
+    )
+    container.register(
         ImageRepository,
         lambda: ImageRepository(
             container.resolve(Database),
@@ -157,6 +170,17 @@ def build_container(
             algorithm=container.resolve(AppConfig).media.hash_algorithm
         ),
         name="image_duplicates",
+    )
+    container.register(
+        ImagePipeline,
+        lambda: ImagePipeline(
+            config=container.resolve(AppConfig),
+            image_repository=container.resolve(ImageRepository),
+            downloader=container.resolve(ImageDownloader),
+            thumbnail_service=container.resolve(ThumbnailService),
+            photo_repository=container.resolve(IPhotoRepository),
+        ),
+        name="image_pipeline",
     )
     container.register(
         ImportPipeline,
@@ -227,6 +251,7 @@ def build_container(
             event_bus=container.resolve(IEventBus),
             photo_repository=container.resolve(IPhotoRepository),
             image_repository=container.resolve(ImageRepository),
+            image_pipeline=container.resolve(ImagePipeline),
         ),
         name="nightly",
     )

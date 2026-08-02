@@ -19,7 +19,7 @@ src/profile_intelligence/
     cache/             # Memory / File / SQLite cache (+ Redis stub)
     database/          # SQLite connection, ORM models, repository, migrate, seed
     importers/         # Registry + built-in plugins (csv, excel, webarchive)
-    media/             # hashing, duplicates, thumbnails, image repository
+    media/             # download, hash, duplicates, thumbnails, image repository
     excel/             # Excel export adapter
     search/            # SQLite search adapter
     scoring/           # Completeness scorer
@@ -49,6 +49,7 @@ Supporting trees:
 | Repository pattern | `IProfileRepository` → `SQLiteProfileRepository` / `PostgreSQLProfileRepository` |
 | Domain events | `ProfileImported` → … → `DashboardUpdated` via `IEventBus` |
 | Caching | `ICache` → Memory / File / SQLite (+ Redis stub) |
+| Image pipeline | Download → Hash → Duplicate Detection → Thumbnail → Storage |
 | Dependency injection | Lightweight `Container` in `core.container` |
 | Typed | Python 3.12 + `py.typed`, mypy strict |
 | Configurable | YAML + env overrides |
@@ -100,6 +101,27 @@ Full persist path is `ImportPipeline` (`application/use_cases/`), exposed via `I
 | scorer | `ProfileScorer` | application/pipeline |
 | repository | `RepositoryStage` → `IProfileRepository` | application/pipeline + infrastructure |
 | SQLite | `Database` | infrastructure |
+
+## Image media pipeline
+
+```
+Image
+ ↓
+Download
+ ↓
+Hash
+ ↓
+Duplicate Detection
+ ↓
+Thumbnail
+ ↓
+Storage
+```
+
+Orchestrated by `ImagePipeline` (`application/use_cases/media_pipeline.py`) using
+`ImageDownloader`, hashing helpers, `ImageRepository` (content-addressed
+dedupe), and `ThumbnailService`. Nightly `extract_images` runs this pipeline
+over profile photos and publishes `ImagesExtracted`.
 
 ## Cache backends
 

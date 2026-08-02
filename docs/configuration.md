@@ -51,6 +51,18 @@ Profile repository adapter is selected by `driver`:
 
 Scaffold settings for upcoming modules. AI remains disabled unless `ai.enabled: true`.
 
+### `media`
+
+Image pipeline: **Download → Hash → Duplicate Detection → Thumbnail → Storage**.
+
+- `root_dir` — content-addressed image blob storage
+- `thumbnails_dir` — generated thumbnails
+- `downloads_dir` — staging directory for the Download stage
+- `hash_algorithm` — default `sha256`
+- `thumbnail_max_size`, `thumbnail_format`, `thumbnail_quality`
+- `allow_remote_download` — permit `http`/`https` fetches (default `true`)
+- `download_timeout_seconds` — remote download timeout
+
 ### `cache`
 
 ```

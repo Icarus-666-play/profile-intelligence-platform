@@ -45,6 +45,7 @@ from profile_intelligence.application.use_cases.import_service import (
     ImportService,
     ImportSummary,
 )
+from profile_intelligence.application.use_cases.media_pipeline import ImagePipeline
 from profile_intelligence.application.use_cases.profile_service import ProfileService
 from profile_intelligence.core.config import AppConfig
 from profile_intelligence.core.exceptions import ServiceError
@@ -123,6 +124,7 @@ class NightlyPipeline:
         event_bus: IEventBus | None = None,
         photo_repository: IPhotoRepository | None = None,
         image_repository: ImageRepository | None = None,
+        image_pipeline: ImagePipeline | None = None,
     ) -> None:
         self._config = config
         self._import = import_service
@@ -133,6 +135,7 @@ class NightlyPipeline:
         self._events = event_bus
         self._photos = photo_repository
         self._images = image_repository
+        self._image_pipeline = image_pipeline
 
     def run(
         self,
@@ -341,7 +344,21 @@ class NightlyPipeline:
         return event
 
     def _extract_images(self, profile_ids: Sequence[int]) -> int:
-        """Inventory images for profiles (photos + stored media assets)."""
+        """Run Image → Download → Hash → Duplicate → Thumbnail → Storage.
+
+        Falls back to inventory counts when no image pipeline is wired.
+        """
+        if self._image_pipeline is not None and profile_ids:
+            result = self._image_pipeline.process_profiles(profile_ids)
+            logger.info(
+                "Nightly extract_images: processed=%d new=%d duplicates=%d failed=%d",
+                result.processed,
+                result.stored_new,
+                result.duplicates,
+                result.failed,
+            )
+            return result.processed
+
         photo_count = 0
         if self._photos is not None:
             for profile_id in profile_ids:
@@ -353,7 +370,7 @@ class NightlyPipeline:
 
         total = max(photo_count, media_count)
         logger.info(
-            "Nightly extract_images: photos=%d media_assets=%d total=%d",
+            "Nightly extract_images (inventory): photos=%d media_assets=%d total=%d",
             photo_count,
             media_count,
             total,

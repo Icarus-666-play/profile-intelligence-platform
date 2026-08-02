@@ -1,16 +1,26 @@
 """Local media storage, hashing, thumbnails, and duplicate detection.
 
 ```
-media/
-  hashing.py
-  duplicates.py
-  thumbnail_service.py
-  image_repository.py
+Image
+ ↓
+Download
+ ↓
+Hash
+ ↓
+Duplicate Detection
+ ↓
+Thumbnail
+ ↓
+Storage
 ```
 """
 
 from __future__ import annotations
 
+from profile_intelligence.infrastructure.media.downloader import (
+    DownloadResult,
+    ImageDownloader,
+)
 from profile_intelligence.infrastructure.media.duplicates import (
     DuplicateImageGroup,
     DuplicateScanResult,
@@ -29,8 +39,10 @@ from profile_intelligence.infrastructure.media.thumbnail_service import (
 
 __all__ = [
     "DEFAULT_ALGORITHM",
+    "DownloadResult",
     "DuplicateImageGroup",
     "DuplicateScanResult",
+    "ImageDownloader",
     "ImageDuplicateFinder",
     "ImageRepository",
     "ThumbnailService",

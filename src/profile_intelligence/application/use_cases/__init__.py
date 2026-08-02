@@ -23,6 +23,13 @@ from profile_intelligence.application.use_cases.import_service import (
     ImportSummary,
 )
 from profile_intelligence.application.use_cases.import_stats import ImportStats
+from profile_intelligence.application.use_cases.media_pipeline import (
+    DEFAULT_IMAGE_PIPELINE_STAGES,
+    ImagePipeline,
+    ImagePipelineItemResult,
+    ImagePipelineResult,
+    ImageSource,
+)
 from profile_intelligence.application.use_cases.nightly_pipeline import (
     NIGHTLY_STAGES,
     NightlyPipeline,
@@ -35,10 +42,15 @@ from profile_intelligence.domain.value_objects.documents import (
 )
 
 __all__ = [
+    "DEFAULT_IMAGE_PIPELINE_STAGES",
     "NIGHTLY_STAGES",
     "ApplicationService",
     "CompareService",
     "DocumentParser",
+    "ImagePipeline",
+    "ImagePipelineItemResult",
+    "ImagePipelineResult",
+    "ImageSource",
     "ImportPipeline",
     "ImportService",
     "ImportStats",
