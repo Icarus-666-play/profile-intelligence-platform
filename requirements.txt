@@ -1,0 +1,15 @@
+# Profile Intelligence Platform — runtime dependencies
+# Install: pip install -r requirements.txt
+# Dev extras: pip install -e ".[dev]"
+
+PyYAML>=6.0.2
+SQLAlchemy>=2.0.36
+openpyxl>=3.1.5
+typing-extensions>=4.12.2
+
+# Development / quality (optional; also available via pyproject [dev])
+pytest>=8.3.4
+pytest-cov>=6.0.0
+mypy>=1.14.0
+ruff>=0.8.4
+types-PyYAML>=6.0.12

@@ -1,0 +1,52 @@
+# Profile Intelligence Platform — default configuration
+# Override with config/local.yaml or PIP_CONFIG_PATH environment variable.
+
+app:
+  name: Profile Intelligence Platform
+  short_name: PIP
+  version: "0.1.0"
+  environment: development  # development | production
+
+paths:
+  # Relative paths resolve against the application data directory.
+  data_dir: data
+  database_file: data/pip.sqlite3
+  logs_dir: logs
+  exports_dir: exports
+  plugins_dir: plugins
+
+database:
+  echo_sql: false
+  timeout_seconds: 30.0
+  check_same_thread: false
+  foreign_keys: true
+
+logging:
+  level: INFO  # DEBUG | INFO | WARNING | ERROR | CRITICAL
+  console: true
+  file: true
+  filename: pip.log
+  max_bytes: 10485760  # 10 MiB
+  backup_count: 5
+  format: "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
+  date_format: "%Y-%m-%d %H:%M:%S"
+
+importers:
+  auto_discover: true
+  enabled: []  # empty = all discovered plugins; otherwise plugin names
+
+excel:
+  default_sheet_name: Profiles
+  date_format: "YYYY-MM-DD"
+
+ai:
+  enabled: false
+  provider: null
+  model: null
+
+search:
+  default_limit: 50
+  fuzzy: true
+
+dashboard:
+  refresh_seconds: 30
