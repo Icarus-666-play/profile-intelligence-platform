@@ -194,10 +194,154 @@ class MediaAssetsMigration(Migration):
         connection.execute(text("DROP TABLE IF EXISTS media_assets"))
 
 
+class ProfileChildrenMigration(Migration):
+    """Create child tables for the Profile aggregate."""
+
+    version = "004"
+    name = "profile_children"
+
+    def up(self, connection: Connection) -> None:
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS profile_rates (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    profile_id INTEGER NOT NULL
+                        REFERENCES profiles(id) ON DELETE CASCADE,
+                    duration VARCHAR(64) NOT NULL DEFAULT '',
+                    price VARCHAR(64) NOT NULL DEFAULT '',
+                    currency VARCHAR(8) NOT NULL DEFAULT 'EUR',
+                    incall BOOLEAN NOT NULL DEFAULT 0,
+                    outcall BOOLEAN NOT NULL DEFAULT 0,
+                    UNIQUE (profile_id, duration, incall, outcall)
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE INDEX IF NOT EXISTS ix_profile_rates_profile_id
+                ON profile_rates (profile_id)
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS profile_services (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    profile_id INTEGER NOT NULL
+                        REFERENCES profiles(id) ON DELETE CASCADE,
+                    name VARCHAR(128) NOT NULL,
+                    available BOOLEAN NOT NULL DEFAULT 1,
+                    UNIQUE (profile_id, name)
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE INDEX IF NOT EXISTS ix_profile_services_profile_id
+                ON profile_services (profile_id)
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS profile_reviews (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    profile_id INTEGER NOT NULL
+                        REFERENCES profiles(id) ON DELETE CASCADE,
+                    text TEXT,
+                    author VARCHAR(128),
+                    rating VARCHAR(64),
+                    reviewed_at VARCHAR(64),
+                    source_url VARCHAR(1024)
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE INDEX IF NOT EXISTS ix_profile_reviews_profile_id
+                ON profile_reviews (profile_id)
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS profile_photos (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    profile_id INTEGER NOT NULL
+                        REFERENCES profiles(id) ON DELETE CASCADE,
+                    original_url VARCHAR(1024) NOT NULL,
+                    sha256 VARCHAR(128),
+                    role VARCHAR(32) NOT NULL DEFAULT 'gallery',
+                    content_type VARCHAR(128),
+                    UNIQUE (profile_id, original_url)
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE INDEX IF NOT EXISTS ix_profile_photos_profile_id
+                ON profile_photos (profile_id)
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS profile_availability (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    profile_id INTEGER NOT NULL
+                        REFERENCES profiles(id) ON DELETE CASCADE,
+                    day_of_week VARCHAR(16),
+                    start_time VARCHAR(16),
+                    end_time VARCHAR(16),
+                    status VARCHAR(64),
+                    notes TEXT,
+                    UNIQUE (profile_id, day_of_week, start_time, end_time)
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE INDEX IF NOT EXISTS ix_profile_availability_profile_id
+                ON profile_availability (profile_id)
+                """
+            )
+        )
+
+    def down(self, connection: Connection) -> None:
+        connection.execute(
+            text("DROP INDEX IF EXISTS ix_profile_availability_profile_id")
+        )
+        connection.execute(text("DROP TABLE IF EXISTS profile_availability"))
+        connection.execute(text("DROP INDEX IF EXISTS ix_profile_photos_profile_id"))
+        connection.execute(text("DROP TABLE IF EXISTS profile_photos"))
+        connection.execute(text("DROP INDEX IF EXISTS ix_profile_reviews_profile_id"))
+        connection.execute(text("DROP TABLE IF EXISTS profile_reviews"))
+        connection.execute(text("DROP INDEX IF EXISTS ix_profile_services_profile_id"))
+        connection.execute(text("DROP TABLE IF EXISTS profile_services"))
+        connection.execute(text("DROP INDEX IF EXISTS ix_profile_rates_profile_id"))
+        connection.execute(text("DROP TABLE IF EXISTS profile_rates"))
+
+
 ALL_MIGRATIONS: tuple[type[Migration], ...] = (
     InitialSchemaMigration,
     EnrichProfilesMigration,
     MediaAssetsMigration,
+    ProfileChildrenMigration,
 )
 
 

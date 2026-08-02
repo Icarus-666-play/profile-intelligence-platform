@@ -24,26 +24,45 @@ db.disconnect()
 
 ## Models
 
-ORM models live in `database/models.py`:
+ORM models live under `infrastructure/database/`:
 
 - `SchemaMigration` — applied migration ledger
-- `Profile` — initial profile entity scaffold
+- `Profile` — aggregate root
+- `ProfileRate` / `ProfileService` / `ProfileReview` / `ProfilePhoto` / `ProfileAvailability` — child tables
+- `MediaAsset` — content-addressed image metadata
+
+Aggregate shape:
+
+```
+Profile
+ ↓
+Rate
+ ↓
+Service
+ ↓
+Review
+ ↓
+Photo
+ ↓
+Availability
+```
 
 ## Repository pattern
 
 `Repository[T]` defines `get_by_id`, `list_all`, `add`, and `delete`.
 
-`ProfileRepository` is the first concrete implementation. Additional repositories should follow the same pattern and wrap persistence errors as `RepositoryError`.
+`ProfileRepository.upsert_draft` upserts the parent row and **replaces** all child collections in the same session. Additional repositories should follow the same pattern and wrap persistence errors as `RepositoryError`.
 
 ## Package layout
 
 ```
-src/profile_intelligence/database/
-  connection.py   # engine + session management
-  models.py       # SQLAlchemy ORM models
-  repository.py   # repository pattern
-  migrate.py      # migration framework + versions
-  seed.py         # demo data seeder
+src/profile_intelligence/infrastructure/database/
+  connection.py              # engine + session management
+  models.py                  # Base, Profile, MediaAsset
+  models_profile_children.py # Rate / Service / Review / Photo / Availability
+  repository.py              # repository pattern
+  migrate.py                 # migration framework + versions
+  seed.py                    # demo data seeder
 ```
 
 ## Migrations
@@ -69,6 +88,20 @@ Adds Milestone 1 columns:
 
 - `email`, `phone`, `title`, `organization`, `location`, `tags`, `raw_json`
 - indexes on `email` and `external_id`
+
+### Media assets migration (`003_media_assets`)
+
+Creates `media_assets` for content-addressed image storage.
+
+### Profile children migration (`004_profile_children`)
+
+Creates child tables owned by `profiles.id` (CASCADE delete):
+
+- `profile_rates`
+- `profile_services`
+- `profile_reviews`
+- `profile_photos`
+- `profile_availability`
 
 ## Seeding
 

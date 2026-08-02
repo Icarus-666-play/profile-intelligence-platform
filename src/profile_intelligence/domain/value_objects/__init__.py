@@ -7,5 +7,22 @@ from profile_intelligence.domain.value_objects.documents import (
     RawDocument,
 )
 from profile_intelligence.domain.value_objects.importing import ImportResult, RawRecord
+from profile_intelligence.domain.value_objects.profile_children import (
+    Availability,
+    Photo,
+    Rate,
+    Review,
+    Service,
+)
 
-__all__ = ["ImportResult", "ParsedDocument", "RawDocument", "RawRecord"]
+__all__ = [
+    "Availability",
+    "ImportResult",
+    "ParsedDocument",
+    "Photo",
+    "Rate",
+    "RawDocument",
+    "RawRecord",
+    "Review",
+    "Service",
+]

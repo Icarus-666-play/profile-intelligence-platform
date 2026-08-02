@@ -3,9 +3,19 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, Integer, String, Text, func
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
+if TYPE_CHECKING:
+    from profile_intelligence.infrastructure.database.models_profile_children import (
+        ProfileAvailability,
+        ProfilePhoto,
+        ProfileRate,
+        ProfileReview,
+        ProfileService,
+    )
 
 
 class Base(DeclarativeBase):
@@ -28,7 +38,12 @@ class SchemaMigration(Base):
 
 
 class Profile(Base):
-    """Core profile entity."""
+    """Core profile aggregate root.
+
+    Child collections follow:
+
+    Profile → Rate → Service → Review → Photo → Availability
+    """
 
     __tablename__ = "profiles"
 
@@ -55,6 +70,37 @@ class Profile(Base):
         nullable=False,
         server_default=func.now(),
         onupdate=func.now(),
+    )
+
+    rates: Mapped[list[ProfileRate]] = relationship(
+        "ProfileRate",
+        back_populates="profile",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+    services: Mapped[list[ProfileService]] = relationship(
+        "ProfileService",
+        back_populates="profile",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+    reviews: Mapped[list[ProfileReview]] = relationship(
+        "ProfileReview",
+        back_populates="profile",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+    photos: Mapped[list[ProfilePhoto]] = relationship(
+        "ProfilePhoto",
+        back_populates="profile",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+    availability: Mapped[list[ProfileAvailability]] = relationship(
+        "ProfileAvailability",
+        back_populates="profile",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
     def __repr__(self) -> str:
@@ -97,3 +143,25 @@ class MediaAsset(Base):
             f"MediaAsset(id={self.id!r}, content_hash={self.content_hash!r}, "
             f"profile_id={self.profile_id!r})"
         )
+
+
+# Register Profile child mappers for relationship resolution.
+from profile_intelligence.infrastructure.database.models_profile_children import (  # noqa: E402
+    ProfileAvailability,
+    ProfilePhoto,
+    ProfileRate,
+    ProfileReview,
+    ProfileService,
+)
+
+__all__ = [
+    "Base",
+    "MediaAsset",
+    "Profile",
+    "ProfileAvailability",
+    "ProfilePhoto",
+    "ProfileRate",
+    "ProfileReview",
+    "ProfileService",
+    "SchemaMigration",
+]

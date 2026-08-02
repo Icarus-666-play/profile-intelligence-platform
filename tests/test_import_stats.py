@@ -12,6 +12,11 @@ from profile_intelligence.application.use_cases.import_stats import (
 )
 from profile_intelligence.bootstrap import build_container
 from profile_intelligence.domain.entities.profile import ProfileDraft
+from profile_intelligence.domain.value_objects.profile_children import (
+    Photo,
+    Rate,
+    Service,
+)
 
 
 def test_import_stats_render_format() -> None:
@@ -41,6 +46,28 @@ def test_import_stats_render_format() -> None:
         "\n"
         "0.8 sec"
     )
+
+
+def test_collect_import_stats_from_draft_children() -> None:
+    draft = ProfileDraft(
+        display_name="Sophia",
+        source="eurogirls",
+        rates=(
+            Rate(duration="1 hour", price="300"),
+            Rate(duration="2 hours", price="500"),
+        ),
+        services=(Service(name="GFE"), Service(name="Dinner")),
+        photos=(
+            Photo(original_url="https://example.com/a.jpg", role="main"),
+            Photo(original_url="https://example.com/b.jpg"),
+            Photo(original_url="https://example.com/c.jpg"),
+        ),
+    )
+    stats = collect_import_stats(drafts=[draft], duplicates=0, profiles=1)
+    assert stats.profiles == 1
+    assert stats.rates == 2
+    assert stats.services == 2
+    assert stats.images == 3
 
 
 def test_collect_import_stats_from_draft_raw_json() -> None:

@@ -84,21 +84,31 @@ def collect_import_stats(
     profiles: int | None = None,
     execution_seconds: float = 0.0,
 ) -> ImportStats:
-    """Count services / rates / images from draft or entity payloads."""
-    sources: list[Mapping[str, Any]] = []
-    for draft in drafts:
-        payload = _payload_from_raw_json(draft.raw_json)
-        if payload is not None:
-            sources.append(payload)
-    if not sources:
-        for entity in entities:
-            payload = _payload_from_raw_json(entity.raw_json)
-            if payload is not None:
-                sources.append(payload)
+    """Count services / rates / images from draft children or raw payloads."""
+    if drafts:
+        services = sum(len(draft.services) for draft in drafts)
+        rates = sum(len(draft.rates) for draft in drafts)
+        images = sum(len(draft.photos) for draft in drafts)
+        # Fall back to raw_json when child tuples are empty (legacy drafts).
+        if services == 0 and rates == 0 and images == 0:
+            sources = [
+                payload
+                for draft in drafts
+                if (payload := _payload_from_raw_json(draft.raw_json)) is not None
+            ]
+            services = sum(_count_list(item.get("services")) for item in sources)
+            rates = sum(_count_list(item.get("rates")) for item in sources)
+            images = sum(_count_images(item) for item in sources)
+    else:
+        sources = [
+            payload
+            for entity in entities
+            if (payload := _payload_from_raw_json(entity.raw_json)) is not None
+        ]
+        services = sum(_count_list(item.get("services")) for item in sources)
+        rates = sum(_count_list(item.get("rates")) for item in sources)
+        images = sum(_count_images(item) for item in sources)
 
-    services = sum(_count_list(item.get("services")) for item in sources)
-    rates = sum(_count_list(item.get("rates")) for item in sources)
-    images = sum(_count_images(item) for item in sources)
     profile_count = (
         profiles
         if profiles is not None

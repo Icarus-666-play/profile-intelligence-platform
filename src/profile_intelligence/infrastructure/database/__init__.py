@@ -18,6 +18,13 @@ from profile_intelligence.infrastructure.database.models import (
     Profile,
     SchemaMigration,
 )
+from profile_intelligence.infrastructure.database.models_profile_children import (
+    ProfileAvailability,
+    ProfilePhoto,
+    ProfileRate,
+    ProfileReview,
+    ProfileService,
+)
 from profile_intelligence.infrastructure.database.repository import (
     DatabaseRepository,
     ProfileRepository,
@@ -39,7 +46,12 @@ __all__ = [
     "Migration",
     "MigrationRunner",
     "Profile",
+    "ProfileAvailability",
+    "ProfilePhoto",
+    "ProfileRate",
     "ProfileRepository",
+    "ProfileReview",
+    "ProfileService",
     "Repository",
     "SchemaMigration",
     "SeedResult",

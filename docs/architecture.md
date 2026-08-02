@@ -7,8 +7,8 @@ Profile Intelligence Platform (PIP) is a **local-first**, modular Python desktop
 ```
 src/profile_intelligence/
   domain/
-    entities/          # ProfileDraft, ProfileExtractor
-    value_objects/     # RawDocument, ImportResult, …
+    entities/          # ProfileDraft (+ Rate→…→Availability), ProfileExtractor
+    value_objects/     # RawDocument, ImportResult, Rate/Service/Review/Photo/Availability
     interfaces/        # ImporterPlugin, ProfileImporter, Repository ports
   application/
     pipeline/          # Parser → Normalizer → Validator

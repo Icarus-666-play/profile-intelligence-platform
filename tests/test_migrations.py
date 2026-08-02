@@ -19,6 +19,8 @@ def test_migrate_applies_initial_schema(app_config: AppConfig) -> None:
     applied = run_migrations(db)
     assert "001" in applied
     assert "002" in applied
+    assert "003" in applied
+    assert "004" in applied
     assert runner.pending() == []
     # Idempotent
     assert run_migrations(db) == []
@@ -36,6 +38,12 @@ def test_migrate_applies_initial_schema(app_config: AppConfig) -> None:
         }
     assert "profiles" in tables
     assert "schema_migrations" in tables
+    assert "media_assets" in tables
+    assert "profile_rates" in tables
+    assert "profile_services" in tables
+    assert "profile_reviews" in tables
+    assert "profile_photos" in tables
+    assert "profile_availability" in tables
     assert "email" in columns
     assert "raw_json" in columns
     db.disconnect()
@@ -43,4 +51,4 @@ def test_migrate_applies_initial_schema(app_config: AppConfig) -> None:
 
 def test_applied_versions(database) -> None:
     runner = MigrationRunner(database)
-    assert {"001", "002"} <= runner.applied_versions()
+    assert {"001", "002", "003", "004"} <= runner.applied_versions()

@@ -4,15 +4,29 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from profile_intelligence.core.exceptions import RepositoryError
 from profile_intelligence.core.logging import get_logger
 from profile_intelligence.domain.entities.profile import ProfileDraft
 from profile_intelligence.domain.interfaces.repositories import Repository
+from profile_intelligence.domain.value_objects.profile_children import (
+    Availability,
+    Photo,
+    Rate,
+    Review,
+    Service,
+)
 from profile_intelligence.infrastructure.database.connection import Database
 from profile_intelligence.infrastructure.database.models import Profile
+from profile_intelligence.infrastructure.database.models_profile_children import (
+    ProfileAvailability,
+    ProfilePhoto,
+    ProfileRate,
+    ProfileReview,
+    ProfileService,
+)
 
 logger = get_logger(__name__)
 
@@ -26,6 +40,7 @@ class DatabaseRepository[T](Repository[T]):
 
 class ProfileRepository(DatabaseRepository[Profile]):
     """Repository for :class:`Profile` persistence models."""
+
     def get_by_id(self, entity_id: int) -> Profile | None:
         try:
             with self._database.session() as session:
@@ -125,7 +140,7 @@ class ProfileRepository(DatabaseRepository[Profile]):
             ) from exc
 
     def upsert_draft(self, draft: ProfileDraft) -> tuple[Profile, bool]:
-        """Insert or update a profile from a draft.
+        """Insert or update a profile and replace its child collections.
 
         Match order: ``external_id``, then ``display_name`` + ``source``.
         Returns ``(profile, created)`` where *created* is True on insert.
@@ -133,30 +148,34 @@ class ProfileRepository(DatabaseRepository[Profile]):
         try:
             with self._database.session() as session:
                 existing = self._find_existing(session, draft)
+                created = existing is None
                 if existing is None:
                     profile = Profile(**_draft_to_columns(draft))
                     session.add(profile)
                     session.flush()
-                    session.refresh(profile)
-                    session.expunge(profile)
+                else:
+                    profile = existing
+                    for key, value in _draft_to_columns(draft).items():
+                        setattr(profile, key, value)
+                    session.flush()
+
+                self._replace_children(session, profile.id, draft)
+                session.flush()
+                session.refresh(profile)
+                session.expunge(profile)
+                if created:
                     logger.debug(
                         "Created profile %r (source=%s)",
                         profile.display_name,
                         profile.source,
                     )
-                    return profile, True
-
-                for key, value in _draft_to_columns(draft).items():
-                    setattr(existing, key, value)
-                session.flush()
-                session.refresh(existing)
-                session.expunge(existing)
-                logger.debug(
-                    "Updated profile id=%s (%r)",
-                    existing.id,
-                    existing.display_name,
-                )
-                return existing, False
+                else:
+                    logger.debug(
+                        "Updated profile id=%s (%r)",
+                        profile.id,
+                        profile.display_name,
+                    )
+                return profile, created
         except RepositoryError:
             raise
         except Exception as exc:
@@ -194,6 +213,42 @@ class ProfileRepository(DatabaseRepository[Profile]):
             conditions.append(Profile.source == draft.source)
         return session.scalar(select(Profile).where(*conditions))
 
+    @staticmethod
+    def _replace_children(
+        session: Session,
+        profile_id: int,
+        draft: ProfileDraft,
+    ) -> None:
+        """Delete existing children and insert draft children in one session."""
+        session.execute(
+            delete(ProfileRate).where(ProfileRate.profile_id == profile_id)
+        )
+        session.execute(
+            delete(ProfileService).where(ProfileService.profile_id == profile_id)
+        )
+        session.execute(
+            delete(ProfileReview).where(ProfileReview.profile_id == profile_id)
+        )
+        session.execute(
+            delete(ProfilePhoto).where(ProfilePhoto.profile_id == profile_id)
+        )
+        session.execute(
+            delete(ProfileAvailability).where(
+                ProfileAvailability.profile_id == profile_id
+            )
+        )
+
+        for rate in draft.rates:
+            session.add(_rate_to_model(profile_id, rate))
+        for service in draft.services:
+            session.add(_service_to_model(profile_id, service))
+        for review in draft.reviews:
+            session.add(_review_to_model(profile_id, review))
+        for photo in draft.photos:
+            session.add(_photo_to_model(profile_id, photo))
+        for slot in draft.availability:
+            session.add(_availability_to_model(profile_id, slot))
+
 
 def _draft_to_columns(draft: ProfileDraft) -> dict[str, object | None]:
     return {
@@ -210,3 +265,57 @@ def _draft_to_columns(draft: ProfileDraft) -> dict[str, object | None]:
         "raw_json": draft.raw_json,
         "score": draft.score,
     }
+
+
+def _rate_to_model(profile_id: int, rate: Rate) -> ProfileRate:
+    return ProfileRate(
+        profile_id=profile_id,
+        duration=rate.duration,
+        price=rate.price,
+        currency=rate.currency,
+        incall=rate.incall,
+        outcall=rate.outcall,
+    )
+
+
+def _service_to_model(profile_id: int, service: Service) -> ProfileService:
+    return ProfileService(
+        profile_id=profile_id,
+        name=service.name,
+        available=service.available,
+    )
+
+
+def _review_to_model(profile_id: int, review: Review) -> ProfileReview:
+    return ProfileReview(
+        profile_id=profile_id,
+        text=review.text,
+        author=review.author,
+        rating=review.rating,
+        reviewed_at=review.reviewed_at,
+        source_url=review.source_url,
+    )
+
+
+def _photo_to_model(profile_id: int, photo: Photo) -> ProfilePhoto:
+    return ProfilePhoto(
+        profile_id=profile_id,
+        original_url=photo.original_url,
+        sha256=photo.sha256,
+        role=photo.role,
+        content_type=photo.content_type,
+    )
+
+
+def _availability_to_model(
+    profile_id: int,
+    slot: Availability,
+) -> ProfileAvailability:
+    return ProfileAvailability(
+        profile_id=profile_id,
+        day_of_week=slot.day_of_week,
+        start_time=slot.start_time,
+        end_time=slot.end_time,
+        status=slot.status,
+        notes=slot.notes,
+    )

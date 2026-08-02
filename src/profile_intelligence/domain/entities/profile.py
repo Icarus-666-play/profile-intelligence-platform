@@ -1,14 +1,38 @@
-"""Domain profile entity (draft) and field-mapping extractor."""
+"""Domain profile aggregate (draft) and field-mapping extractor.
+
+```
+Profile
+ ↓
+Rate
+ ↓
+Service
+ ↓
+Review
+ ↓
+Photo
+ ↓
+Availability
+```
+"""
 
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping
-from dataclasses import asdict, dataclass, fields
-from typing import Any
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import asdict, dataclass, field, fields
+from typing import Any, TypeVar
 
 from profile_intelligence.core.exceptions import ExtractorError
 from profile_intelligence.core.logging import get_logger
+from profile_intelligence.domain.value_objects.profile_children import (
+    Availability,
+    Photo,
+    Rate,
+    Review,
+    Service,
+)
+
+_ChildT = TypeVar("_ChildT")
 
 logger = get_logger(__name__)
 
@@ -53,7 +77,7 @@ def _normalize_key(key: object) -> str:
 
 @dataclass(slots=True)
 class ProfileDraft:
-    """Normalized profile payload prior to persistence."""
+    """Normalized profile aggregate prior to persistence."""
 
     display_name: str
     external_id: str | None = None
@@ -67,9 +91,14 @@ class ProfileDraft:
     source: str | None = None
     raw_json: str | None = None
     score: int | None = None
+    rates: tuple[Rate, ...] = field(default_factory=tuple)
+    services: tuple[Service, ...] = field(default_factory=tuple)
+    reviews: tuple[Review, ...] = field(default_factory=tuple)
+    photos: tuple[Photo, ...] = field(default_factory=tuple)
+    availability: tuple[Availability, ...] = field(default_factory=tuple)
 
     def to_mapping(self) -> dict[str, Any]:
-        """Return a plain dict of draft fields."""
+        """Return a plain dict of draft fields (including children)."""
         return asdict(self)
 
 
@@ -130,6 +159,11 @@ class ProfileExtractor:
             notes=_as_optional_str(normalized.get("notes")),
             source=_as_optional_str(source),
             raw_json=json.dumps(dict(record), ensure_ascii=True, default=str),
+            rates=self._parse_rates(record),
+            services=self._parse_services(record),
+            reviews=self._parse_reviews(record),
+            photos=self._parse_photos(record),
+            availability=self._parse_availability(record),
         )
 
     def extract_many(
@@ -154,6 +188,69 @@ class ProfileExtractor:
             len(errors),
         )
         return drafts, errors
+
+    def _parse_rates(self, record: Mapping[str, Any]) -> tuple[Rate, ...]:
+        return self._parse_children(record.get("rates"), Rate.from_mapping)
+
+    def _parse_services(self, record: Mapping[str, Any]) -> tuple[Service, ...]:
+        return self._parse_children(
+            record.get("services"), Service.from_mapping
+        )
+
+    def _parse_reviews(self, record: Mapping[str, Any]) -> tuple[Review, ...]:
+        return self._parse_children(
+            record.get("reviews"), Review.from_mapping
+        )
+
+    def _parse_photos(self, record: Mapping[str, Any]) -> tuple[Photo, ...]:
+        photos = self._parse_children(
+            record.get("photos"), Photo.from_mapping
+        )
+        if photos:
+            return photos
+        # Fallback: main_image + gallery keys used by EuroGirls normalizer.
+        items: list[Photo] = []
+        main = Photo.from_mapping(record.get("main_image"))
+        if main is not None:
+            items.append(
+                Photo(
+                    original_url=main.original_url,
+                    sha256=main.sha256,
+                    role="main",
+                    content_type=main.content_type,
+                )
+            )
+        gallery = record.get("gallery")
+        if isinstance(gallery, Sequence) and not isinstance(
+            gallery, (str, bytes)
+        ):
+            for raw in gallery:
+                photo = Photo.from_mapping(raw)
+                if photo is not None:
+                    items.append(photo)
+        return tuple(items)
+
+    def _parse_availability(
+        self,
+        record: Mapping[str, Any],
+    ) -> tuple[Availability, ...]:
+        return self._parse_children(
+            record.get("availability"), Availability.from_mapping
+        )
+
+    @staticmethod
+    def _parse_children(
+        raw: object,
+        factory: Callable[[object], _ChildT | None],
+    ) -> tuple[_ChildT, ...]:
+        if not isinstance(raw, Sequence) or isinstance(raw, (str, bytes)):
+            return ()
+        items: list[_ChildT] = []
+        for entry in raw:
+            parsed = factory(entry)
+            if parsed is not None:
+                items.append(parsed)
+        return tuple(items)
 
     @staticmethod
     def _clean_value(value: object) -> object | None:
