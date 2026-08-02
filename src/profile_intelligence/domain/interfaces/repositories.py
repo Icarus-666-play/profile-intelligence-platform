@@ -62,7 +62,7 @@ class ProfileEntity(Protocol):
 class IProfileRepository(Protocol):
     """Port for Profile aggregate persistence.
 
-    Implemented by infrastructure ``SQLiteRepository``.
+    Implemented by infrastructure ``SQLiteProfileRepository``.
     """
 
     def get_by_id(self, entity_id: int) -> ProfileEntity | None:

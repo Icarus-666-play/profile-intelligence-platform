@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from profile_intelligence.infrastructure.database.repository import SQLiteRepository
+from profile_intelligence.infrastructure.database.repository import (
+    SQLiteProfileRepository,
+)
 from profile_intelligence.infrastructure.database.seed import (
     DEFAULT_SEED_PROFILES,
     seed_database,
@@ -10,7 +12,7 @@ from profile_intelligence.infrastructure.database.seed import (
 
 
 def test_seed_creates_demo_profiles(database) -> None:
-    repo = SQLiteRepository(database)
+    repo = SQLiteProfileRepository(database)
     result = seed_database(repo)
     assert result.created == len(DEFAULT_SEED_PROFILES)
     assert result.updated == 0
@@ -23,7 +25,7 @@ def test_seed_creates_demo_profiles(database) -> None:
 
 
 def test_seed_only_if_empty(database) -> None:
-    repo = SQLiteRepository(database)
+    repo = SQLiteProfileRepository(database)
     first = seed_database(repo, only_if_empty=True)
     assert first.created == len(DEFAULT_SEED_PROFILES)
 

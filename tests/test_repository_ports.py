@@ -25,7 +25,9 @@ from profile_intelligence.infrastructure.database.child_repositories import (
     SQLiteServiceRepository,
 )
 from profile_intelligence.infrastructure.database.connection import Database
-from profile_intelligence.infrastructure.database.repository import SQLiteRepository
+from profile_intelligence.infrastructure.database.repository import (
+    SQLiteProfileRepository,
+)
 
 
 def test_profile_repository_port_alias() -> None:
@@ -33,7 +35,7 @@ def test_profile_repository_port_alias() -> None:
 
 
 def test_sqlite_repository_implements_iprofile(database: Database) -> None:
-    assert isinstance(SQLiteRepository(database), IProfileRepository)
+    assert isinstance(SQLiteProfileRepository(database), IProfileRepository)
 
 
 def test_child_repositories_implement_ports(database: Database) -> None:
@@ -46,7 +48,7 @@ def test_child_repositories_implement_ports(database: Database) -> None:
 def test_container_resolves_repository_ports(temp_root) -> None:
     container = build_container(root_dir=temp_root)
     profile_repo = container.resolve(IProfileRepository)
-    assert isinstance(profile_repo, SQLiteRepository)
+    assert isinstance(profile_repo, SQLiteProfileRepository)
     assert isinstance(profile_repo, IProfileRepository)
     assert isinstance(container.resolve(IRateRepository), IRateRepository)
     assert isinstance(container.resolve(IServiceRepository), IServiceRepository)
@@ -55,7 +57,7 @@ def test_container_resolves_repository_ports(temp_root) -> None:
 
 
 def test_child_repositories_replace_and_list(database: Database) -> None:
-    profiles: IProfileRepository = SQLiteRepository(database)
+    profiles: IProfileRepository = SQLiteProfileRepository(database)
     rates: IRateRepository = SQLiteRateRepository(database)
     services: IServiceRepository = SQLiteServiceRepository(database)
     reviews: IReviewRepository = SQLiteReviewRepository(database)

@@ -40,7 +40,7 @@ Pipeline:
 
 ```
 .webarchive → RawDocument → BeautifulSoup Parser → Extract → Normalize
-→ Validate → Domain Profile → SQLiteRepository → SQLite
+→ Validate → Domain Profile → SQLiteProfileRepository → SQLite
 ```
 
 Sample archives: `samples/eurogirls/*.webarchive`

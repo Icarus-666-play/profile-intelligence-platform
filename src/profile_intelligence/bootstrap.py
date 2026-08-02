@@ -32,7 +32,9 @@ from profile_intelligence.infrastructure.database.connection import (
     Database,
     create_database,
 )
-from profile_intelligence.infrastructure.database.repository import SQLiteRepository
+from profile_intelligence.infrastructure.database.repository import (
+    SQLiteProfileRepository,
+)
 from profile_intelligence.infrastructure.database.seed import DatabaseSeeder
 from profile_intelligence.infrastructure.excel.exporter import ExcelExporter
 from profile_intelligence.infrastructure.importers.registry import ImporterRegistry
@@ -69,13 +71,13 @@ def build_container(
     container.register_instance(ImporterRegistry, importers, name="importers")
 
     container.register(
-        SQLiteRepository,
-        lambda: SQLiteRepository(container.resolve(Database)),
+        SQLiteProfileRepository,
+        lambda: SQLiteProfileRepository(container.resolve(Database)),
         name="profiles",
     )
     container.register(
         IProfileRepository,
-        lambda: container.resolve(SQLiteRepository),
+        lambda: container.resolve(SQLiteProfileRepository),
         name="iprofile",
     )
     container.register(

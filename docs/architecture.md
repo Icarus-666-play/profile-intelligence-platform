@@ -43,7 +43,7 @@ Supporting trees:
 | Local-first | SQLite file under `data/`; no required network services |
 | Clean architecture | Domain ← Application ← Infrastructure |
 | Plugin importers | `ProfileImporter` port + `ImporterRegistry` discovery |
-| Repository pattern | `IProfileRepository` (+ child ports) → `SQLiteRepository` adapters |
+| Repository pattern | `IProfileRepository` (+ child ports) → `SQLiteProfileRepository` adapters |
 | Dependency injection | Lightweight `Container` in `core.container` |
 | Typed | Python 3.12 + `py.typed`, mypy strict |
 | Configurable | YAML + env overrides |

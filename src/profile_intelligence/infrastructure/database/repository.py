@@ -33,7 +33,7 @@ class DatabaseRepository[T](Repository[T]):
         self._database = database
 
 
-class SQLiteRepository(DatabaseRepository[Profile]):
+class SQLiteProfileRepository(DatabaseRepository[Profile]):
     """SQLite adapter for ``IProfileRepository``.
 
     Persists ``Profile`` and child collections::
@@ -259,5 +259,6 @@ def _draft_to_columns(draft: ProfileDraft) -> dict[str, object | None]:
     }
 
 
-# Backward-compatible alias.
-ProfileRepository = SQLiteRepository
+# Backward-compatible aliases.
+SQLiteRepository = SQLiteProfileRepository
+ProfileRepository = SQLiteProfileRepository

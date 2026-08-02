@@ -65,18 +65,18 @@ SQLite adapters:
 
 | Port | Adapter |
 |------|---------|
-| `IProfileRepository` | `SQLiteRepository` |
+| `IProfileRepository` | `SQLiteProfileRepository` |
 | `IRateRepository` | `SQLiteRateRepository` |
 | `IServiceRepository` | `SQLiteServiceRepository` |
 | `IReviewRepository` | `SQLiteReviewRepository` |
 | `IPhotoRepository` | `SQLitePhotoRepository` |
 
-`SQLiteRepository.upsert_draft` upserts the parent and replaces child collections in one session (delegating to the child session helpers). `ProfileRepository` remains a compatibility alias for `SQLiteRepository`.
+`SQLiteProfileRepository.upsert_draft` upserts the parent and replaces child collections in one session (delegating to the child session helpers). `SQLiteRepository` and `ProfileRepository` remain compatibility aliases.
 
 ```
 Domain ProfileDraft
  ↓
-IProfileRepository  (SQLiteRepository)
+IProfileRepository  (SQLiteProfileRepository)
  ↓
 SQLite
 ```
@@ -88,7 +88,7 @@ src/profile_intelligence/infrastructure/database/
   connection.py              # engine + session management
   models.py                  # Base, Profile, MediaAsset
   models_profile_children.py # Rate / Service / Review / Photo / Availability
-  repository.py              # SQLiteRepository (IProfileRepository)
+  repository.py              # SQLiteProfileRepository (IProfileRepository)
   child_repositories.py      # Rate / Service / Review / Photo adapters
   migrate.py                 # migration framework + versions
   seed.py                    # demo data seeder
@@ -137,9 +137,9 @@ Creates child tables owned by `profiles.id` (CASCADE delete):
 `database/seed.py` upserts built-in demo profiles (source=`seed`):
 
 ```python
-from profile_intelligence.infrastructure.database import seed_database, SQLiteRepository
+from profile_intelligence.infrastructure.database import seed_database, SQLiteProfileRepository
 
-seed_database(SQLiteRepository(db), only_if_empty=True)
+seed_database(SQLiteProfileRepository(db), only_if_empty=True)
 ```
 
 ## CLI
