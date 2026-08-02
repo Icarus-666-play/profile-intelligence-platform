@@ -94,6 +94,6 @@ def test_cli_nightly(
     assert main(["nightly"]) == 0
     out = capsys.readouterr().out  # type: ignore[attr-defined]
     assert "Daily alias" in out or "pipeline complete" in out
-    assert "import_folder" in out
+    assert "every_day" in out or "check_import_queue" in out
     assert (temp_root / "exports" / "daily-profiles.xlsx").is_file()
     assert (temp_root / "exports" / "daily-dashboard.txt").is_file()

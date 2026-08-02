@@ -15,6 +15,8 @@ GET    /api/profiles
 GET    /api/profiles/{id}
 POST   /api/compare
 GET    /api/dashboard
+GET    /api/daily
+POST   /api/daily/run
 GET    /api/analytics
 GET    /api/plugins
 POST   /api/plugins/reload

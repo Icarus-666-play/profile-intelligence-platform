@@ -1,21 +1,17 @@
 """Daily automation workflow.
 
 ```
-Daily
+Every Day
  ↓
-Import Folder
- ↓
-Detect new files
+Check Import Queue
  ↓
 Import
  ↓
-Update
+Statistics
  ↓
-Generate Excel
+Excel
  ↓
-Create Dashboard
- ↓
-Email Report (future)
+Dashboard
 ```
 
 Schedule externally (cron / Task Scheduler)::
@@ -25,7 +21,7 @@ Schedule externally (cron / Task Scheduler)::
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -50,6 +46,10 @@ from profile_intelligence.domain.events import (
 )
 from profile_intelligence.domain.interfaces.events import IEventBus
 from profile_intelligence.domain.interfaces.repositories import IPhotoRepository
+from profile_intelligence.domain.value_objects.daily import (
+    DAILY_STAGE_LABELS,
+    DAILY_STAGES,
+)
 from profile_intelligence.infrastructure.dashboard import DashboardService
 from profile_intelligence.infrastructure.database.connection import Database
 from profile_intelligence.infrastructure.database.migrate import run_migrations
@@ -63,15 +63,16 @@ from profile_intelligence.infrastructure.reporting.email_report import (
 
 logger = get_logger(__name__)
 
-DAILY_STAGES: tuple[str, ...] = (
-    "import_folder",
-    "detect_new_files",
-    "import",
-    "update",
-    "generate_excel",
-    "create_dashboard",
-    "email_report",
-)
+ProgressCallback = Callable[[str, str], None]
+
+# Re-export for existing imports.
+__all__ = [
+    "DAILY_STAGE_LABELS",
+    "DAILY_STAGES",
+    "DailyPipeline",
+    "DailyResult",
+    "ProgressCallback",
+]
 
 
 @dataclass(frozen=True, slots=True)
@@ -110,7 +111,7 @@ class DailyResult:
 
 
 class DailyPipeline:
-    """Run the Daily import-folder → report automation chain."""
+    """Run the Every Day → Dashboard automation chain."""
 
     def __init__(
         self,
@@ -155,11 +156,17 @@ class DailyPipeline:
         rescore: bool | None = None,
         recursive: bool | None = None,
         force_all_files: bool = False,
+        on_progress: ProgressCallback | None = None,
     ) -> DailyResult:
         """Execute all Daily stages and publish workflow events."""
         self._config.ensure_directories()
 
-        # 1. Import Folder
+        def progress(stage: str, message: str) -> None:
+            if on_progress is not None:
+                on_progress(stage, message)
+
+        # 1. Every Day — prepare paths / inbox
+        progress("every_day", "Starting daily run…")
         inbox = (
             Path(import_dir)
             if import_dir is not None
@@ -168,7 +175,7 @@ class DailyPipeline:
         if not inbox.is_absolute():
             inbox = self._config.resolve_path(inbox)
         inbox.mkdir(parents=True, exist_ok=True)
-        stages_run: list[str] = ["import_folder"]
+        stages_run: list[str] = ["every_day"]
 
         excel_out = (
             Path(excel_path)
@@ -206,21 +213,23 @@ class DailyPipeline:
         # Ensure ledger schema exists before detect/import.
         run_migrations(self._database)
 
-        # 2. Detect new files
+        # 2. Check Import Queue
+        progress("check_import_queue", f"Checking import queue in {inbox}…")
         candidates = self._discover_import_files(inbox, recursive=do_recursive)
         if force_all_files:
             new_files = tuple(candidates)
         else:
             new_files = self._ledger.detect_new(candidates)
-        stages_run.append("detect_new_files")
+        stages_run.append("check_import_queue")
         logger.info(
-            "Daily detect_new_files: folder=%s candidates=%d new=%d",
+            "Daily check_import_queue: folder=%s candidates=%d new=%d",
             inbox,
             len(candidates),
             len(new_files),
         )
 
         # 3. Import
+        progress("import", f"Importing {len(new_files)} new file(s)…")
         summaries, import_errors = self._import_files(new_files)
         errors.extend(import_errors)
         stages_run.append("import")
@@ -228,7 +237,8 @@ class DailyPipeline:
         updated = sum(item.updated for item in summaries)
         skipped = sum(item.skipped for item in summaries)
 
-        # 4. Update (DB totals + confidence scores + images)
+        # 4. Statistics (DB totals + confidence scores + images)
+        progress("statistics", "Updating statistics…")
         try:
             run_migrations(self._database)
             profile_count = self._profiles.count()
@@ -242,10 +252,12 @@ class DailyPipeline:
                 rescored = self._profiles.rescore_all()
             image_count = self._extract_images(profile_ids)
         except Exception as exc:
-            raise ServiceError("Daily update stage failed", cause=exc) from exc
-        stages_run.append("update")
+            raise ServiceError(
+                "Daily statistics stage failed", cause=exc
+            ) from exc
+        stages_run.append("statistics")
         logger.info(
-            "Daily update: profiles=%d created=%d updated=%d "
+            "Daily statistics: profiles=%d created=%d updated=%d "
             "rescored=%d images=%d",
             profile_count,
             created,
@@ -277,15 +289,16 @@ class DailyPipeline:
             )
         )
 
-        # 5. Generate Excel
+        # 5. Excel
+        progress("excel", "Generating Excel…")
         try:
             excel_written = self._profiles.export_excel(excel_out)
         except Exception as exc:
             raise ServiceError(
-                "Daily generate_excel stage failed",
+                "Daily excel stage failed",
                 cause=exc,
             ) from exc
-        stages_run.append("generate_excel")
+        stages_run.append("excel")
         published.append(
             self._publish(
                 ExcelExported(
@@ -295,17 +308,18 @@ class DailyPipeline:
             )
         )
 
-        # 6. Create Dashboard
+        # 6. Dashboard
+        progress("dashboard", "Creating dashboard…")
         try:
             text = self._dashboard.render_text()
             dashboard_out.parent.mkdir(parents=True, exist_ok=True)
             dashboard_out.write_text(text + "\n", encoding="utf-8")
         except Exception as exc:
             raise ServiceError(
-                "Daily create_dashboard stage failed",
+                "Daily dashboard stage failed",
                 cause=exc,
             ) from exc
-        stages_run.append("create_dashboard")
+        stages_run.append("dashboard")
         published.append(
             self._publish(
                 DashboardUpdated(
@@ -315,7 +329,7 @@ class DailyPipeline:
             )
         )
 
-        # 7. Email Report (future)
+        # Optional email (not part of the operator stage chain).
         email_result = self._run_email_report(
             excel_path=excel_written,
             dashboard_path=dashboard_out,
@@ -323,7 +337,6 @@ class DailyPipeline:
             files_imported=len(summaries),
             errors=errors,
         )
-        stages_run.append("email_report")
         if (
             email_result.attempted
             and not email_result.sent

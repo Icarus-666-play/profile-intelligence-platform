@@ -1,5 +1,11 @@
-import { useEffect, useState } from 'react'
-import { api, type DashboardSnapshot } from '../api'
+import { useCallback, useEffect, useState } from 'react'
+import {
+  api,
+  type DailyRunResult,
+  type DailySnapshot,
+  type DashboardSnapshot,
+} from '../api'
+import UrlImportPipeline from '../components/UrlImportPipeline'
 
 type PanelKey = 'latest' | 'newest' | 'duplicates' | 'queue'
 
@@ -9,6 +15,24 @@ const PANELS: { key: PanelKey; label: string }[] = [
   { key: 'duplicates', label: 'Duplicates' },
   { key: 'queue', label: 'Import Queue' },
 ]
+
+const DAILY_PIPELINE = [
+  'every_day',
+  'check_import_queue',
+  'import',
+  'statistics',
+  'excel',
+  'dashboard',
+] as const
+
+const DAILY_LABELS: Record<string, string> = {
+  every_day: 'Every Day',
+  check_import_queue: 'Check Import Queue',
+  import: 'Import',
+  statistics: 'Statistics',
+  excel: 'Excel',
+  dashboard: 'Dashboard',
+}
 
 function formatCount(value: number): string {
   return value.toLocaleString('en-US')
@@ -33,13 +57,44 @@ export default function DashboardPage() {
   const [data, setData] = useState<DashboardSnapshot | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [panel, setPanel] = useState<PanelKey>('latest')
+  const [daily, setDaily] = useState<DailySnapshot | null>(null)
+  const [dailyBusy, setDailyBusy] = useState(false)
+  const [dailyError, setDailyError] = useState<string | null>(null)
+  const [lastDaily, setLastDaily] = useState<DailyRunResult | null>(null)
+  const [activeStage, setActiveStage] = useState<string | null>(null)
+  const [stagesRun, setStagesRun] = useState<string[]>([])
+
+  const refreshDashboard = useCallback(async () => {
+    const snapshot = await api.dashboard()
+    setData(snapshot)
+  }, [])
+
+  const refreshDaily = useCallback(async () => {
+    const snapshot = await api.daily()
+    setDaily(snapshot)
+    if (snapshot.progress) {
+      setActiveStage(snapshot.progress.stage)
+      setStagesRun(snapshot.progress.stages_run ?? [])
+    }
+    if (snapshot.last_result) {
+      setLastDaily(snapshot.last_result)
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
-    api
-      .dashboard()
-      .then((snapshot) => {
-        if (!cancelled) setData(snapshot)
+    Promise.all([api.dashboard(), api.daily()])
+      .then(([snapshot, dailySnap]) => {
+        if (cancelled) return
+        setData(snapshot)
+        setDaily(dailySnap)
+        if (dailySnap.progress) {
+          setActiveStage(dailySnap.progress.stage)
+          setStagesRun(dailySnap.progress.stages_run ?? [])
+        }
+        if (dailySnap.last_result) {
+          setLastDaily(dailySnap.last_result)
+        }
       })
       .catch((err: Error) => {
         if (!cancelled) setError(err.message)
@@ -49,16 +104,74 @@ export default function DashboardPage() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!dailyBusy) return
+    const timer = window.setInterval(() => {
+      void refreshDaily().catch(() => undefined)
+    }, 800)
+    return () => window.clearInterval(timer)
+  }, [dailyBusy, refreshDaily])
+
+  async function runDaily() {
+    setDailyBusy(true)
+    setDailyError(null)
+    setActiveStage('every_day')
+    setStagesRun(['every_day'])
+    try {
+      const result = await api.runDaily()
+      setLastDaily(result)
+      setActiveStage(result.stage || 'dashboard')
+      setStagesRun(result.stages_run?.length ? result.stages_run : [...DAILY_PIPELINE])
+      await refreshDaily()
+      await refreshDashboard()
+    } catch (err) {
+      setDailyError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setDailyBusy(false)
+    }
+  }
+
+  const pipeline = daily?.pipeline?.length ? daily.pipeline : [...DAILY_PIPELINE]
+  const labels =
+    daily?.stage_labels && Object.keys(daily.stage_labels).length
+      ? daily.stage_labels
+      : DAILY_LABELS
+
   return (
     <section>
       <h1 className="page-title">Dashboard</h1>
       <p className="page-lead">
-        Profiles, imports, geography, pricing, and ratings from the local database.
+        Every Day → Check Import Queue → Import → Statistics → Excel → Dashboard
       </p>
       {error && <p className="status error">{error}</p>}
       {!data && !error && <p className="muted">Loading dashboard…</p>}
       {data && (
         <>
+          <div className="panel daily-pipeline-panel">
+            <UrlImportPipeline
+              pipeline={pipeline}
+              labels={{ ...DAILY_LABELS, ...labels }}
+              currentStage={activeStage}
+              stagesRun={stagesRun}
+            />
+            <div className="daily-pipeline-actions">
+              <button
+                type="button"
+                onClick={() => void runDaily()}
+                disabled={dailyBusy}
+              >
+                {dailyBusy ? 'Running…' : 'Run Daily'}
+              </button>
+              {lastDaily && (
+                <span className="muted">
+                  Last run: {lastDaily.files_new} new · {lastDaily.created} created ·{' '}
+                  {lastDaily.profile_count} profiles
+                </span>
+              )}
+            </div>
+            {dailyError && <p className="status error">{dailyError}</p>}
+          </div>
+
           <div className="metric-row metric-row-5">
             <div className="metric">
               <span className="metric-label">Profiles</span>

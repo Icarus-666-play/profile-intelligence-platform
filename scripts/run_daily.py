@@ -2,21 +2,17 @@
 """Run the Daily automation workflow (for cron / Task Scheduler).
 
 ```
-Daily
+Every Day
  ↓
-Import Folder
- ↓
-Detect new files
+Check Import Queue
  ↓
 Import
  ↓
-Update
+Statistics
  ↓
-Generate Excel
+Excel
  ↓
-Create Dashboard
- ↓
-Email Report (future)
+Dashboard
 ```
 
 Example crontab (02:15 local time)::

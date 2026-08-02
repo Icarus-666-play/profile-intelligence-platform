@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from profile_intelligence.application.use_cases.compare_service import CompareService
+from profile_intelligence.application.use_cases.daily_pipeline import DailyPipeline
 from profile_intelligence.application.use_cases.import_flow import ImportFlow
 from profile_intelligence.application.use_cases.import_service import ImportService
 from profile_intelligence.application.use_cases.profile_service import ProfileService
@@ -19,6 +20,9 @@ from profile_intelligence.infrastructure.dashboard import (
 )
 from profile_intelligence.infrastructure.database.connection import Database
 from profile_intelligence.infrastructure.download import DocumentDownloader
+from profile_intelligence.infrastructure.importers.daily_activity import (
+    DailyActivityStore,
+)
 from profile_intelligence.infrastructure.importers.import_activity import (
     ImportActivityStore,
 )
@@ -44,6 +48,8 @@ class ApiContext:
     database: Database | None = None
     reports_analytics: ReportsAnalyticsService | None = None
     backups: BackupService | None = None
+    daily: DailyPipeline | None = None
+    daily_activity: DailyActivityStore | None = None
 
 
 __all__ = ["ApiContext"]

@@ -735,9 +735,21 @@ button.secondary,
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 0.35rem;
   align-items: start;
+}
+
+.daily-pipeline-panel {
+  margin-bottom: 1.25rem;
+}
+
+.daily-pipeline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 0.85rem;
 }
 
 .url-pipeline-step {

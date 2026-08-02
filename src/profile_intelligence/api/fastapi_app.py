@@ -46,6 +46,7 @@ from profile_intelligence.api.routes import (
     compare_profiles,
     create_backup,
     get_analytics,
+    get_daily,
     get_dashboard,
     get_profile,
     get_settings,
@@ -57,6 +58,7 @@ from profile_intelligence.api.routes import (
     list_plugins,
     list_profiles,
     reload_plugins,
+    run_daily,
 )
 from profile_intelligence.core.exceptions import PipError
 from profile_intelligence.core.logging import get_logger
@@ -176,6 +178,15 @@ def create_fastapi_app(
     @app.get("/api/dashboard")
     def api_dashboard() -> dict[str, Any]:
         return get_dashboard(ctx)
+
+    @app.get("/api/daily")
+    def api_daily() -> dict[str, Any]:
+        return get_daily(ctx)
+
+    @app.post("/api/daily/run")
+    async def api_daily_run(request: Request) -> dict[str, Any]:
+        body = await _json_body(request)
+        return run_daily(ctx, body)
 
     @app.get("/api/analytics")
     def api_analytics(threshold: str | None = None) -> dict[str, Any]:

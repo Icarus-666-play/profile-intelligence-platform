@@ -99,16 +99,15 @@ cache/
 ### `daily`
 
 ```
-Daily → Import Folder → Detect new files → Import → Update →
-Generate Excel → Create Dashboard → Email Report (future)
+Every Day → Check Import Queue → Import → Statistics → Excel → Dashboard
 ```
 
 - `import_dir` — import folder / inbox (default `data/inbox`)
 - `excel_path` — Daily Excel report path
 - `dashboard_path` — Daily dashboard export path
-- `rescore` — recompute Confidence Scores during Update
+- `rescore` — recompute Confidence Scores during Statistics
 - `recursive` — recurse import folder
-- `email_enabled` — reserved for Email Report (default `false`)
+- `email_enabled` — optional post-Dashboard email (default `false`)
 - `email_to` — reserved recipient
 
 Legacy `nightly:` keys are still accepted and merged under `daily`.

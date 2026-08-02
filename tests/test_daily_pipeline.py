@@ -16,13 +16,12 @@ from profile_intelligence.main import build_parser, main
 
 def test_daily_stages_order() -> None:
     assert DAILY_STAGES == (
-        "import_folder",
-        "detect_new_files",
+        "every_day",
+        "check_import_queue",
         "import",
-        "update",
-        "generate_excel",
-        "create_dashboard",
-        "email_report",
+        "statistics",
+        "excel",
+        "dashboard",
     )
 
 
@@ -121,7 +120,8 @@ def test_cli_daily(
     assert main(["daily"]) == 0
     out = capsys.readouterr().out  # type: ignore[attr-defined]
     assert "Daily pipeline complete" in out
-    assert "detect_new_files" in out
-    assert "email_report" in out or "email:" in out
+    assert "check_import_queue" in out
+    assert "statistics" in out
+    assert "email:" in out
     assert (temp_root / "exports" / "daily-profiles.xlsx").is_file()
     assert (temp_root / "exports" / "daily-dashboard.txt").is_file()

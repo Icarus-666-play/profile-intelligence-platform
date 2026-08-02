@@ -4,21 +4,17 @@ Prefer :class:`~profile_intelligence.application.use_cases.daily_pipeline.DailyP
 and ``pip-app daily``.
 
 ```
-Daily
+Every Day
  ↓
-Import Folder
- ↓
-Detect new files
+Check Import Queue
  ↓
 Import
  ↓
-Update
+Statistics
  ↓
-Generate Excel
+Excel
  ↓
-Create Dashboard
- ↓
-Email Report (future)
+Dashboard
 ```
 """
 

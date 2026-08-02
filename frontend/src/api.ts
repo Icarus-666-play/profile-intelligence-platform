@@ -319,9 +319,56 @@ export type SettingsSnapshot = {
   }
 }
 
+export type DailySnapshot = {
+  pipeline: string[]
+  stage_labels: Record<string, string>
+  progress: {
+    stage: string
+    message: string
+    percent: number
+    stages_run: string[]
+    pipeline: string[]
+    status: string
+  } | null
+  last_result: DailyRunResult | null
+}
+
+export type DailyRunResult = {
+  ok: boolean
+  success: boolean
+  pipeline: string[]
+  stage_labels: Record<string, string>
+  stages_run: string[]
+  stage: string
+  percent: number
+  message: string
+  import_folder?: string
+  files_detected: number
+  files_new: number
+  files_imported: number
+  created: number
+  updated: number
+  skipped: number
+  profile_count: number
+  excel_path?: string | null
+  dashboard_path?: string | null
+  errors: string[]
+}
+
 export const api = {
   health: () => request<{ status: string; stack: string }>('/api/health'),
   dashboard: () => request<DashboardSnapshot>('/api/dashboard'),
+  daily: () => request<DailySnapshot>('/api/daily'),
+  runDaily: (body?: {
+    import_dir?: string
+    excel_path?: string
+    dashboard_path?: string
+    force_all_files?: boolean
+  }) =>
+    request<DailyRunResult>('/api/daily/run', {
+      method: 'POST',
+      body: JSON.stringify(body ?? {}),
+    }),
   settings: () => request<SettingsSnapshot>('/api/settings'),
   backups: () =>
     request<{

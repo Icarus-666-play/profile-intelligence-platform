@@ -62,6 +62,9 @@ from profile_intelligence.infrastructure.database.repository import (
 from profile_intelligence.infrastructure.database.seed import DatabaseSeeder
 from profile_intelligence.infrastructure.download import DocumentDownloader
 from profile_intelligence.infrastructure.excel.exporter import ExcelExporter
+from profile_intelligence.infrastructure.importers.daily_activity import (
+    DailyActivityStore,
+)
 from profile_intelligence.infrastructure.importers.import_activity import (
     ImportActivityStore,
 )
@@ -379,6 +382,11 @@ def build_container(
             ledger=container.resolve(ImportFileLedger),
         ),
         name="import_activity",
+    )
+    container.register(
+        DailyActivityStore,
+        lambda: DailyActivityStore(),
+        name="daily_activity",
     )
     container.register(
         EmailReportService,

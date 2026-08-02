@@ -219,21 +219,17 @@ class DailySection:
 
     Flow::
 
-        Daily
+        Every Day
          ↓
-        Import Folder
-         ↓
-        Detect new files
+        Check Import Queue
          ↓
         Import
          ↓
-        Update
+        Statistics
          ↓
-        Generate Excel
+        Excel
          ↓
-        Create Dashboard
-         ↓
-        Email Report (future)
+        Dashboard
     """
 
     import_dir: str = "data/inbox"

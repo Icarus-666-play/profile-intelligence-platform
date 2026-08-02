@@ -200,34 +200,31 @@ All platform errors inherit from `PipError`. Domain-specific subclasses (`Config
 `DailyPipeline` (`application/use_cases/daily_pipeline.py`) runs:
 
 ```
-Daily
+Every Day
  ↓
-Import Folder
- ↓
-Detect new files
+Check Import Queue
  ↓
 Import
  ↓
-Update
+Statistics
  ↓
-Generate Excel
+Excel
  ↓
-Create Dashboard
- ↓
-Email Report (future)
+Dashboard
 ```
 
-Domain events published during Update / Excel / Dashboard:
+Domain events published during Statistics / Excel / Dashboard:
 
 ```
 ProfileImported → ScoreCalculated → ImagesExtracted → ExcelExported → DashboardUpdated
 ```
 
-New files are detected via `import_file_ledger` (content hash). Email Report is a
-stub until the email milestone (`daily.email_enabled`).
+New files are detected via `import_file_ledger` (content hash). Optional email
+report may run after Dashboard (`daily.email_enabled`) but is not an operator stage.
 
-CLI: `pip-app daily` (alias: `pip-app nightly`).
-Scheduler: `scripts/run_daily.py`.
+CLI: `pip-app daily` (alias: `pip-app nightly`).  
+API: `GET /api/daily`, `POST /api/daily/run`.  
+Scheduler: `scripts/run_daily.py`.  
 Config: `daily:` in `config/settings.yaml` (legacy `nightly:` still accepted).
 
 ## Extension points

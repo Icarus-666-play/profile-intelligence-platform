@@ -239,21 +239,17 @@ Import
 Daily automation (`pip-app daily` / `scripts/run_daily.py`):
 
 ```
-Daily
+Every Day
  ↓
-Import Folder
- ↓
-Detect new files
+Check Import Queue
  ↓
 Import
  ↓
-Update
+Statistics
  ↓
-Generate Excel
+Excel
  ↓
-Create Dashboard
- ↓
-Email Report (future)
+Dashboard
 ```
 
 Publishes: `ProfileImported → ScoreCalculated → ImagesExtracted → ExcelExported → DashboardUpdated`.

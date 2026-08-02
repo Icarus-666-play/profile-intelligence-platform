@@ -139,24 +139,22 @@ Implemented via `ImagePipeline` / `MediaPipeline` and `media_assets` / `profile_
 ## Daily automation pipeline
 
 ```
-Daily
+Every Day
  ↓
-Import Folder
- ↓
-Detect new files      (import_file_ledger)
+Check Import Queue    (import_file_ledger)
  ↓
 Import
  ↓
-Update                (optional rescore)
+Statistics            (optional rescore + images)
  ↓
-Generate Excel
+Excel
  ↓
-Create Dashboard
- ↓
-Email Report (future)
+Dashboard
 ```
 
-Entry: `pip-app daily` / `scripts/run_daily.py` → `DailyPipeline`.
+Constants: `domain/value_objects/daily.py` (`DAILY_STAGES`).  
+Entry: `pip-app daily` / `scripts/run_daily.py` / `POST /api/daily/run` → `DailyPipeline`.  
+Optional email report still runs after Dashboard when enabled (not an operator stage).
 
 Domain events published along the way:
 

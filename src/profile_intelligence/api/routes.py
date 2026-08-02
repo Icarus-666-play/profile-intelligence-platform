@@ -57,6 +57,10 @@ def dispatch(
         return 200, compare_profiles(ctx, body)
     if method == "GET" and path == "/api/dashboard":
         return 200, get_dashboard(ctx)
+    if method == "GET" and path == "/api/daily":
+        return 200, get_daily(ctx)
+    if method == "POST" and path == "/api/daily/run":
+        return 200, run_daily(ctx, body)
     if method == "GET" and path == "/api/analytics":
         return 200, get_analytics(ctx, query)
     if method == "GET" and path == "/api/plugins":
@@ -751,6 +755,109 @@ def auth_session(ctx: ApiContext, query: dict[str, str]) -> dict[str, Any]:
     if session is None:
         return {"session": None}
     return {"session": session.to_dict()}
+
+
+def get_daily(ctx: ApiContext) -> dict[str, Any]:
+    """GET /api/daily — pipeline stages, labels, and latest progress."""
+    from profile_intelligence.domain.value_objects.daily import (
+        DAILY_STAGE_LABELS,
+        DAILY_STAGES,
+    )
+
+    snap = (
+        ctx.daily_activity.snapshot()
+        if ctx.daily_activity is not None
+        else {"progress": None, "last_result": None}
+    )
+    return {
+        "pipeline": list(DAILY_STAGES),
+        "stage_labels": dict(DAILY_STAGE_LABELS),
+        "progress": snap.get("progress"),
+        "last_result": snap.get("last_result"),
+    }
+
+
+def run_daily(ctx: ApiContext, body: dict[str, Any] | None = None) -> dict[str, Any]:
+    """POST /api/daily/run — execute Every Day → … → Dashboard."""
+    from profile_intelligence.core.exceptions import ServiceError
+    from profile_intelligence.domain.value_objects.daily import (
+        DAILY_STAGE_LABELS,
+        DAILY_STAGES,
+        stage_percent,
+        stages_through,
+    )
+
+    if ctx.daily is None:
+        raise ApiError("Daily pipeline is not configured", status=503)
+    body = body or {}
+    activity = ctx.daily_activity
+
+    def on_progress(stage: str, message: str) -> None:
+        if activity is None:
+            return
+        activity.set_progress(
+            stage=stage,
+            message=message,
+            percent=stage_percent(stage),
+            stages_run=list(stages_through(stage)),
+            pipeline=list(DAILY_STAGES),
+        )
+
+    try:
+        result = ctx.daily.run(
+            import_dir=_optional_str(body, "import_dir"),
+            excel_path=_optional_str(body, "excel_path"),
+            dashboard_path=_optional_str(body, "dashboard_path"),
+            force_all_files=bool(body.get("force_all_files", False)),
+            on_progress=on_progress,
+        )
+    except (OSError, PipError, ServiceError, ValueError) as exc:
+        if activity is not None:
+            activity.record_result(
+                {
+                    "success": False,
+                    "stage": "every_day",
+                    "message": str(exc),
+                    "percent": 0,
+                    "stages_run": [],
+                    "pipeline": list(DAILY_STAGES),
+                    "errors": [str(exc)],
+                }
+            )
+        raise ApiError(str(exc), status=400) from exc
+
+    payload = {
+        "ok": result.success,
+        "success": result.success,
+        "pipeline": list(DAILY_STAGES),
+        "stage_labels": dict(DAILY_STAGE_LABELS),
+        "stages_run": list(result.stages_run),
+        "stage": result.stages_run[-1] if result.stages_run else "dashboard",
+        "percent": stage_percent(
+            result.stages_run[-1] if result.stages_run else "dashboard"
+        ),
+        "message": "Daily pipeline complete",
+        "import_folder": result.import_folder,
+        "files_detected": result.files_detected,
+        "files_new": result.files_new,
+        "files_imported": result.files_imported,
+        "created": result.created,
+        "updated": result.updated,
+        "skipped": result.skipped,
+        "profile_count": result.profile_count,
+        "rescored": result.rescored,
+        "images_extracted": result.images_extracted,
+        "excel_path": result.excel_path,
+        "dashboard_path": result.dashboard_path,
+        "email_sent": result.email_sent,
+        "email_skipped": result.email_skipped,
+        "email_message": result.email_message,
+        "events": list(result.event_names),
+        "errors": list(result.errors),
+    }
+    if activity is not None:
+        activity.record_result(payload)
+    return payload
 
 
 def _optional_str(body: dict[str, Any], key: str) -> str | None:

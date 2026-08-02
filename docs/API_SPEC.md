@@ -32,6 +32,8 @@ GET    /api/profiles
 GET    /api/profiles/{id}
 POST   /api/compare
 GET    /api/dashboard
+GET    /api/daily
+POST   /api/daily/run
 GET    /api/analytics
 GET    /api/plugins
 POST   /api/plugins/reload
@@ -171,6 +173,23 @@ Response includes `fields[]` with `equal` flags plus difference/match counts.
 
 JSON form of `DashboardService.snapshot()` (totals, by_source, top/incomplete profiles).
 
+### `GET /api/daily` / `POST /api/daily/run`
+
+Daily operator pipeline:
+
+`Every Day → Check Import Queue → Import → Statistics → Excel → Dashboard`
+
+```json
+{
+  "pipeline": ["every_day", "check_import_queue", "import", "statistics", "excel", "dashboard"],
+  "stage_labels": { "every_day": "Every Day" },
+  "progress": null,
+  "last_result": null
+}
+```
+
+`POST /api/daily/run` executes `DailyPipeline` and returns counts plus `stages_run`.
+
 ### `GET /api/analytics`
 
 Aggregate analysis plus Reports panels. Optional query: `threshold` (duplicate similarity).
@@ -225,7 +244,7 @@ List or create timestamped SQLite copies under `exports/backups/`.
 | `export` | `--output` | Write `.xlsx` |
 | `dashboard` | — | Console dashboard text |
 | `ui` | `--host`, `--port`, `--no-browser` | Dashboard UI **and** `/api` |
-| `daily` / `nightly` | daily flags | Daily automation |
+| `daily` / `nightly` | daily flags | Every Day → … → Dashboard |
 | `analyze …` | subcommands | Analysis toolkit |
 | `importers` / `seed` / `score` | — | Utilities |
 

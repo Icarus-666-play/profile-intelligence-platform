@@ -26,11 +26,11 @@ Primary actor: **Operator** — a local user running PIP on their workstation.
 
 ### US-I2 — Import an inbox folder
 **As an** operator  
-**I want to** process a folder of new files  
+**I want to** run Every Day → Check Import Queue → Import → Statistics → Excel → Dashboard  
 **So that** daily drops are ingested without re-importing old files.
 
 **Acceptance**
-- `pip-app daily` detects new files via `import_file_ledger`
+- `pip-app daily` / Dashboard **Run Daily** check the import queue via `import_file_ledger`
 - Only new/changed files are imported unless `--force-all-files`
 
 ### US-I3 — Choose an importer plugin

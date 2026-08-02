@@ -109,7 +109,7 @@ Unique window constraint per profile
 | file_size | |
 | imported_at | |
 
-Used by Daily **Detect new files**.
+Used by Daily **Check Import Queue**.
 
 ## Migrations
 

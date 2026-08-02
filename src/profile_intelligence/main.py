@@ -44,6 +44,9 @@ from profile_intelligence.infrastructure.dashboard import (
 from profile_intelligence.infrastructure.database.connection import Database
 from profile_intelligence.infrastructure.database.seed import DatabaseSeeder
 from profile_intelligence.infrastructure.download import DocumentDownloader
+from profile_intelligence.infrastructure.importers.daily_activity import (
+    DailyActivityStore,
+)
 from profile_intelligence.infrastructure.importers.import_activity import (
     ImportActivityStore,
 )
@@ -225,9 +228,8 @@ def build_parser() -> argparse.ArgumentParser:
     daily_parser = subparsers.add_parser(
         "daily",
         help=(
-            "Run Daily automation: Import Folder → Detect new files → "
-            "Import → Update → Generate Excel → Create Dashboard → "
-            "Email Report (future)"
+            "Run Daily automation: Every Day → Check Import Queue → "
+            "Import → Statistics → Excel → Dashboard"
         ),
     )
     _add_daily_arguments(daily_parser)
@@ -658,6 +660,8 @@ def _cmd_ui(args: argparse.Namespace, container: Container) -> int:
         database=container.resolve(Database),
         reports_analytics=container.resolve(ReportsAnalyticsService),
         backups=container.resolve(BackupService),
+        daily=container.resolve(DailyPipeline),
+        daily_activity=container.resolve(DailyActivityStore),
     )
     if bool(getattr(args, "legacy_wsgi", False)):
         context = UiContext(
@@ -714,7 +718,10 @@ def _cmd_daily(
         f"created={result.created} updated={result.updated} "
         f"skipped={result.skipped}"
     )
-    print(f"  update:   profiles={result.profile_count} rescored={result.rescored}")
+    print(
+        f"  statistics: profiles={result.profile_count} "
+        f"rescored={result.rescored}"
+    )
     print(f"  excel:    {result.excel_path}")
     print(f"  dashboard: {result.dashboard_path}")
     print(

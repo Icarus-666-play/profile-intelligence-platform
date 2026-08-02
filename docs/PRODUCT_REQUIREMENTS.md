@@ -54,7 +54,7 @@ Requirements for Profile Intelligence Platform through Milestone 2 (shipped) and
 
 | ID | Requirement | Status |
 |----|-------------|--------|
-| FR-6.1 | Import Folder → Detect new files → Import → Update → Excel → Dashboard | Done |
+| FR-6.1 | Every Day → Check Import Queue → Import → Statistics → Excel → Dashboard | Done |
 | FR-6.2 | Email report stage (stub / future send) | Partial |
 
 ### FR-7 Extensibility

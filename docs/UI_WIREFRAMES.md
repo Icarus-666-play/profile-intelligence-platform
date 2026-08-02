@@ -51,7 +51,10 @@ Navigation source of truth: `ui/navigation.py`.
 ### Dashboard `/dashboard`
 
 ```
-Dashboard — local overview…
+Dashboard
+
+Every Day → Check Import Queue → Import → Statistics → Excel → Dashboard
+  …pipeline stepper…   [ Run Daily ]
 
 Profiles   Imported Today   Countries   Average Price   Average Rating
   N              N              N            €NNN            N.NN
@@ -60,7 +63,8 @@ Profiles   Imported Today   Countries   Average Price   Average Rating
   …table for active panel…
 ```
 
-Data: `DashboardService.snapshot()` (+ rates/reviews/ledger/inbox).
+Data: `DashboardService.snapshot()` (+ rates/reviews/ledger/inbox).  
+Daily: `GET /api/daily`, `POST /api/daily/run` → `DailyPipeline`.
 
 ### Search `/search`
 

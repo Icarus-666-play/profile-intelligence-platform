@@ -31,7 +31,13 @@ export default function UrlImportPipeline({
   const completed = new Set(stagesRun)
 
   return (
-    <ol className="url-pipeline" aria-label="URL import pipeline">
+    <ol
+      className="url-pipeline"
+      aria-label="Pipeline progress"
+      style={{
+        gridTemplateColumns: `repeat(${pipeline.length}, minmax(0, 1fr))`,
+      }}
+    >
       {pipeline.map((stage, index) => {
         const done =
           completed.has(stage) || (currentIndex >= 0 && index < currentIndex)
