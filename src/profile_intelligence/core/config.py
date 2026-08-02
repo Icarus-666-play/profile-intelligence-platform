@@ -2,7 +2,7 @@
 
 Shipped files under ``config/``:
 - ``settings.yaml`` — app, paths, database, importers, excel, ai, search,
-  dashboard, pipeline
+  dashboard, media, nightly, pipeline
 - ``logging.yaml`` — logging options
 - ``scoring.yaml`` — completeness scoring weights
 
