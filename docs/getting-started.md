@@ -96,7 +96,7 @@ pip-app ui
 | Command | Purpose |
 |---------|---------|
 | `migrate` | Apply SQLite migrations |
-| `import <path>` | File → … → SQLite (`.csv`, `.xlsx`, `.webarchive`, …) |
+| `import <path>` | Input → Preview → Validate → Import (`--preview` / `--validate`) |
 | `list` | List stored profiles |
 | `search <query>` | Local profile search |
 | `compare <id_a> <id_b>` | Side-by-side profile diff |
