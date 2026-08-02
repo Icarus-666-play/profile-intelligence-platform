@@ -120,4 +120,5 @@ python -m profile_intelligence importers
 python -m profile_intelligence import path/to/file.csv
 python -m profile_intelligence import path/to/file.xlsx --source crm
 python -m profile_intelligence import path/to/profiles.custom.json --plugin custom
+python -m profile_intelligence import samples/newwebsite/ada.newwebsite.html --plugin newwebsite
 ```
