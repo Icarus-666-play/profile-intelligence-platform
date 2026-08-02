@@ -15,6 +15,7 @@ from profile_intelligence.core.container import Container
 from profile_intelligence.core.logging import configure_logging, get_logger
 from profile_intelligence.core.types import PathLike
 from profile_intelligence.domain.entities.profile import ProfileExtractor
+from profile_intelligence.domain.interfaces.cache import ICache
 from profile_intelligence.domain.interfaces.events import IEventBus
 from profile_intelligence.domain.interfaces.repositories import (
     IPhotoRepository,
@@ -23,6 +24,7 @@ from profile_intelligence.domain.interfaces.repositories import (
     IReviewRepository,
     IServiceRepository,
 )
+from profile_intelligence.infrastructure.cache import create_cache
 from profile_intelligence.infrastructure.dashboard import DashboardService
 from profile_intelligence.infrastructure.database.child_repositories import (
     SQLitePhotoRepository,
@@ -207,6 +209,11 @@ def build_container(
         IEventBus,
         lambda: container.resolve(InMemoryEventBus),
         name="ievent_bus",
+    )
+    container.register(
+        ICache,
+        lambda: create_cache(container.resolve(AppConfig)),
+        name="cache",
     )
     container.register(
         NightlyPipeline,

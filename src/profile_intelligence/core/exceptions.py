@@ -63,6 +63,10 @@ class MediaError(PipError):
     """Raised when media / image operations fail."""
 
 
+class CacheError(PipError):
+    """Raised when cache backend operations fail."""
+
+
 class SearchError(PipError):
     """Raised when search operations fail."""
 

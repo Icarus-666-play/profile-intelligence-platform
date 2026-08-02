@@ -36,9 +36,19 @@ src/profile_intelligence/
   application/
     pipeline/      # parser → … → repository stages
     use_cases/
-  infrastructure/  # database, importers, excel, media, search, scoring, dashboard
+  infrastructure/  # cache, database, importers, excel, media, search, scoring, dashboard
   core/            # config, logging, DI, exceptions
 config/ docs/ scripts/ tests/ plugins/
+```
+
+Cache package (`infrastructure/cache/`):
+
+```
+cache/
+  SQLite
+  Memory
+  File
+  Redis (future)
 ```
 
 Media package (`infrastructure/media/`):

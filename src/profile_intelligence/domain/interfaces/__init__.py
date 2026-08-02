@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from profile_intelligence.domain.interfaces.cache import ICache
 from profile_intelligence.domain.interfaces.events import (
     EventHandler,
     IEventBus,
@@ -25,6 +26,7 @@ from profile_intelligence.domain.interfaces.repositories import (
 
 __all__ = [
     "EventHandler",
+    "ICache",
     "IEventBus",
     "IEventPublisher",
     "IPhotoRepository",

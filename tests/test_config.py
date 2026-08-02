@@ -109,6 +109,15 @@ def test_ensure_directories(app_config) -> None:
     assert app_config.logs_dir.is_dir()
     assert app_config.exports_dir.is_dir()
     assert app_config.plugins_dir.is_dir()
+    assert app_config.cache_dir.is_dir()
+    assert app_config.cache_sqlite_path.parent.is_dir()
+
+
+def test_cache_section_defaults(app_config) -> None:
+    assert app_config.cache.backend == "memory"
+    assert app_config.cache.ttl_seconds == 3600
+    assert app_config.cache.file_dir == "data/cache"
+    assert app_config.cache.sqlite_file == "data/cache.sqlite3"
 
 
 def test_invalid_yaml(temp_root: Path) -> None:

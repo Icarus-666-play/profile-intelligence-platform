@@ -64,6 +64,13 @@ def temp_root(tmp_path: Path) -> Path:
             "thumbnail_format": "JPEG",
             "thumbnail_quality": 80,
         },
+        "cache": {
+            "backend": "memory",
+            "ttl_seconds": 3600,
+            "file_dir": "data/cache",
+            "sqlite_file": "data/cache.sqlite3",
+            "redis_url": None,
+        },
         "nightly": {
             "import_dir": "data/inbox",
             "excel_path": "exports/nightly-profiles.xlsx",

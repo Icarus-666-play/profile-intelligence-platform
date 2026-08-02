@@ -6,7 +6,7 @@ PIP uses split YAML configuration with typed dataclasses (`AppConfig` and nested
 
 | File | Role |
 |------|------|
-| `config/settings.yaml` | App, paths, database, importers, excel, ai, search, dashboard |
+| `config/settings.yaml` | App, paths, database, importers, excel, ai, search, dashboard, media, cache, nightly, pipeline |
 | `config/logging.yaml` | Logging options |
 | `config/scoring.yaml` | Completeness scoring method/weights |
 | `config/*.local.yaml` | Optional machine-local overlays (gitignored) |
@@ -50,6 +50,22 @@ Profile repository adapter is selected by `driver`:
 ### `excel`, `ai`, `search`, `dashboard`
 
 Scaffold settings for upcoming modules. AI remains disabled unless `ai.enabled: true`.
+
+### `cache`
+
+```
+cache/
+  SQLite
+  Memory
+  File
+  Redis (future)
+```
+
+- `backend` — `memory` (default) \| `file` \| `sqlite` \| `redis` (future)
+- `ttl_seconds` — default entry TTL (`0` / `null` = no expiry)
+- `file_dir` — directory for the `file` backend
+- `sqlite_file` — path for the `sqlite` backend
+- `redis_url` — reserved for the future Redis backend
 
 ## `logging.yaml`
 

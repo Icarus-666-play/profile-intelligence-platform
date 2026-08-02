@@ -6,6 +6,7 @@ from profile_intelligence.core.config import AppConfig, ScoringSection
 from profile_intelligence.core.config_manager import ConfigManager, load_config
 from profile_intelligence.core.container import Container
 from profile_intelligence.core.exceptions import (
+    CacheError,
     ConfigurationError,
     DatabaseError,
     ImporterError,
@@ -19,6 +20,7 @@ from profile_intelligence.core.logging import configure_logging, get_logger
 
 __all__ = [
     "AppConfig",
+    "CacheError",
     "ConfigManager",
     "ConfigurationError",
     "Container",

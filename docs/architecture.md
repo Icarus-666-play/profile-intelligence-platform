@@ -10,12 +10,13 @@ src/profile_intelligence/
     entities/          # ProfileDraft (+ Rate→…→Availability), ProfileExtractor
     value_objects/     # RawDocument, ImportResult, Rate/Service/Review/Photo/Availability
     events/            # ProfileImported → … → DashboardUpdated
-    interfaces/        # ImporterPlugin, repository ports, IEventBus
+    interfaces/        # ImporterPlugin, repository ports, IEventBus, ICache
   application/
     pipeline/          # Parser → Normalizer → Validator
     events/            # InMemoryEventBus
     use_cases/         # Import, search, compare, export, dashboard, nightly
   infrastructure/
+    cache/             # Memory / File / SQLite cache (+ Redis stub)
     database/          # SQLite connection, ORM models, repository, migrate, seed
     importers/         # Registry + built-in plugins (csv, excel, webarchive)
     media/             # hashing, duplicates, thumbnails, image repository
@@ -47,6 +48,7 @@ Supporting trees:
 | Plugin importers | `ProfileImporter` port + `ImporterRegistry` discovery |
 | Repository pattern | `IProfileRepository` → `SQLiteProfileRepository` / `PostgreSQLProfileRepository` |
 | Domain events | `ProfileImported` → … → `DashboardUpdated` via `IEventBus` |
+| Caching | `ICache` → Memory / File / SQLite (+ Redis stub) |
 | Dependency injection | Lightweight `Container` in `core.container` |
 | Typed | Python 3.12 + `py.typed`, mypy strict |
 | Configurable | YAML + env overrides |
@@ -99,9 +101,22 @@ Full persist path is `ImportPipeline` (`application/use_cases/`), exposed via `I
 | repository | `RepositoryStage` → `IProfileRepository` | application/pipeline + infrastructure |
 | SQLite | `Database` | infrastructure |
 
+## Cache backends
+
+```
+cache/
+  SQLite
+  Memory
+  File
+  Redis (future)
+```
+
+Select via `cache.backend` in `settings.yaml` (`memory` default). Bound in DI as `ICache`.
+Redis raises `CacheError` until implemented.
+
 ## Error model
 
-All platform errors inherit from `PipError`. Domain-specific subclasses (`ConfigurationError`, `DatabaseError`, `MigrationError`, `PluginError`, …) allow precise handling without catching unrelated exceptions.
+All platform errors inherit from `PipError`. Domain-specific subclasses (`ConfigurationError`, `DatabaseError`, `MigrationError`, `PluginError`, `CacheError`, …) allow precise handling without catching unrelated exceptions.
 
 ## Nightly automation + workflow events
 

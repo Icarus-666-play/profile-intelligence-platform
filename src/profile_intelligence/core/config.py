@@ -175,6 +175,26 @@ class MediaSection:
 
 
 @dataclass(frozen=True, slots=True)
+class CacheSection:
+    """Application cache settings.
+
+    Backends::
+
+        cache/
+          SQLite
+          Memory
+          File
+          Redis (future)
+    """
+
+    backend: str = "memory"
+    ttl_seconds: float | None = 3600.0
+    file_dir: str = "data/cache"
+    sqlite_file: str = "data/cache.sqlite3"
+    redis_url: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class NightlySection:
     """Nightly automation workflow settings.
 
@@ -270,6 +290,7 @@ class AppConfig:
     search: SearchSection = field(default_factory=SearchSection)
     dashboard: DashboardSection = field(default_factory=DashboardSection)
     media: MediaSection = field(default_factory=MediaSection)
+    cache: CacheSection = field(default_factory=CacheSection)
     nightly: NightlySection = field(default_factory=NightlySection)
     pipeline: PipelineSection = field(default_factory=PipelineSection)
     config_dir: Path | None = None
@@ -319,6 +340,16 @@ class AppConfig:
         return self.resolve_path(self.media.thumbnails_dir)
 
     @property
+    def cache_dir(self) -> Path:
+        """Absolute path to the file-cache directory."""
+        return self.resolve_path(self.cache.file_dir)
+
+    @property
+    def cache_sqlite_path(self) -> Path:
+        """Absolute path to the SQLite cache database file."""
+        return self.resolve_path(self.cache.sqlite_file)
+
+    @property
     def nightly_import_dir(self) -> Path:
         """Absolute path to the nightly import inbox."""
         return self.resolve_path(self.nightly.import_dir)
@@ -342,6 +373,8 @@ class AppConfig:
             self.plugins_dir,
             self.media_dir,
             self.thumbnails_dir,
+            self.cache_dir,
+            self.cache_sqlite_path.parent,
             self.nightly_import_dir,
             self.database_path.parent,
             self.nightly_excel_path.parent,
@@ -459,6 +492,16 @@ def _optional_str(value: object | None) -> str | None:
     return text or None
 
 
+def _optional_float(value: object | None) -> float | None:
+    if value is None:
+        return None
+    if isinstance(value, (int, float, str)):
+        return float(value)
+    raise ConfigurationError(
+        f"Expected a numeric value, got {type(value).__name__}"
+    )
+
+
 def _build_config(
     settings_raw: Mapping[str, Any],
     logging_raw: Mapping[str, Any],
@@ -481,6 +524,7 @@ def _build_config(
     search_defaults = SearchSection()
     dashboard_defaults = DashboardSection()
     media_defaults = MediaSection()
+    cache_defaults = CacheSection()
     nightly_defaults = NightlySection()
 
     app_raw = _section(settings_raw, "app")
@@ -492,6 +536,7 @@ def _build_config(
     search_raw = _section(settings_raw, "search")
     dashboard_raw = _section(settings_raw, "dashboard")
     media_raw = _section(settings_raw, "media")
+    cache_raw = _section(settings_raw, "cache")
     nightly_raw = _section(settings_raw, "nightly")
     pipeline_section = _parse_pipeline(settings_raw.get("pipeline"))
     logging_data = _normalize_logging_raw(logging_raw)
@@ -640,6 +685,19 @@ def _build_config(
                 )
             ),
         ),
+        cache=CacheSection(
+            backend=str(cache_raw.get("backend", cache_defaults.backend)).lower(),
+            ttl_seconds=_optional_float(
+                cache_raw.get("ttl_seconds", cache_defaults.ttl_seconds)
+            ),
+            file_dir=str(cache_raw.get("file_dir", cache_defaults.file_dir)),
+            sqlite_file=str(
+                cache_raw.get("sqlite_file", cache_defaults.sqlite_file)
+            ),
+            redis_url=_optional_str(
+                cache_raw.get("redis_url", cache_defaults.redis_url)
+            ),
+        ),
         nightly=NightlySection(
             import_dir=str(
                 nightly_raw.get("import_dir", nightly_defaults.import_dir)
@@ -718,6 +776,7 @@ __all__ = [
     "AISection",
     "AppConfig",
     "AppSection",
+    "CacheSection",
     "DashboardSection",
     "DatabaseSection",
     "ExcelSection",

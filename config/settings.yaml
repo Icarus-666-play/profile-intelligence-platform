@@ -54,6 +54,18 @@ media:
   thumbnail_format: JPEG
   thumbnail_quality: 85
 
+# cache/
+#   SQLite
+#   Memory
+#   File
+#   Redis (future)
+cache:
+  backend: memory  # memory | file | sqlite | redis
+  ttl_seconds: 3600
+  file_dir: data/cache
+  sqlite_file: data/cache.sqlite3
+  redis_url: null
+
 # Nightly automation: import → DB → scores → Excel → dashboard
 nightly:
   import_dir: data/inbox
