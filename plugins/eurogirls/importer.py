@@ -1,7 +1,7 @@
 """EuroGirls directory export importer (scaffold).
 
-Replace :meth:`import_file` with parsing for your EuroGirls export format.
-Until then this plugin only claims files whose names contain ``eurogirls``.
+Replace :meth:`parse_profiles` with parsing for your EuroGirls export format.
+Until then this plugin only claims files marked with ``eurogirls``.
 """
 
 from __future__ import annotations
@@ -10,24 +10,16 @@ from pathlib import Path
 from typing import ClassVar
 
 from profile_intelligence.core.logging import get_logger
-from profile_intelligence.core.types import PathLike
-from profile_intelligence.importers.base import ImporterPlugin, ImportResult
+from profile_intelligence.importers.base import ImportResult
+from profile_intelligence.importers.profile_importer import (
+    ProfileImporter,
+    ProfileParseOutcome,
+)
 
 logger = get_logger("importers.external.eurogirls")
 
 
-def _has_source_marker(path: Path, marker: str) -> bool:
-    stem = path.stem.lower()
-    name = path.name.lower()
-    return (
-        stem == marker
-        or stem.startswith(f"{marker}_")
-        or stem.endswith(f"_{marker}")
-        or f".{marker}." in name
-    )
-
-
-class EuroGirlsImporter(ImporterPlugin):
+class EuroGirlsImporter(ProfileImporter):
     """Scaffold importer for EuroGirls profile exports."""
 
     name: ClassVar[str] = "eurogirls"
@@ -40,21 +32,15 @@ class EuroGirlsImporter(ImporterPlugin):
         ".xlsx",
         ".html",
     )
+    source_markers: ClassVar[tuple[str, ...]] = ("eurogirls",)
+    require_source_marker: ClassVar[bool] = True
 
-    def can_handle(self, path: PathLike) -> bool:
-        resolved = Path(path)
-        return _has_source_marker(resolved, "eurogirls") and self.matches_extension(
-            resolved
-        )
-
-    def import_file(self, path: PathLike, **options: object) -> ImportResult:
-        resolved = self.validate_path(path)
+    def parse_profiles(self, path: Path, **options: object) -> ProfileParseOutcome:
         logger.warning(
             "EuroGirls importer is a scaffold; no parser implemented for %s",
-            resolved,
+            path,
         )
         return ImportResult.failure(
-            "EuroGirls importer scaffold: implement parsing in "
-            "plugins/eurogirls/importer.py",
-            records_read=0,
+            "EuroGirls importer scaffold: implement parse_profiles in "
+            "plugins/eurogirls/importer.py"
         )

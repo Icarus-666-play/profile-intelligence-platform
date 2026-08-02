@@ -3,44 +3,42 @@
 from __future__ import annotations
 
 import csv
-from typing import Any, ClassVar
+from pathlib import Path
+from typing import ClassVar
 
 from profile_intelligence.core.exceptions import ImporterError
 from profile_intelligence.core.logging import get_logger
-from profile_intelligence.core.types import PathLike
-from profile_intelligence.importers.base import ImporterPlugin, ImportResult
+from profile_intelligence.importers.base import ImportResult, RawRecord
+from profile_intelligence.importers.profile_importer import (
+    ProfileImporter,
+    ProfileParseOutcome,
+)
 
 logger = get_logger(__name__)
 
 
-class CsvImporter(ImporterPlugin):
+class CsvImporter(ProfileImporter):
     """Import profile rows from a UTF-8 CSV file with a header row."""
 
     name: ClassVar[str] = "csv"
     description: ClassVar[str] = "CSV profile importer (header row required)"
     supported_extensions: ClassVar[tuple[str, ...]] = (".csv",)
 
-    def can_handle(self, path: PathLike) -> bool:
-        return self.matches_extension(path)
-
-    def import_file(self, path: PathLike, **options: object) -> ImportResult:
-        resolved = self.validate_path(path)
+    def parse_profiles(self, path: Path, **options: object) -> ProfileParseOutcome:
         encoding = str(options.get("encoding", "utf-8-sig"))
         try:
-            with resolved.open(encoding=encoding, newline="") as handle:
+            with path.open(encoding=encoding, newline="") as handle:
                 reader = csv.DictReader(handle)
                 if not reader.fieldnames:
                     return ImportResult.failure("CSV file has no header row")
-                records: list[dict[str, Any]] = []
+                records: list[RawRecord] = []
                 skipped = 0
                 for row in reader:
-                    if all(
-                        value is None or str(value).strip() == ""
-                        for value in row.values()
-                    ):
+                    materialised = dict(row)
+                    if self.is_empty_row(materialised):
                         skipped += 1
                         continue
-                    records.append(dict(row))
+                    records.append(materialised)
         except UnicodeDecodeError as exc:
             raise ImporterError(
                 f"Failed to decode CSV as {encoding}",
@@ -48,18 +46,14 @@ class CsvImporter(ImporterPlugin):
             ) from exc
         except OSError as exc:
             raise ImporterError(
-                f"Failed to read CSV file: {resolved}",
+                f"Failed to read CSV file: {path}",
                 cause=exc,
             ) from exc
 
         logger.debug(
             "Parsed CSV %s: records=%d skipped=%d",
-            resolved,
+            path,
             len(records),
             skipped,
         )
-        return ImportResult.from_records(
-            records,
-            skipped=skipped,
-            metadata={"path": str(resolved), "plugin": self.name},
-        )
+        return records, skipped

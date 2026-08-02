@@ -14,6 +14,7 @@ from profile_intelligence.core.exceptions import ImporterError, PluginError
 from profile_intelligence.core.logging import get_logger
 from profile_intelligence.core.types import PathLike
 from profile_intelligence.importers.base import ImporterPlugin
+from profile_intelligence.importers.profile_importer import ProfileImporter
 
 logger = get_logger(__name__)
 
@@ -209,7 +210,7 @@ class ImporterRegistry:
         return (
             isinstance(value, type)
             and issubclass(value, ImporterPlugin)
-            and value is not ImporterPlugin
+            and value not in {ImporterPlugin, ProfileImporter}
             and not getattr(value, "__abstractmethods__", None)
         )
 

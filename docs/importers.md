@@ -12,24 +12,31 @@ extracts, scores, and persists profiles.
 
 ## Interface
 
-Subclass `ImporterPlugin` and return `ImportResult.from_records(...)`:
+Prefer subclassing `ProfileImporter` (builds on `ImporterPlugin`) and implement
+`parse_profiles()`:
 
 ```python
+from pathlib import Path
 from typing import ClassVar
-from profile_intelligence.importers import ImporterPlugin, ImportResult
+from profile_intelligence.importers import ProfileImporter
 
-class MyImporter(ImporterPlugin):
+class MyImporter(ProfileImporter):
     name: ClassVar[str] = "my_source"
     description: ClassVar[str] = "Imports from my format"
     supported_extensions: ClassVar[tuple[str, ...]] = (".csv",)
+    source_markers: ClassVar[tuple[str, ...]] = ("my_source",)  # optional
+    require_source_marker: ClassVar[bool] = True                # optional
 
-    def can_handle(self, path) -> bool:
-        return self.matches_extension(path)
-
-    def import_file(self, path, **options: object) -> ImportResult:
-        self.validate_path(path)
-        return ImportResult.from_records([{"name": "Ada"}])
+    def parse_profiles(self, path: Path, **options: object):
+        # return (records, skipped) or ImportResult.failure(...)
+        return [{"name": "Ada"}], 0
 ```
+
+`ProfileImporter` provides:
+
+- `can_handle()` from extensions + optional source filename markers
+- `import_file()` wrapping parse output in `ImportResult`
+- helpers: `is_empty_row()`, `matches_source_marker()`, `build_metadata()`
 
 ## Header aliases
 

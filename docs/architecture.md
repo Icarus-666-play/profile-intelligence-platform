@@ -33,7 +33,7 @@ Supporting trees:
 |-----------|----------------|
 | Local-first | SQLite file under `data/`; no required network services |
 | Modular | Domain packages with clear boundaries |
-| Plugin importers | `ImporterPlugin` ABC + `ImporterRegistry` discovery |
+| Plugin importers | `ProfileImporter` / `ImporterPlugin` + `ImporterRegistry` discovery |
 | Repository pattern | `Repository[T]` / `ProfileRepository` |
 | Dependency injection | Lightweight `Container` in `core.container` |
 | Typed | Python 3.12 + `py.typed`, mypy strict |

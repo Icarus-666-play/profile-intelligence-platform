@@ -26,20 +26,19 @@ directly under `plugins/`.
 ## Create a plugin
 
 ```python
+from pathlib import Path
 from typing import ClassVar
-from profile_intelligence.importers.base import ImporterPlugin, ImportResult
+from profile_intelligence.importers import ProfileImporter
 
-class MyImporter(ImporterPlugin):
+class MyImporter(ProfileImporter):
     name: ClassVar[str] = "my_source"
     description: ClassVar[str] = "My export format"
     supported_extensions: ClassVar[tuple[str, ...]] = (".json",)
+    source_markers: ClassVar[tuple[str, ...]] = ("my_source",)
+    require_source_marker: ClassVar[bool] = True
 
-    def can_handle(self, path) -> bool:
-        return self.matches_extension(path)
-
-    def import_file(self, path, **options: object) -> ImportResult:
-        self.validate_path(path)
-        return ImportResult.from_records([{"name": "Ada"}])
+    def parse_profiles(self, path: Path, **options: object):
+        return [{"name": "Ada"}], 0
 ```
 
 See `custom/` for a ready-to-edit template.

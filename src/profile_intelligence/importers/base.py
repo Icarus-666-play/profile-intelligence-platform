@@ -63,9 +63,10 @@ class ImportResult:
 class ImporterPlugin(ABC):
     """Base class for all importer plugins.
 
-    Plugins are discovered by subclassing this type and either:
+    Prefer :class:`~profile_intelligence.importers.profile_importer.ProfileImporter`
+    for profile row importers. Plugins are discovered by subclassing and either:
     - living under ``profile_intelligence.importers.plugins``, or
-    - being loaded from the configured external plugins directory.
+    - being loaded from the configured external ``plugins/`` packages.
     """
 
     name: ClassVar[str]

@@ -9,6 +9,7 @@ import pytest
 
 from profile_intelligence.core.exceptions import PluginError
 from profile_intelligence.importers.base import ImporterPlugin, ImportResult
+from profile_intelligence.importers.profile_importer import ProfileImporter
 from profile_intelligence.importers.registry import ImporterRegistry
 
 
@@ -28,6 +29,17 @@ class DummyCsvImporter(ImporterPlugin):
             records_read=len(lines),
             records_imported=max(len(lines) - 1, 0),
         )
+
+
+class MarkerProfileImporter(ProfileImporter):
+    name: ClassVar[str] = "marker_demo"
+    description: ClassVar[str] = "ProfileImporter with source marker"
+    supported_extensions: ClassVar[tuple[str, ...]] = (".csv",)
+    source_markers: ClassVar[tuple[str, ...]] = ("marker",)
+    require_source_marker: ClassVar[bool] = True
+
+    def parse_profiles(self, path: Path, **options: object):
+        return [{"name": "Ada"}], 0
 
 
 def test_register_and_list() -> None:
@@ -122,6 +134,35 @@ def test_repo_plugin_packages_discoverable() -> None:
     assert count >= 3
     names = {plugin.name for plugin in registry.list_plugins()}
     assert {"eurogirls", "eros", "custom"}.issubset(names)
+    assert all(
+        isinstance(plugin, ProfileImporter) for plugin in registry.list_plugins()
+    )
+
+
+def test_profile_importer_source_markers(tmp_path: Path) -> None:
+    plugin = MarkerProfileImporter()
+    plain = tmp_path / "people.csv"
+    marked = tmp_path / "marker_people.csv"
+    plain.write_text("name\nAda\n", encoding="utf-8")
+    marked.write_text("name\nAda\n", encoding="utf-8")
+
+    assert plugin.can_handle(plain) is False
+    assert plugin.can_handle(marked) is True
+    result = plugin.import_file(marked)
+    assert result.success
+    assert result.records[0]["name"] == "Ada"
+    assert result.metadata["plugin"] == "marker_demo"
+
+
+def test_profile_importer_not_auto_registered() -> None:
+    import types
+
+    module = types.ModuleType("fake_profile_importer_module")
+    module.ProfileImporter = ProfileImporter  # type: ignore[attr-defined]
+    registry = ImporterRegistry()
+    count = registry._register_plugins_from_module(module)
+    assert count == 0
+    assert registry.list_plugins() == ()
 
 
 def test_import_result_failure() -> None:

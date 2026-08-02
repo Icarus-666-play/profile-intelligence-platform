@@ -2,40 +2,40 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any, ClassVar
 
 from openpyxl import load_workbook
 
 from profile_intelligence.core.exceptions import ImporterError
 from profile_intelligence.core.logging import get_logger
-from profile_intelligence.core.types import PathLike
-from profile_intelligence.importers.base import ImporterPlugin, ImportResult
+from profile_intelligence.importers.base import ImportResult, RawRecord
+from profile_intelligence.importers.profile_importer import (
+    ProfileImporter,
+    ProfileParseOutcome,
+)
 
 logger = get_logger(__name__)
 
 
-class ExcelImporter(ImporterPlugin):
+class ExcelImporter(ProfileImporter):
     """Import profile rows from the first sheet of an Excel workbook."""
 
     name: ClassVar[str] = "excel"
     description: ClassVar[str] = "Excel .xlsx profile importer (first sheet)"
     supported_extensions: ClassVar[tuple[str, ...]] = (".xlsx",)
 
-    def can_handle(self, path: PathLike) -> bool:
-        return self.matches_extension(path)
-
-    def import_file(self, path: PathLike, **options: object) -> ImportResult:
-        resolved = self.validate_path(path)
+    def parse_profiles(self, path: Path, **options: object) -> ProfileParseOutcome:
         sheet_name = options.get("sheet_name")
         try:
             workbook = load_workbook(
-                filename=resolved,
+                filename=path,
                 read_only=True,
                 data_only=True,
             )
         except Exception as exc:
             raise ImporterError(
-                f"Failed to open Excel workbook: {resolved}",
+                f"Failed to open Excel workbook: {path}",
                 cause=exc,
             ) from exc
 
@@ -59,7 +59,7 @@ class ExcelImporter(ImporterPlugin):
             if not any(headers):
                 return ImportResult.failure("Excel sheet has no header row")
 
-            records: list[dict[str, Any]] = []
+            records: list[RawRecord] = []
             skipped = 0
             for row in rows:
                 values = list(row)
@@ -78,16 +78,17 @@ class ExcelImporter(ImporterPlugin):
 
         logger.debug(
             "Parsed Excel %s sheet=%s records=%d skipped=%d",
-            resolved,
+            path,
             active_sheet_title,
             len(records),
             skipped,
         )
+        # Preserve sheet name in metadata via ImportResult path.
         return ImportResult.from_records(
             records,
             skipped=skipped,
             metadata={
-                "path": str(resolved),
+                "path": str(path),
                 "plugin": self.name,
                 "sheet": active_sheet_title,
             },
