@@ -55,6 +55,17 @@ main()
       → ImporterRegistry.discover()
 ```
 
+## Milestone 1 data pipeline
+
+```
+file.csv/.xlsx
+  → ImporterPlugin.import_file()          # raw row dicts
+  → ProfileExtractor.extract_many()       # ProfileDraft
+  → CompletenessScorer.score()            # 0-100
+  → ProfileRepository.upsert_draft()      # SQLite
+  → ProfileSearchService / ExcelExporter  # query & report
+```
+
 ## Error model
 
 All platform errors inherit from `PipError`. Domain-specific subclasses (`ConfigurationError`, `DatabaseError`, `MigrationError`, `PluginError`, …) allow precise handling without catching unrelated exceptions.

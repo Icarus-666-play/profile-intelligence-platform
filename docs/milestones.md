@@ -4,7 +4,7 @@
 
 Repository scaffold: config, logging, SQLite layer, migrations, empty plugin framework, DI, docs, tests.
 
-## Milestone 1 — Core Profile Data Pipeline (current)
+## Milestone 1 — Core Profile Data Pipeline (complete)
 
 Deliver a complete local import → extract → persist → search → score → Excel export loop.
 
