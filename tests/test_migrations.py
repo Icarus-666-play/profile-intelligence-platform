@@ -15,6 +15,7 @@ def test_migrate_applies_initial_schema(app_config: AppConfig) -> None:
     assert runner.pending()
     applied = runner.migrate()
     assert "001" in applied
+    assert "002" in applied
     assert runner.pending() == []
     # Idempotent
     assert runner.migrate() == []
@@ -26,11 +27,17 @@ def test_migrate_applies_initial_schema(app_config: AppConfig) -> None:
                 text("SELECT name FROM sqlite_master WHERE type='table'")
             )
         }
+        columns = {
+            row[1]
+            for row in connection.execute(text("PRAGMA table_info(profiles)"))
+        }
     assert "profiles" in tables
     assert "schema_migrations" in tables
+    assert "email" in columns
+    assert "raw_json" in columns
     db.disconnect()
 
 
 def test_applied_versions(database) -> None:
     runner = MigrationRunner(database)
-    assert "001" in runner.applied_versions()
+    assert {"001", "002"} <= runner.applied_versions()

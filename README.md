@@ -4,18 +4,20 @@ Local-first desktop application for profile analysis, scoring, Excel reporting, 
 
 **Windows-first · Python 3.12 · SQLite · Plugin importers · Fully typed**
 
-## Features (foundation)
+## Features
 
+### Milestone 0 — Foundation
 - Modular package architecture under `src/profile_intelligence/`
-- YAML configuration with environment overrides
-- Structured rotating-file + console logging
-- SQLite connection layer (SQLAlchemy 2.x)
-- Database migration framework
-- Repository pattern
-- Lightweight dependency injection container
-- Empty, ready-to-extend importer plugin framework
-- Typed exception hierarchy
-- Unit tests, documentation, and quality tooling (ruff, mypy, pytest)
+- YAML configuration, logging, DI, migrations, repository pattern
+- Typed exception hierarchy and quality tooling
+
+### Milestone 1 — Core Profile Pipeline
+- Built-in **CSV** and **Excel** importer plugins
+- Header-alias extractors → SQLite upsert
+- Completeness scoring (0–100)
+- Local profile search
+- Excel workbook export
+- CLI: `import`, `list`, `search`, `export`, `score`
 
 ## Quick start
 
@@ -27,11 +29,14 @@ source .venv/bin/activate
 pip install -U pip
 pip install -e ".[dev]"
 
-python -m profile_intelligence --migrate-only
+python -m profile_intelligence migrate
+python -m profile_intelligence import samples/profiles.csv
+python -m profile_intelligence search Lovelace
+python -m profile_intelligence export
 pytest
 ```
 
-See [docs/getting-started.md](docs/getting-started.md) for full setup details.
+See [docs/getting-started.md](docs/getting-started.md) and [docs/milestones.md](docs/milestones.md).
 
 ## Project structure
 
@@ -62,6 +67,7 @@ See [docs/getting-started.md](docs/getting-started.md) for full setup details.
 | [Configuration](docs/configuration.md) | YAML & env reference |
 | [Database](docs/database.md) | SQLite, repos, migrations |
 | [Importers](docs/importers.md) | Plugin authoring |
+| [Milestones](docs/milestones.md) | Roadmap & acceptance |
 
 ## Development standards
 

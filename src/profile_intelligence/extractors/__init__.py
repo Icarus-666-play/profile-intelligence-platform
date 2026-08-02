@@ -1,9 +1,10 @@
-"""Data extractors for normalizing imported profile sources.
-
-Concrete extractors will be added as the platform grows. This package is
-intentionally scaffolded for future field-level extraction pipelines.
-"""
+"""Data extractors for normalizing imported profile sources."""
 
 from __future__ import annotations
 
-__all__: list[str] = []
+from profile_intelligence.extractors.profile import (
+    ProfileDraft,
+    ProfileExtractor,
+)
+
+__all__ = ["ProfileDraft", "ProfileExtractor"]

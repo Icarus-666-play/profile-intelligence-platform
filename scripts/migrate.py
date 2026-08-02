@@ -14,4 +14,4 @@ if str(SRC) not in sys.path:
 from profile_intelligence.main import main  # noqa: E402
 
 if __name__ == "__main__":
-    raise SystemExit(main(["--migrate-only", *sys.argv[1:]]))
+    raise SystemExit(main(["migrate", *sys.argv[1:]]))

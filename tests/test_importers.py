@@ -91,7 +91,9 @@ def test_import_result_failure() -> None:
     assert result.records_read == 3
 
 
-def test_discover_builtin_empty() -> None:
+def test_discover_builtin_plugins() -> None:
     registry = ImporterRegistry()
     count = registry.discover_builtin()
-    assert count == 0
+    assert count == 2
+    names = {plugin.name for plugin in registry.list_plugins()}
+    assert names == {"csv", "excel"}

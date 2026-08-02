@@ -1,8 +1,7 @@
-"""Profile search and query helpers.
-
-Scaffold package for full-text / fuzzy search over local profiles.
-"""
+"""Profile search helpers."""
 
 from __future__ import annotations
 
-__all__: list[str] = []
+from profile_intelligence.search.service import ProfileSearchService
+
+__all__ = ["ProfileSearchService"]

@@ -1,8 +1,7 @@
-"""Excel reporting and workbook generation.
-
-Scaffold package — openpyxl-based exporters will live here.
-"""
+"""Excel reporting and workbook generation."""
 
 from __future__ import annotations
 
-__all__: list[str] = []
+from profile_intelligence.excel.exporter import ExcelExporter
+
+__all__ = ["ExcelExporter"]

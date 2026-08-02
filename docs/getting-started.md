@@ -36,7 +36,7 @@ Default settings live in [`config/default.yaml`](../config/default.yaml).
 
 Optional local overrides:
 
-1. Copy defaults and edit `config/local.yaml` (gitignored pattern supported), or
+1. Copy [`config/local.yaml.example`](../config/local.yaml.example) to `config/local.yaml`, or
 2. Set `PIP_CONFIG_PATH` to a YAML file, or
 3. Pass `--config path/to/config.yaml` to the launcher
 
@@ -49,18 +49,33 @@ Environment overrides:
 | `PIP_LOG_LEVEL` | Override log level (`DEBUG`, `INFO`, …) |
 | `PIP_ENVIRONMENT` | Override `app.environment` |
 
-## Run
+## Milestone 1 workflows
 
 ```bash
-# Module entrypoint
-python -m profile_intelligence --migrate-only
+# Apply migrations
+python -m profile_intelligence migrate
 
-# Console script (after editable install)
-pip-app --list-importers
+# List importer plugins (csv, excel)
+python -m profile_intelligence importers
 
-# Helper scripts
-python scripts/run_app.py
-python scripts/migrate.py
+# Import sample profiles
+python -m profile_intelligence import samples/profiles.csv
+
+# List / search
+python -m profile_intelligence list
+python -m profile_intelligence search Lovelace
+
+# Export Excel report (writes exports/profiles.xlsx)
+python -m profile_intelligence export
+
+# Recompute completeness scores
+python -m profile_intelligence score
+```
+
+Console script after editable install:
+
+```bash
+pip-app import samples/profiles.csv
 ```
 
 On first start the application:

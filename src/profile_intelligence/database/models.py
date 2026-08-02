@@ -28,15 +28,22 @@ class SchemaMigration(Base):
 
 
 class Profile(Base):
-    """Core profile entity (initial schema scaffold)."""
+    """Core profile entity."""
 
     __tablename__ = "profiles"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     external_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     display_name: Mapped[str] = mapped_column(String(512), nullable=False)
+    email: Mapped[str | None] = mapped_column(String(320), nullable=True)
+    phone: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    title: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    organization: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    location: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    tags: Mapped[str | None] = mapped_column(Text, nullable=True)
     source: Mapped[str | None] = mapped_column(String(128), nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    raw_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -53,5 +60,5 @@ class Profile(Base):
     def __repr__(self) -> str:
         return (
             f"Profile(id={self.id!r}, display_name={self.display_name!r}, "
-            f"source={self.source!r})"
+            f"source={self.source!r}, score={self.score!r})"
         )

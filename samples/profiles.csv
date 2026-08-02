@@ -1,0 +1,4 @@
+external_id,name,email,phone,title,organization,location,tags,notes
+p-001,Ada Lovelace,ada@example.com,+1-555-0101,Analyst,Analytical Engines,London,"math,computing",Pioneer of computing
+p-002,Grace Hopper,grace@example.com,+1-555-0102,Rear Admiral,US Navy,New York,"cobol,compilers",Invented the compiler
+p-003,Alan Turing,alan@example.com,,Mathematician,Bletchley Park,United Kingdom,"crypto,ai",

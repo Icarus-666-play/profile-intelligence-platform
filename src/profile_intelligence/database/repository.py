@@ -5,12 +5,13 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from profile_intelligence.core.exceptions import RepositoryError
 from profile_intelligence.database.connection import Database
 from profile_intelligence.database.models import Profile
+from profile_intelligence.extractors.profile import ProfileDraft
 
 
 class Repository[T](ABC):
@@ -66,6 +67,15 @@ class ProfileRepository(Repository[Profile]):
         except Exception as exc:
             raise RepositoryError("Failed to list profiles", cause=exc) from exc
 
+    def count(self) -> int:
+        """Return total number of profiles."""
+        try:
+            with self._database.session() as session:
+                total = session.scalar(select(func.count()).select_from(Profile))
+                return int(total or 0)
+        except Exception as exc:
+            raise RepositoryError("Failed to count profiles", cause=exc) from exc
+
     def add(self, entity: Profile) -> Profile:
         try:
             with self._database.session() as session:
@@ -109,3 +119,80 @@ class ProfileRepository(Repository[Profile]):
                 "Failed to find profiles by display name",
                 cause=exc,
             ) from exc
+
+    def upsert_draft(self, draft: ProfileDraft) -> tuple[Profile, bool]:
+        """Insert or update a profile from a draft.
+
+        Match order: ``external_id``, then ``display_name`` + ``source``.
+        Returns ``(profile, created)`` where *created* is True on insert.
+        """
+        try:
+            with self._database.session() as session:
+                existing = self._find_existing(session, draft)
+                if existing is None:
+                    profile = Profile(**_draft_to_columns(draft))
+                    session.add(profile)
+                    session.flush()
+                    session.refresh(profile)
+                    session.expunge(profile)
+                    return profile, True
+
+                for key, value in _draft_to_columns(draft).items():
+                    setattr(existing, key, value)
+                session.flush()
+                session.refresh(existing)
+                session.expunge(existing)
+                return existing, False
+        except RepositoryError:
+            raise
+        except Exception as exc:
+            raise RepositoryError("Failed to upsert profile", cause=exc) from exc
+
+    def update_scores(self, scores: dict[int, int]) -> int:
+        """Bulk-assign scores by profile id. Returns number of rows updated."""
+        if not scores:
+            return 0
+        updated = 0
+        try:
+            with self._database.session() as session:
+                for profile_id, score in scores.items():
+                    profile = session.get(Profile, profile_id)
+                    if profile is None:
+                        continue
+                    profile.score = score
+                    updated += 1
+            return updated
+        except Exception as exc:
+            raise RepositoryError("Failed to update profile scores", cause=exc) from exc
+
+    @staticmethod
+    def _find_existing(session: Session, draft: ProfileDraft) -> Profile | None:
+        if draft.external_id:
+            found = session.scalar(
+                select(Profile).where(Profile.external_id == draft.external_id)
+            )
+            if found is not None:
+                return found
+        conditions = [Profile.display_name == draft.display_name]
+        if draft.source is None:
+            conditions.append(Profile.source.is_(None))
+        else:
+            conditions.append(Profile.source == draft.source)
+        return session.scalar(select(Profile).where(*conditions))
+
+
+def _draft_to_columns(draft: ProfileDraft) -> dict[str, object | None]:
+    return {
+        "external_id": draft.external_id,
+        "display_name": draft.display_name,
+        "email": draft.email,
+        "phone": draft.phone,
+        "title": draft.title,
+        "organization": draft.organization,
+        "location": draft.location,
+        "tags": draft.tags,
+        "source": draft.source,
+        "notes": draft.notes,
+        "raw_json": draft.raw_json,
+        "score": draft.score,
+    }

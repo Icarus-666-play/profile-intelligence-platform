@@ -25,5 +25,14 @@ def test_parser_defaults() -> None:
     parser = build_parser()
     args = parser.parse_args([])
     assert args.config_path is None
+    assert args.command is None
     assert args.migrate_only is False
     assert args.list_importers is False
+
+
+def test_parser_import_subcommand() -> None:
+    parser = build_parser()
+    args = parser.parse_args(["import", "file.csv", "--source", "crm"])
+    assert args.command == "import"
+    assert args.path == "file.csv"
+    assert args.source == "crm"

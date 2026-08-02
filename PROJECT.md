@@ -37,14 +37,17 @@ src/profile_intelligence/
 config/ docs/ scripts/ tests/ plugins/
 ```
 
+## Milestones
+
+See [docs/milestones.md](docs/milestones.md).
+
+| Milestone | Status | Summary |
+|-----------|--------|---------|
+| **M0 Foundation** | Complete | Scaffold, config, logging, DB, plugin framework |
+| **M1 Core Pipeline** | In progress | CSV/Excel import, extract, search, score, Excel export |
+| M2 Dashboard UI | Planned | Windows-first desktop presentation layer |
+| M3 AI Assist | Planned | Optional local/remote AI adapters |
+
 ## Status
 
-Initial repository scaffold is complete:
-
-- Configuration & logging systems
-- Application launcher
-- SQLite connection layer
-- Migration framework
-- Empty importer plugin framework
-- Exception hierarchy
-- Documentation and tests
+Milestone 0 complete. Milestone 1 implements the first end-to-end profile data pipeline.

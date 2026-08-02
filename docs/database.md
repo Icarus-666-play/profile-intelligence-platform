@@ -52,9 +52,16 @@ Creates:
 - `schema_migrations`
 - `profiles` (+ indexes on `display_name`, `source`)
 
+### Enrichment migration (`002_enrich_profiles`)
+
+Adds Milestone 1 columns:
+
+- `email`, `phone`, `title`, `organization`, `location`, `tags`, `raw_json`
+- indexes on `email` and `external_id`
+
 ## CLI
 
 ```bash
-python -m profile_intelligence --migrate-only
+python -m profile_intelligence migrate
 python scripts/migrate.py
 ```
