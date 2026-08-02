@@ -25,11 +25,27 @@ src/profile_intelligence/
     excel/             # Excel export adapter
     search/            # SQLite search adapter
     scoring/           # Confidence Score (0-100) via completeness engine
-    dashboard/         # Console dashboard adapter
+    dashboard/         # Console dashboard adapter / snapshot metrics
     reporting/         # Email report stub (future)
+  ui/                  # Milestone 2 Dashboard UI (local WSGI pages)
   core/                # Shared kernel: config, logging, DI, exceptions
   bootstrap.py         # Composition root
   main.py              # CLI / process launcher
+```
+
+Dashboard UI (`ui/`) navigation:
+
+```
+Profile Intelligence Platform
+Dashboard
+Search
+Import
+Compare
+Reports
+Settings
+Plugins
+Logs
+About
 ```
 
 Compatibility shims remain at legacy paths (`importers/`, `database/`, `services/`, …) for older imports and external plugins.

@@ -1,7 +1,6 @@
-"""Desktop dashboard / presentation layer.
+"""Console dashboard adapter and snapshot metrics.
 
-Milestone 1 ships a console dashboard via :class:`DashboardService`.
-A Windows-first graphical UI is planned for Milestone 2.
+Milestone 2 ships the multi-page local UI under ``profile_intelligence.ui``.
 """
 
 from __future__ import annotations

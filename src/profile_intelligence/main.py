@@ -8,6 +8,7 @@ Primary commands::
     pip-app compare
     pip-app export
     pip-app dashboard
+    pip-app ui
     pip-app daily
     pip-app analyze
 """
@@ -26,12 +27,15 @@ from profile_intelligence.application.use_cases.daily_pipeline import DailyPipel
 from profile_intelligence.application.use_cases.import_service import ImportService
 from profile_intelligence.application.use_cases.profile_service import ProfileService
 from profile_intelligence.bootstrap import build_container
+from profile_intelligence.core.config import AppConfig
 from profile_intelligence.core.container import Container
 from profile_intelligence.core.exceptions import PipError
 from profile_intelligence.core.logging import get_logger
 from profile_intelligence.infrastructure.analysis import AnalysisService
 from profile_intelligence.infrastructure.dashboard import DashboardService
 from profile_intelligence.infrastructure.database.seed import DatabaseSeeder
+from profile_intelligence.infrastructure.importers.registry import ImporterRegistry
+from profile_intelligence.ui import UiContext, serve_ui
 
 logger = get_logger(__name__)
 
@@ -43,6 +47,7 @@ _PRIMARY_COMMANDS = (
     "compare",
     "export",
     "dashboard",
+    "ui",
     "daily",
     "nightly",
     "analyze",
@@ -66,6 +71,7 @@ def build_parser() -> argparse.ArgumentParser:
             "  pip-app compare <id_a> <id_b>\n"
             "  pip-app export\n"
             "  pip-app dashboard\n"
+            "  pip-app ui\n"
             "  pip-app daily\n"
         ),
     )
@@ -154,6 +160,31 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser(
         "dashboard",
         help="Show a local console dashboard summary",
+    )
+
+    ui_parser = subparsers.add_parser(
+        "ui",
+        help=(
+            "Open the local Dashboard UI "
+            "(Dashboard, Search, Import, Compare, Reports, "
+            "Settings, Plugins, Logs, About)"
+        ),
+    )
+    ui_parser.add_argument(
+        "--host",
+        default="127.0.0.1",
+        help="Bind host (default: 127.0.0.1)",
+    )
+    ui_parser.add_argument(
+        "--port",
+        type=int,
+        default=8765,
+        help="Bind port (default: 8765)",
+    )
+    ui_parser.add_argument(
+        "--no-browser",
+        action="store_true",
+        help="Do not open a system browser",
     )
 
     daily_parser = subparsers.add_parser(
@@ -376,6 +407,9 @@ def _dispatch(
         logger.info("Dashboard rendered (%d chars)", len(text))
         return 0
 
+    if command == "ui":
+        return _cmd_ui(args, container)
+
     if command in {"daily", "nightly"}:
         return _cmd_daily(args, container, label=command)
 
@@ -519,6 +553,24 @@ def _add_daily_arguments(parser: argparse.ArgumentParser) -> None:
         action="store_true",
         help="Import all detected files, ignoring the new-file ledger",
     )
+
+
+def _cmd_ui(args: argparse.Namespace, container: Container) -> int:
+    context = UiContext(
+        config=container.resolve(AppConfig),
+        dashboard=container.resolve(DashboardService),
+        profiles=container.resolve(ProfileService),
+        imports=container.resolve(ImportService),
+        compare=container.resolve(CompareService),
+        importers=container.resolve(ImporterRegistry),
+    )
+    serve_ui(
+        context,
+        host=str(args.host),
+        port=int(args.port),
+        open_browser=not bool(args.no_browser),
+    )
+    return 0
 
 
 def _cmd_daily(

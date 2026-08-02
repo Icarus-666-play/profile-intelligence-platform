@@ -66,7 +66,7 @@ Repository = "https://github.com/Icarus-666-play/profile-intelligence-platform"
 where = ["src"]
 
 [tool.setuptools.package-data]
-profile_intelligence = ["py.typed"]
+profile_intelligence = ["py.typed", "ui/static/*"]
 
 [tool.pytest.ini_options]
 minversion = "8.0"
@@ -149,6 +149,7 @@ ignore = [
 "plugins/**/conftest.py" = ["S101", "ANN", "T201"]
 "scripts/**/*.py" = ["T201", "E402"]
 "src/profile_intelligence/main.py" = ["T201"]
+"src/profile_intelligence/ui/**" = ["E501", "T201"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["profile_intelligence"]

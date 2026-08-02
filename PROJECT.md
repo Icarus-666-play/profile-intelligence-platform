@@ -37,8 +37,24 @@ src/profile_intelligence/
     pipeline/      # parser → … → repository stages
     use_cases/
   infrastructure/  # ai, analysis, cache, database, importers, excel, media, search, scoring
+  ui/              # Dashboard UI (Dashboard…About)
   core/            # config, logging, DI, exceptions
 config/ docs/ scripts/ tests/ plugins/
+```
+
+Dashboard UI navigation:
+
+```
+Profile Intelligence Platform
+Dashboard
+Search
+Import
+Compare
+Reports
+Settings
+Plugins
+Logs
+About
 ```
 
 Analysis package (`infrastructure/analysis/`):
@@ -123,12 +139,12 @@ See [docs/milestones.md](docs/milestones.md).
 |-----------|--------|---------|
 | **M0 Foundation** | Complete | Scaffold, config, logging, DB, plugin framework |
 | **M1 Core Pipeline** | Complete | CSV/Excel import, extract, search, score, Excel export |
-| M2 Dashboard UI | Planned | Windows-first desktop presentation layer |
+| **M2 Dashboard UI** | Complete | Local multi-page UI (`pip-app ui`) |
 | M3 AI Assist | Planned | Optional local/remote AI adapters |
 
 ## Status
 
-Milestones 0 and 1 are complete. Core import pipeline (`config/settings.yaml`):
+Milestones 0–2 are complete. Core import pipeline (`config/settings.yaml`):
 
 ```
 pipeline:

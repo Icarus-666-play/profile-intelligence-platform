@@ -23,10 +23,35 @@ Deliver a complete local import → extract → persist → search → score →
 
 ### Out of scope (later milestones)
 
-- Desktop dashboard UI
 - Live Local/Remote AI completions (scaffold is in place; providers stubbed)
 - Advanced fuzzy/full-text search engines
 - Network/cloud sync
+
+## Milestone 2 — Dashboard UI (complete)
+
+Local multi-page presentation layer launched with `pip-app ui` (binds `127.0.0.1` by default).
+
+### Navigation
+
+```
+Profile Intelligence Platform
+Dashboard
+Search
+Import
+Compare
+Reports
+Settings
+Plugins
+Logs
+About
+```
+
+### Acceptance
+
+1. `pip-app ui` serves the Dashboard UI locally
+2. Each nav page renders against live application services
+3. Search / Import / Compare / Reports perform real local operations
+4. Tests and static checks pass
 
 ## Milestone 3 — AI Assist (planned)
 

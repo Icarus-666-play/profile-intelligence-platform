@@ -21,6 +21,10 @@ Local-first desktop application for profile analysis, scoring, Excel reporting, 
 - Console dashboard
 - CLI: `migrate`, `import`, `list`, `search`, `compare`, `export`, `dashboard`
 
+### Milestone 2 — Dashboard UI
+- Local multi-page UI: Dashboard, Search, Import, Compare, Reports, Settings, Plugins, Logs, About
+- Launch: `pip-app ui` (default `http://127.0.0.1:8765/`)
+
 ## Quick start
 
 ```bash

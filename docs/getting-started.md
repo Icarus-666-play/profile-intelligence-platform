@@ -90,6 +90,7 @@ pip-app import samples/profiles.csv
 pip-app compare 1 2
 pip-app export
 pip-app dashboard
+pip-app ui
 ```
 
 | Command | Purpose |
@@ -101,6 +102,7 @@ pip-app dashboard
 | `compare <id_a> <id_b>` | Side-by-side profile diff |
 | `export` | Write Excel report under `exports/` |
 | `dashboard` | Console dashboard summary |
+| `ui` | Local Dashboard UI (Dashboard…About) |
 
 Additional utilities: `seed`, `score`, `importers`.
 

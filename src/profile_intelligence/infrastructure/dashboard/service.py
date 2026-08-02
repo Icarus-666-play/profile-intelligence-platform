@@ -118,8 +118,8 @@ class DashboardService:
         lines.extend(
             [
                 "",
-                "Desktop UI dashboard is planned for Milestone 2.",
-                "Use: pip-app search | compare | export",
+                "Open the Dashboard UI: pip-app ui",
+                "Or: pip-app search | compare | export",
             ]
         )
         return "\n".join(lines)
