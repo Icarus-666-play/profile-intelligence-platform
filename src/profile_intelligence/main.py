@@ -9,6 +9,7 @@ Primary commands::
     pip-app export
     pip-app dashboard
     pip-app daily
+    pip-app analyze
 """
 
 from __future__ import annotations
@@ -28,6 +29,7 @@ from profile_intelligence.bootstrap import build_container
 from profile_intelligence.core.container import Container
 from profile_intelligence.core.exceptions import PipError
 from profile_intelligence.core.logging import get_logger
+from profile_intelligence.infrastructure.analysis import AnalysisService
 from profile_intelligence.infrastructure.dashboard import DashboardService
 from profile_intelligence.infrastructure.database.seed import DatabaseSeeder
 
@@ -43,6 +45,7 @@ _PRIMARY_COMMANDS = (
     "dashboard",
     "daily",
     "nightly",
+    "analyze",
 )
 
 
@@ -189,6 +192,53 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers.add_parser(
         "score",
         help="Recompute Confidence Scores (0-100) for all profiles",
+    )
+
+    analyze_parser = subparsers.add_parser(
+        "analyze",
+        help=(
+            "Profile analysis: similarity, recommendation, summarization, "
+            "classification, duplicates"
+        ),
+    )
+    analyze_sub = analyze_parser.add_subparsers(dest="analyze_command")
+    sim_parser = analyze_sub.add_parser(
+        "similarity",
+        help="Score similarity between two profiles",
+    )
+    sim_parser.add_argument("left_id", type=int)
+    sim_parser.add_argument("right_id", type=int)
+    rec_parser = analyze_sub.add_parser(
+        "recommend",
+        help="Recommend similar profiles",
+    )
+    rec_parser.add_argument("profile_id", type=int)
+    rec_parser.add_argument("--limit", type=int, default=5)
+    sum_parser = analyze_sub.add_parser(
+        "summarize",
+        help="Summarize one profile",
+    )
+    sum_parser.add_argument("profile_id", type=int)
+    cls_parser = analyze_sub.add_parser(
+        "classify",
+        help="Classify one profile (or all with --all)",
+    )
+    cls_parser.add_argument("profile_id", type=int, nargs="?", default=None)
+    cls_parser.add_argument(
+        "--all",
+        action="store_true",
+        dest="classify_all",
+        help="Classify all stored profiles",
+    )
+    dup_parser = analyze_sub.add_parser(
+        "duplicates",
+        help="Find near-duplicate profiles",
+    )
+    dup_parser.add_argument(
+        "--threshold",
+        type=float,
+        default=None,
+        help="Similarity threshold 0.0-1.0 (default 0.75)",
     )
 
     # Backward-compatible flags from Milestone 0.
@@ -360,8 +410,81 @@ def _dispatch(
         print(message)
         return 0
 
+    if command == "analyze":
+        return _cmd_analyze(args, container)
+
     logger.error("Unknown command: %s", command)
     print(f"error: unknown command: {command}", file=sys.stderr)
+    return 2
+
+
+def _cmd_analyze(args: argparse.Namespace, container: Container) -> int:
+    analysis = container.resolve(AnalysisService)
+    action = getattr(args, "analyze_command", None)
+    if action is None:
+        print(
+            "usage: pip-app analyze {similarity,recommend,summarize,"
+            "classify,duplicates}",
+            file=sys.stderr,
+        )
+        return 2
+
+    if action == "similarity":
+        score = analysis.similarity(args.left_id, args.right_id)
+        print(
+            f"similarity={score.value:.2f} ({score.percent}%) "
+            f"matched={','.join(score.matched_fields) or '-'}"
+        )
+        return 0
+
+    if action == "recommend":
+        rows = analysis.recommend(args.profile_id, limit=args.limit)
+        print(f"Recommendations for id={args.profile_id}: {len(rows)}")
+        for row in rows:
+            print(
+                f"  [{row.profile_id}] {row.display_name} "
+                f"score={row.score.value:.2f} — {row.reason}"
+            )
+        return 0
+
+    if action == "summarize":
+        summary = analysis.summarize(args.profile_id)
+        print(f"[{summary.profile_id}] {summary.display_name} ({summary.source})")
+        print(summary.text)
+        return 0
+
+    if action == "classify":
+        if args.classify_all:
+            rows = analysis.classify_all()
+            print(f"Classified {len(rows)} profile(s)")
+            for row in rows:
+                print(
+                    f"  [{row.profile_id}] {row.display_name} "
+                    f"{' '.join(row.labels)}"
+                )
+            return 0
+        if args.profile_id is None:
+            print(
+                "usage: pip-app analyze classify <profile_id> | --all",
+                file=sys.stderr,
+            )
+            return 2
+        row = analysis.classify(args.profile_id)
+        print(f"[{row.profile_id}] {row.display_name}")
+        print(" ".join(row.labels))
+        return 0
+
+    if action == "duplicates":
+        result = analysis.find_duplicates(threshold=args.threshold)
+        print(
+            f"Scanned {result.scanned} profile(s): "
+            f"pairs={len(result.pairs)} groups={len(result.groups)}"
+        )
+        for group in result.groups:
+            print(f"  group: {', '.join(str(item) for item in group.profile_ids)}")
+        return 0
+
+    print(f"error: unknown analyze command: {action}", file=sys.stderr)
     return 2
 
 

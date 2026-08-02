@@ -36,9 +36,20 @@ src/profile_intelligence/
   application/
     pipeline/      # parser → … → repository stages
     use_cases/
-  infrastructure/  # ai, cache, database, importers, excel, media, search, scoring, dashboard
+  infrastructure/  # ai, analysis, cache, database, importers, excel, media, search, scoring
   core/            # config, logging, DI, exceptions
 config/ docs/ scripts/ tests/ plugins/
+```
+
+Analysis package (`infrastructure/analysis/`):
+
+```
+analysis/
+  similarity.py
+  recommendation.py
+  summarization.py
+  classification.py
+  duplicates.py
 ```
 
 AI providers:

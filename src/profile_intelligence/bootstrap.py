@@ -28,6 +28,14 @@ from profile_intelligence.domain.interfaces.repositories import (
     IServiceRepository,
 )
 from profile_intelligence.infrastructure.ai import create_ai_provider
+from profile_intelligence.infrastructure.analysis import (
+    AnalysisService,
+    ProfileClassifier,
+    ProfileDuplicateAnalyzer,
+    ProfileRecommender,
+    ProfileSimilarityAnalyzer,
+    ProfileSummarizer,
+)
 from profile_intelligence.infrastructure.cache import create_cache
 from profile_intelligence.infrastructure.dashboard import DashboardService
 from profile_intelligence.infrastructure.database.child_repositories import (
@@ -256,6 +264,46 @@ def build_container(
         IAIProvider,
         lambda: create_ai_provider(container.resolve(AppConfig)),
         name="ai",
+    )
+    container.register(
+        ProfileSimilarityAnalyzer,
+        ProfileSimilarityAnalyzer,
+        name="similarity",
+    )
+    container.register(
+        ProfileRecommender,
+        lambda: ProfileRecommender(container.resolve(ProfileSimilarityAnalyzer)),
+        name="recommender",
+    )
+    container.register(
+        ProfileSummarizer,
+        lambda: ProfileSummarizer(container.resolve(IAIProvider)),
+        name="summarizer",
+    )
+    container.register(
+        ProfileClassifier,
+        ProfileClassifier,
+        name="classifier",
+    )
+    container.register(
+        ProfileDuplicateAnalyzer,
+        lambda: ProfileDuplicateAnalyzer(
+            container.resolve(ProfileSimilarityAnalyzer)
+        ),
+        name="profile_duplicates",
+    )
+    container.register(
+        AnalysisService,
+        lambda: AnalysisService(
+            repository=container.resolve(IProfileRepository),
+            similarity=container.resolve(ProfileSimilarityAnalyzer),
+            recommender=container.resolve(ProfileRecommender),
+            summarizer=container.resolve(ProfileSummarizer),
+            classifier=container.resolve(ProfileClassifier),
+            duplicates=container.resolve(ProfileDuplicateAnalyzer),
+            ai=container.resolve(IAIProvider),
+        ),
+        name="analysis",
     )
     container.register(
         ImportFileLedger,

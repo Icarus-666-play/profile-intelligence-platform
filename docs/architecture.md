@@ -17,6 +17,7 @@ src/profile_intelligence/
     use_cases/         # Import, search, compare, export, dashboard, daily
   infrastructure/
     ai/                # Null AI provider (+ Local/Remote stubs)
+    analysis/          # similarity, recommendation, summarization, classification, duplicates
     cache/             # Memory / File / SQLite cache (+ Redis stub)
     database/          # SQLite connection, ORM models, repository, migrate, seed
     importers/         # Registry + built-in plugins (csv, excel, webarchive)
@@ -54,6 +55,7 @@ Supporting trees:
 | Image pipeline | Download → Hash → Duplicate Detection → Thumbnail → Storage |
 | Confidence Score | Fixed **0–100** scale (`ConfidenceScorer` / completeness method) |
 | AI | `IAIProvider` → Null (default) / Local stub / Remote stub |
+| Analysis | similarity / recommendation / summarization / classification / duplicates |
 | Dependency injection | Lightweight `Container` in `core.container` |
 | Typed | Python 3.12 + `py.typed`, mypy strict |
 | Configurable | YAML + env overrides |
