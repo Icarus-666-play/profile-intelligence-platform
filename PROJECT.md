@@ -36,9 +36,19 @@ src/profile_intelligence/
   application/
     pipeline/      # parser → … → repository stages
     use_cases/
-  infrastructure/  # database, importers, excel, search, scoring, dashboard
+  infrastructure/  # database, importers, excel, media, search, scoring, dashboard
   core/            # config, logging, DI, exceptions
 config/ docs/ scripts/ tests/ plugins/
+```
+
+Media package (`infrastructure/media/`):
+
+```
+media/
+  hashing.py
+  duplicates.py
+  thumbnail_service.py
+  image_repository.py
 ```
 
 ## Milestones

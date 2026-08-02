@@ -14,6 +14,7 @@ from profile_intelligence.infrastructure.database.migrate import (
 )
 from profile_intelligence.infrastructure.database.models import (
     Base,
+    MediaAsset,
     Profile,
     SchemaMigration,
 )
@@ -34,6 +35,7 @@ __all__ = [
     "Database",
     "DatabaseRepository",
     "DatabaseSeeder",
+    "MediaAsset",
     "Migration",
     "MigrationRunner",
     "Profile",

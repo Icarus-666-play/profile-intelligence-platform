@@ -56,6 +56,14 @@ def temp_root(tmp_path: Path) -> Path:
         "ai": {"enabled": False, "provider": None, "model": None},
         "search": {"default_limit": 50, "fuzzy": True},
         "dashboard": {"refresh_seconds": 30},
+        "media": {
+            "root_dir": "data/media",
+            "thumbnails_dir": "data/media/thumbnails",
+            "hash_algorithm": "sha256",
+            "thumbnail_max_size": 64,
+            "thumbnail_format": "JPEG",
+            "thumbnail_quality": 80,
+        },
         "pipeline": [
             "parser",
             "normalizer",

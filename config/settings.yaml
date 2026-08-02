@@ -41,6 +41,14 @@ search:
 dashboard:
   refresh_seconds: 30
 
+media:
+  root_dir: data/media
+  thumbnails_dir: data/media/thumbnails
+  hash_algorithm: sha256
+  thumbnail_max_size: 256
+  thumbnail_format: JPEG
+  thumbnail_quality: 85
+
 # Ordered import stages after File → RawDocument
 pipeline:
   - parser

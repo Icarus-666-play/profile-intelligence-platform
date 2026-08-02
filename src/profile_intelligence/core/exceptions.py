@@ -59,6 +59,10 @@ class ExcelError(PipError):
     """Raised when Excel export or import operations fail."""
 
 
+class MediaError(PipError):
+    """Raised when media / image operations fail."""
+
+
 class SearchError(PipError):
     """Raised when search operations fail."""
 

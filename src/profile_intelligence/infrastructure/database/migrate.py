@@ -143,9 +143,61 @@ class EnrichProfilesMigration(Migration):
         connection.execute(text("DROP INDEX IF EXISTS ix_profiles_email"))
 
 
+class MediaAssetsMigration(Migration):
+    """Create media_assets table for content-addressed image storage."""
+
+    version = "003"
+    name = "media_assets"
+
+    def up(self, connection: Connection) -> None:
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS media_assets (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    profile_id INTEGER,
+                    content_hash VARCHAR(128) NOT NULL UNIQUE,
+                    original_name VARCHAR(512),
+                    content_type VARCHAR(128),
+                    extension VARCHAR(32),
+                    byte_size INTEGER NOT NULL DEFAULT 0,
+                    width INTEGER,
+                    height INTEGER,
+                    storage_path VARCHAR(1024) NOT NULL,
+                    thumbnail_path VARCHAR(1024),
+                    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE INDEX IF NOT EXISTS ix_media_assets_profile_id
+                ON media_assets (profile_id)
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE INDEX IF NOT EXISTS ix_media_assets_content_hash
+                ON media_assets (content_hash)
+                """
+            )
+        )
+
+    def down(self, connection: Connection) -> None:
+        connection.execute(text("DROP INDEX IF EXISTS ix_media_assets_content_hash"))
+        connection.execute(text("DROP INDEX IF EXISTS ix_media_assets_profile_id"))
+        connection.execute(text("DROP TABLE IF EXISTS media_assets"))
+
+
 ALL_MIGRATIONS: tuple[type[Migration], ...] = (
     InitialSchemaMigration,
     EnrichProfilesMigration,
+    MediaAssetsMigration,
 )
 
 

@@ -22,6 +22,11 @@ from profile_intelligence.infrastructure.database.repository import ProfileRepos
 from profile_intelligence.infrastructure.database.seed import DatabaseSeeder
 from profile_intelligence.infrastructure.excel.exporter import ExcelExporter
 from profile_intelligence.infrastructure.importers.registry import ImporterRegistry
+from profile_intelligence.infrastructure.media import (
+    ImageDuplicateFinder,
+    ImageRepository,
+    ThumbnailService,
+)
 from profile_intelligence.infrastructure.scoring.completeness import CompletenessScorer
 from profile_intelligence.infrastructure.search.service import ProfileSearchService
 
@@ -76,6 +81,27 @@ def build_container(
         ExcelExporter,
         lambda: ExcelExporter(container.resolve(AppConfig)),
         name="excel",
+    )
+    container.register(
+        ThumbnailService,
+        lambda: ThumbnailService(container.resolve(AppConfig)),
+        name="thumbnails",
+    )
+    container.register(
+        ImageRepository,
+        lambda: ImageRepository(
+            container.resolve(Database),
+            container.resolve(AppConfig),
+            thumbnail_service=container.resolve(ThumbnailService),
+        ),
+        name="images",
+    )
+    container.register(
+        ImageDuplicateFinder,
+        lambda: ImageDuplicateFinder(
+            algorithm=container.resolve(AppConfig).media.hash_algorithm
+        ),
+        name="image_duplicates",
     )
     container.register(
         ImportPipeline,

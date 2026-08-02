@@ -16,6 +16,7 @@ src/profile_intelligence/
   infrastructure/
     database/          # SQLite connection, ORM models, repository, migrate, seed
     importers/         # Registry + built-in plugins (csv, excel, webarchive)
+    media/             # hashing, duplicates, thumbnails, image repository
     excel/             # Excel export adapter
     search/            # SQLite search adapter
     scoring/           # Completeness scorer

@@ -55,6 +55,7 @@ class ConfigManager:
             "ai",
             "search",
             "dashboard",
+            "media",
             "pipeline",
         }
     )

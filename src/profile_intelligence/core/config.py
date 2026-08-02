@@ -161,6 +161,18 @@ class DashboardSection:
 
 
 @dataclass(frozen=True, slots=True)
+class MediaSection:
+    """Local media / image storage settings."""
+
+    root_dir: str = "data/media"
+    thumbnails_dir: str = "data/media/thumbnails"
+    hash_algorithm: str = "sha256"
+    thumbnail_max_size: int = 256
+    thumbnail_format: str = "JPEG"
+    thumbnail_quality: int = 85
+
+
+@dataclass(frozen=True, slots=True)
 class ScoringSection:
     """Completeness scoring configuration."""
 
@@ -231,6 +243,7 @@ class AppConfig:
     ai: AISection = field(default_factory=AISection)
     search: SearchSection = field(default_factory=SearchSection)
     dashboard: DashboardSection = field(default_factory=DashboardSection)
+    media: MediaSection = field(default_factory=MediaSection)
     pipeline: PipelineSection = field(default_factory=PipelineSection)
     config_dir: Path | None = None
     config_path: Path | None = None
@@ -268,6 +281,16 @@ class AppConfig:
         """Absolute path to the external plugins directory."""
         return self.resolve_path(self.paths.plugins_dir)
 
+    @property
+    def media_dir(self) -> Path:
+        """Absolute path to the media storage directory."""
+        return self.resolve_path(self.media.root_dir)
+
+    @property
+    def thumbnails_dir(self) -> Path:
+        """Absolute path to the thumbnail storage directory."""
+        return self.resolve_path(self.media.thumbnails_dir)
+
     def ensure_directories(self) -> None:
         """Create runtime directories if they do not exist."""
         for directory in (
@@ -275,6 +298,8 @@ class AppConfig:
             self.logs_dir,
             self.exports_dir,
             self.plugins_dir,
+            self.media_dir,
+            self.thumbnails_dir,
             self.database_path.parent,
         ):
             directory.mkdir(parents=True, exist_ok=True)
@@ -403,6 +428,7 @@ def _build_config(
     ai_defaults = AISection()
     search_defaults = SearchSection()
     dashboard_defaults = DashboardSection()
+    media_defaults = MediaSection()
 
     app_raw = _section(settings_raw, "app")
     paths_raw = _section(settings_raw, "paths")
@@ -412,6 +438,7 @@ def _build_config(
     ai_raw = _section(settings_raw, "ai")
     search_raw = _section(settings_raw, "search")
     dashboard_raw = _section(settings_raw, "dashboard")
+    media_raw = _section(settings_raw, "media")
     pipeline_section = _parse_pipeline(settings_raw.get("pipeline"))
     logging_data = _normalize_logging_raw(logging_raw)
     scoring_data = _normalize_scoring_raw(scoring_raw)
@@ -533,6 +560,30 @@ def _build_config(
                 )
             ),
         ),
+        media=MediaSection(
+            root_dir=str(media_raw.get("root_dir", media_defaults.root_dir)),
+            thumbnails_dir=str(
+                media_raw.get("thumbnails_dir", media_defaults.thumbnails_dir)
+            ),
+            hash_algorithm=str(
+                media_raw.get("hash_algorithm", media_defaults.hash_algorithm)
+            ).lower(),
+            thumbnail_max_size=int(
+                media_raw.get(
+                    "thumbnail_max_size", media_defaults.thumbnail_max_size
+                )
+            ),
+            thumbnail_format=str(
+                media_raw.get(
+                    "thumbnail_format", media_defaults.thumbnail_format
+                )
+            ).upper(),
+            thumbnail_quality=int(
+                media_raw.get(
+                    "thumbnail_quality", media_defaults.thumbnail_quality
+                )
+            ),
+        ),
         pipeline=pipeline_section,
         config_dir=config_dir,
         config_path=config_path,
@@ -599,6 +650,7 @@ __all__ = [
     "ExcelSection",
     "ImportersSection",
     "LoggingSection",
+    "MediaSection",
     "PathsSection",
     "PipelineSection",
     "ScoringSection",
