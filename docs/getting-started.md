@@ -48,6 +48,17 @@ cp config/scoring.local.yaml.example config/scoring.local.yaml
 
 Or set `PIP_CONFIG_PATH` / pass `--config` for a settings merge override.
 
+Programmatic access via `ConfigManager()`:
+
+```python
+from profile_intelligence.core.config_manager import ConfigManager
+
+manager = ConfigManager()
+manager.load()
+print(manager.settings.database_path)
+print(manager.get("scoring").weights)
+```
+
 Environment overrides:
 
 | Variable | Purpose |
