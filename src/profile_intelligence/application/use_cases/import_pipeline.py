@@ -25,6 +25,7 @@ SQLite
 
 from __future__ import annotations
 
+import time
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 
@@ -39,6 +40,10 @@ from profile_intelligence.application.pipeline.duplicate_detector import (
     DuplicateDetector,
 )
 from profile_intelligence.application.pipeline.scorer import ProfileScorer
+from profile_intelligence.application.use_cases.import_stats import (
+    ImportStats,
+    collect_import_stats,
+)
 from profile_intelligence.core.config import DEFAULT_PIPELINE_STAGES
 from profile_intelligence.core.logging import get_logger
 from profile_intelligence.core.types import PathLike
@@ -70,6 +75,7 @@ class PipelineResult:
     errors: tuple[str, ...] = field(default_factory=tuple)
     entities: tuple[Profile, ...] = field(default_factory=tuple)
     stages_run: tuple[str, ...] = field(default_factory=tuple)
+    stats: ImportStats = field(default_factory=ImportStats)
 
     @property
     def success(self) -> bool:
@@ -133,6 +139,7 @@ class ImportPipeline:
         plugin: ImporterPlugin | None = None,
     ) -> PipelineResult:
         """Run the full configured pipeline for a single file."""
+        started = time.perf_counter()
         document = RawDocument.from_path(
             path,
             source=source,
@@ -148,7 +155,10 @@ class ImportPipeline:
             source=source,
             plugin=plugin,
         )
-        return self._to_result(processed)
+        return self._to_result(
+            processed,
+            execution_seconds=time.perf_counter() - started,
+        )
 
     def load_document(
         self,
@@ -212,11 +222,27 @@ class ImportPipeline:
         source: str | None = None,
     ) -> PipelineResult:
         """Run post-parser stages (including repository) for *parsed*."""
+        started = time.perf_counter()
         processed = self.processing.run_from_parsed(parsed, source=source)
-        return self._to_result(processed)
+        return self._to_result(
+            processed,
+            execution_seconds=time.perf_counter() - started,
+        )
 
-    def _to_result(self, processed: ProcessingResult) -> PipelineResult:
+    def _to_result(
+        self,
+        processed: ProcessingResult,
+        *,
+        execution_seconds: float = 0.0,
+    ) -> PipelineResult:
         """Map a :class:`ProcessingResult` into a :class:`PipelineResult`."""
+        stats = collect_import_stats(
+            drafts=processed.scored or processed.unique or processed.validated,
+            entities=processed.entities,
+            duplicates=len(processed.duplicates),
+            profiles=processed.created + processed.updated,
+            execution_seconds=execution_seconds,
+        )
         result = PipelineResult(
             path=str(processed.parsed.path),
             plugin=processed.parsed.plugin_name,
@@ -227,12 +253,16 @@ class ImportPipeline:
             errors=processed.errors,
             entities=processed.entities,
             stages_run=processed.stages_run,
+            stats=stats,
         )
         logger.info(
-            "Pipeline complete: created=%d updated=%d skipped=%d errors=%d",
-            result.created,
-            result.updated,
-            result.skipped,
-            len(result.errors),
+            "Pipeline complete: profiles=%d services=%d rates=%d images=%d "
+            "duplicates=%d time=%.1fs",
+            stats.profiles,
+            stats.services,
+            stats.rates,
+            stats.images,
+            stats.duplicates,
+            stats.execution_seconds,
         )
         return result

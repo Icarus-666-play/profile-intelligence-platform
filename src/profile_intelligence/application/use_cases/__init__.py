@@ -22,6 +22,7 @@ from profile_intelligence.application.use_cases.import_service import (
     ImportService,
     ImportSummary,
 )
+from profile_intelligence.application.use_cases.import_stats import ImportStats
 from profile_intelligence.application.use_cases.nightly_pipeline import (
     NIGHTLY_STAGES,
     NightlyPipeline,
@@ -40,6 +41,7 @@ __all__ = [
     "DocumentParser",
     "ImportPipeline",
     "ImportService",
+    "ImportStats",
     "ImportSummary",
     "NightlyPipeline",
     "NightlyResult",

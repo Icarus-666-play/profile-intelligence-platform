@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import sys
 from collections.abc import Sequence
+from pathlib import Path
 
 from profile_intelligence import __version__
 from profile_intelligence.application.use_cases.application import ApplicationService
@@ -83,9 +84,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     import_parser = subparsers.add_parser(
         "import",
-        help="Import profiles from a file (CSV/Excel/plugin formats)",
+        help="Import profiles from a file or directory",
     )
-    import_parser.add_argument("path", help="Path to the file to import")
+    import_parser.add_argument(
+        "path",
+        help="Path to a file or directory to import",
+    )
     import_parser.add_argument(
         "--source",
         default=None,
@@ -95,6 +99,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--plugin",
         default=None,
         help="Force a specific importer plugin name",
+    )
+    import_parser.add_argument(
+        "--recursive",
+        action="store_true",
+        help="When path is a directory, recurse into subfolders",
     )
 
     search_parser = subparsers.add_parser(
@@ -292,18 +301,31 @@ def _dispatch(
         return 0
 
     if command == "import":
-        summary = container.resolve(ImportService).import_path(
-            args.path,
-            source=args.source,
-            plugin_name=args.plugin,
+        service = container.resolve(ImportService)
+        target = Path(args.path)
+        if target.is_dir():
+            summary = service.import_directory(
+                target,
+                source=args.source,
+                plugin_name=args.plugin,
+                recursive=bool(args.recursive),
+            )
+        else:
+            summary = service.import_path(
+                target,
+                source=args.source,
+                plugin_name=args.plugin,
+            )
+        report = summary.render_report()
+        logger.info("%s", report.replace("\n", " | "))
+        print(report)
+        detail = (
+            f"via {summary.plugin}: created={summary.created} "
+            f"updated={summary.updated} skipped={summary.skipped}"
         )
-        message = (
-            f"Imported {summary.path} via {summary.plugin}: "
-            f"created={summary.created} updated={summary.updated} "
-            f"skipped={summary.skipped}"
-        )
-        logger.info("%s", message)
-        print(message)
+        logger.info("Import detail %s %s", summary.path, detail)
+        print()
+        print(detail)
         for error in summary.errors:
             logger.warning("Import issue: %s", error)
             print(f"issue: {error}", file=sys.stderr)
