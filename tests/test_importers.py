@@ -138,9 +138,9 @@ def test_repo_plugin_packages_discoverable() -> None:
     repo_plugins = Path(__file__).resolve().parents[1] / "plugins"
     registry = ImporterRegistry()
     count = registry.discover_directory(repo_plugins)
-    assert count >= 3
+    assert count >= 4
     names = {plugin.name for plugin in registry.list_plugins()}
-    assert {"eurogirls", "eros", "custom"}.issubset(names)
+    assert {"eurogirls", "eros", "custom", "newwebsite"}.issubset(names)
     assert all(
         isinstance(plugin, ProfileImporter) for plugin in registry.list_plugins()
     )

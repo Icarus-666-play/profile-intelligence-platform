@@ -8,6 +8,7 @@ startup from `paths.plugins_dir` (default: this directory).
 ```
 plugins/
   eurogirls/     # Sprint 1 — Safari .webarchive importer (production)
+  newwebsite/    # HTML/JSON importer (parser → extract → validate → normalize)
   eros/          # Eros directory export importer (scaffold)
   custom/        # Template for your own importers
 ```
@@ -21,6 +22,17 @@ eurogirls/
   extractor.py    # BeautifulSoup structured extract
   normalizer.py   # → platform RawRecord
   tests.py
+```
+
+### NewWebsite
+
+```
+newwebsite/
+  plugin.py
+  parser.py
+  extractor.py
+  normalizer.py
+  validator.py
 ```
 
 Each subdirectory is a Python package. Put an `ImporterPlugin` subclass in

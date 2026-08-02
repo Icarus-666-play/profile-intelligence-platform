@@ -97,7 +97,7 @@ class MyImporter(ProfileImporter):
 
 1. Loads built-in modules under `profile_intelligence.infrastructure.importers.plugins`
 2. Loads top-level `*.py` modules from the configured `plugins/` directory
-3. Loads each `plugins/<name>/` package (for example `eurogirls/`, `eros/`, `custom/`)
+3. Loads each `plugins/<name>/` package (for example `eurogirls/`, `newwebsite/`, `eros/`, `custom/`)
 4. Filters by `importers.enabled` when that list is non-empty
 
 ## External plugin packages
@@ -106,7 +106,8 @@ Shipped scaffolds under `plugins/`:
 
 | Package | Plugin name | Status |
 |---------|-------------|--------|
-| `plugins/eurogirls/` | `eurogirls` | Scaffold — claims `eurogirls_*` export filenames |
+| `plugins/eurogirls/` | `eurogirls` | Safari `.webarchive` importer (parser → extract → normalize) |
+| `plugins/newwebsite/` | `newwebsite` | HTML/JSON importer (`plugin/parser/extractor/normalizer/validator`) |
 | `plugins/eros/` | `eros` | Scaffold — claims `eros_*` export filenames |
 | `plugins/custom/` | `custom` | Working template for `*.custom.json` arrays |
 

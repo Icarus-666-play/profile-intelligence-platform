@@ -85,6 +85,16 @@ extractor.py
 tests.py
 ```
 
+NewWebsite plugin (`plugins/newwebsite/`):
+
+```
+plugin.py
+parser.py
+extractor.py
+normalizer.py
+validator.py
+```
+
 ## Milestones
 
 See [docs/milestones.md](docs/milestones.md).
