@@ -1,10 +1,14 @@
-"""Plugin-based data importers."""
+"""Compatibility shim — prefer ``profile_intelligence.infrastructure.importers``."""
 
 from __future__ import annotations
 
-from profile_intelligence.importers.base import ImporterPlugin, ImportResult, RawRecord
-from profile_intelligence.importers.profile_importer import ProfileImporter
-from profile_intelligence.importers.registry import ImporterRegistry
+from profile_intelligence.infrastructure.importers import (
+    ImporterPlugin,
+    ImporterRegistry,
+    ImportResult,
+    ProfileImporter,
+    RawRecord,
+)
 
 __all__ = [
     "ImportResult",

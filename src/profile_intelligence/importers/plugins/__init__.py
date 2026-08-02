@@ -1,7 +1,7 @@
-"""Built-in importer plugins package.
-
-Add concrete :class:`~profile_intelligence.importers.base.ImporterPlugin`
-subclasses in sibling modules; they are auto-discovered at startup.
-"""
+"""Compatibility shim — built-in plugins live under infrastructure.importers.plugins."""
 
 from __future__ import annotations
+
+from profile_intelligence.infrastructure.importers import plugins as _plugins
+
+__all__ = list(getattr(_plugins, "__all__", []))

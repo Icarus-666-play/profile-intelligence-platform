@@ -32,8 +32,8 @@ When file logging is enabled, bootstrap writes rotating files under `logs/`:
 | `logs/import.log` | Importer + import-pipeline activity |
 | `logs/errors.log` | `ERROR` and above from all loggers |
 
-Import records are selected by logger name (`profile_intelligence.importers.*` and
-`profile_intelligence.services.import_service`). They also appear in `application.log`.
+Import records are selected by logger name (`profile_intelligence.infrastructure.importers.*` and
+`profile_intelligence.application.use_cases.import_service`). They also appear in `application.log`.
 
 ## Configuration
 

@@ -8,9 +8,14 @@ from typing import ClassVar
 import pytest
 
 from profile_intelligence.core.exceptions import PluginError
-from profile_intelligence.importers.base import ImporterPlugin, ImportResult
-from profile_intelligence.importers.profile_importer import ProfileImporter
-from profile_intelligence.importers.registry import ImporterRegistry
+from profile_intelligence.infrastructure.importers.base import (
+    ImporterPlugin,
+    ImportResult,
+)
+from profile_intelligence.infrastructure.importers.profile_importer import (
+    ProfileImporter,
+)
+from profile_intelligence.infrastructure.importers.registry import ImporterRegistry
 
 
 class DummyCsvImporter(ImporterPlugin):
@@ -75,7 +80,8 @@ def test_discover_directory(tmp_path: Path) -> None:
     plugin_src.write_text(
         """
 from typing import Any, ClassVar
-from profile_intelligence.importers.base import ImportResult, ImporterPlugin
+from profile_intelligence.domain.interfaces.importers import ImporterPlugin
+from profile_intelligence.domain.value_objects.importing import ImportResult
 
 class ExternalImporter(ImporterPlugin):
     name: ClassVar[str] = "external_demo"
@@ -106,7 +112,8 @@ def test_discover_plugin_packages(tmp_path: Path) -> None:
     (package_dir / "importer.py").write_text(
         """
 from typing import ClassVar
-from profile_intelligence.importers.base import ImportResult, ImporterPlugin
+from profile_intelligence.domain.interfaces.importers import ImporterPlugin
+from profile_intelligence.domain.value_objects.importing import ImportResult
 
 class SitePackImporter(ImporterPlugin):
     name: ClassVar[str] = "sitepack"

@@ -2,25 +2,28 @@
 
 from __future__ import annotations
 
+from profile_intelligence.application.use_cases import ImportPipeline
+from profile_intelligence.application.use_cases.application import ApplicationService
+from profile_intelligence.application.use_cases.compare_service import CompareService
+from profile_intelligence.application.use_cases.import_service import ImportService
+from profile_intelligence.application.use_cases.profile_service import ProfileService
 from profile_intelligence.core.config import AppConfig
 from profile_intelligence.core.config_manager import ConfigManager
 from profile_intelligence.core.container import Container
 from profile_intelligence.core.logging import configure_logging, get_logger
 from profile_intelligence.core.types import PathLike
-from profile_intelligence.dashboard import DashboardService
-from profile_intelligence.database.connection import Database, create_database
-from profile_intelligence.database.repository import ProfileRepository
-from profile_intelligence.database.seed import DatabaseSeeder
-from profile_intelligence.excel.exporter import ExcelExporter
-from profile_intelligence.extractors.profile import ProfileExtractor
-from profile_intelligence.importers.registry import ImporterRegistry
-from profile_intelligence.pipeline import ImportPipeline
-from profile_intelligence.scoring.completeness import CompletenessScorer
-from profile_intelligence.search.service import ProfileSearchService
-from profile_intelligence.services.application import ApplicationService
-from profile_intelligence.services.compare_service import CompareService
-from profile_intelligence.services.import_service import ImportService
-from profile_intelligence.services.profile_service import ProfileService
+from profile_intelligence.domain.entities.profile import ProfileExtractor
+from profile_intelligence.infrastructure.dashboard import DashboardService
+from profile_intelligence.infrastructure.database.connection import (
+    Database,
+    create_database,
+)
+from profile_intelligence.infrastructure.database.repository import ProfileRepository
+from profile_intelligence.infrastructure.database.seed import DatabaseSeeder
+from profile_intelligence.infrastructure.excel.exporter import ExcelExporter
+from profile_intelligence.infrastructure.importers.registry import ImporterRegistry
+from profile_intelligence.infrastructure.scoring.completeness import CompletenessScorer
+from profile_intelligence.infrastructure.search.service import ProfileSearchService
 
 logger = get_logger(__name__)
 

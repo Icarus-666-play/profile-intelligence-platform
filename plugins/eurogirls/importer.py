@@ -10,8 +10,8 @@ from pathlib import Path
 from typing import ClassVar
 
 from profile_intelligence.core.logging import get_logger
-from profile_intelligence.importers.base import ImportResult
-from profile_intelligence.importers.profile_importer import (
+from profile_intelligence.infrastructure.importers.base import ImportResult
+from profile_intelligence.infrastructure.importers.profile_importer import (
     ProfileImporter,
     ProfileParseOutcome,
 )

@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 from profile_intelligence.core.config import AppConfig
-from profile_intelligence.database.connection import Database, create_database
-from profile_intelligence.database.models import Profile
-from profile_intelligence.database.repository import ProfileRepository
+from profile_intelligence.infrastructure.database.connection import (
+    Database,
+    create_database,
+)
+from profile_intelligence.infrastructure.database.models import Profile
+from profile_intelligence.infrastructure.database.repository import ProfileRepository
 
 
 def test_create_and_connect(app_config: AppConfig) -> None:

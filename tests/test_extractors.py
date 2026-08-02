@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from profile_intelligence.core.exceptions import ExtractorError
-from profile_intelligence.extractors import ProfileExtractor
+from profile_intelligence.domain.entities import ProfileExtractor
 
 
 def test_extract_with_aliases() -> None:

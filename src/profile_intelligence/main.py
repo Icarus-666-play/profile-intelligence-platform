@@ -17,16 +17,16 @@ import sys
 from collections.abc import Sequence
 
 from profile_intelligence import __version__
+from profile_intelligence.application.use_cases.application import ApplicationService
+from profile_intelligence.application.use_cases.compare_service import CompareService
+from profile_intelligence.application.use_cases.import_service import ImportService
+from profile_intelligence.application.use_cases.profile_service import ProfileService
 from profile_intelligence.bootstrap import build_container
 from profile_intelligence.core.container import Container
 from profile_intelligence.core.exceptions import PipError
 from profile_intelligence.core.logging import get_logger
-from profile_intelligence.dashboard import DashboardService
-from profile_intelligence.database.seed import DatabaseSeeder
-from profile_intelligence.services.application import ApplicationService
-from profile_intelligence.services.compare_service import CompareService
-from profile_intelligence.services.import_service import ImportService
-from profile_intelligence.services.profile_service import ProfileService
+from profile_intelligence.infrastructure.dashboard import DashboardService
+from profile_intelligence.infrastructure.database.seed import DatabaseSeeder
 
 logger = get_logger(__name__)
 

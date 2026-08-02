@@ -4,7 +4,7 @@ PIP persists data in a local **SQLite** database via **SQLAlchemy 2.x**.
 
 ## Connection layer
 
-`profile_intelligence.database.connection.Database`:
+`profile_intelligence.infrastructure.database.connection.Database`:
 
 - Creates the parent directory for the DB file
 - Builds a SQLAlchemy engine (`sqlite:///<path>`)
@@ -12,7 +12,7 @@ PIP persists data in a local **SQLite** database via **SQLAlchemy 2.x**.
 - Exposes transactional `session()` context manager
 
 ```python
-from profile_intelligence.database import create_database
+from profile_intelligence.infrastructure.database import create_database
 from profile_intelligence.core.config import load_config
 
 config = load_config()
@@ -75,7 +75,7 @@ Adds Milestone 1 columns:
 `database/seed.py` upserts built-in demo profiles (source=`seed`):
 
 ```python
-from profile_intelligence.database import seed_database, ProfileRepository
+from profile_intelligence.infrastructure.database import seed_database, ProfileRepository
 
 seed_database(ProfileRepository(db), only_if_empty=True)
 ```

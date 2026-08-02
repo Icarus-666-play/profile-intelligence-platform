@@ -28,7 +28,7 @@ directly under `plugins/`.
 ```python
 from pathlib import Path
 from typing import ClassVar
-from profile_intelligence.importers import ProfileImporter
+from profile_intelligence.infrastructure.importers import ProfileImporter
 
 class MyImporter(ProfileImporter):
     name: ClassVar[str] = "my_source"

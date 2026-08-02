@@ -11,8 +11,11 @@ import yaml
 from profile_intelligence.core.config import AppConfig
 from profile_intelligence.core.config_manager import load_config
 from profile_intelligence.core.logging import reset_logging
-from profile_intelligence.database.connection import Database, create_database
-from profile_intelligence.database.migrate import run_migrations
+from profile_intelligence.infrastructure.database.connection import (
+    Database,
+    create_database,
+)
+from profile_intelligence.infrastructure.database.migrate import run_migrations
 
 
 @pytest.fixture(autouse=True)

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from profile_intelligence.database.repository import ProfileRepository
-from profile_intelligence.database.seed import (
+from profile_intelligence.infrastructure.database.repository import ProfileRepository
+from profile_intelligence.infrastructure.database.seed import (
     DEFAULT_SEED_PROFILES,
     seed_database,
 )

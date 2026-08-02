@@ -1,25 +1,30 @@
 # Architecture
 
-Profile Intelligence Platform (PIP) is a **local-first**, modular Python desktop application. Persistence is SQLite; reporting targets Excel; importers are plugins; AI integration is optional and off by default.
+Profile Intelligence Platform (PIP) is a **local-first**, modular Python desktop application organized in clean-architecture layers. Persistence is SQLite; reporting targets Excel; importers are plugins; AI integration is optional and off by default.
 
 ## Package layout
 
 ```
 src/profile_intelligence/
-  core/          # config, config_manager, logging, DI, exceptions
-  database/      # connection, models, repository, migrate, seed
-  importers/     # plugin interface + registry + built-in plugins
-  pipeline/      # File → … → SQLite staged import pipeline
-  extractors/    # field mapping helpers used by Normalizer
-  services/      # application/use-case orchestration
-  scoring/       # scoring engines
-  excel/         # Excel export
-  dashboard/     # desktop UI layer (scaffold)
-  search/        # local search
-  ai/            # AI provider adapters (scaffold)
-  bootstrap.py   # composition root
-  main.py        # CLI / process launcher
+  domain/
+    entities/          # ProfileDraft, ProfileExtractor
+    value_objects/     # RawDocument, ImportResult, …
+    interfaces/        # ImporterPlugin, ProfileImporter, Repository ports
+  application/
+    use_cases/         # Import, search, compare, export, dashboard, pipeline stages
+  infrastructure/
+    database/          # SQLite connection, ORM models, repository, migrate, seed
+    importers/         # Registry + built-in plugins (csv, excel, webarchive)
+    excel/             # Excel export adapter
+    search/            # SQLite search adapter
+    scoring/           # Completeness scorer
+    dashboard/         # Console dashboard adapter
+  core/                # Shared kernel: config, logging, DI, exceptions
+  bootstrap.py         # Composition root
+  main.py              # CLI / process launcher
 ```
+
+Compatibility shims remain at legacy paths (`importers/`, `database/`, `services/`, …) for older imports and external plugins.
 
 Supporting trees:
 
@@ -27,15 +32,16 @@ Supporting trees:
 - `docs/` — developer documentation
 - `scripts/` — convenience launchers
 - `tests/` — unit and integration tests
+- `plugins/` — external importer packages (`eurogirls`, `eros`, `custom`)
 
 ## Design principles
 
 | Principle | Implementation |
 |-----------|----------------|
 | Local-first | SQLite file under `data/`; no required network services |
-| Modular | Domain packages with clear boundaries |
-| Plugin importers | `ProfileImporter` / `ImporterPlugin` + `ImporterRegistry` discovery |
-| Repository pattern | `Repository[T]` / `ProfileRepository` |
+| Clean architecture | Domain ← Application ← Infrastructure |
+| Plugin importers | `ProfileImporter` port + `ImporterRegistry` discovery |
+| Repository pattern | Domain `Repository` port / infrastructure `ProfileRepository` |
 | Dependency injection | Lightweight `Container` in `core.container` |
 | Typed | Python 3.12 + `py.typed`, mypy strict |
 | Configurable | YAML + env overrides |
@@ -46,10 +52,10 @@ Supporting trees:
 ```
 main()
   → build_container()
-      → ConfigManager().load()   # core/config_manager.py
+      → ConfigManager().load()
       → configure_logging()
       → create_database()
-      → register services
+      → register use cases / adapters
   → ApplicationService.start()
       → ensure directories
       → run_migrations()
@@ -76,18 +82,18 @@ Repository
 SQLite
 ```
 
-Implemented by `ImportPipeline` (`pipeline/`), exposed via `ImportService`:
+Implemented by `ImportPipeline` (`application/use_cases/`), exposed via `ImportService`:
 
-| Stage | Type | Role |
-|-------|------|------|
-| File | path | Source export on disk |
-| RawDocument | `RawDocument` | Resolved file + metadata |
-| Parser | `DocumentParser` | `ProfileImporter` → raw row records |
-| Normalizer | `ProfileNormalizer` | Alias map → `ProfileDraft` |
-| Validator | `ProfileValidator` | Required fields / format checks |
-| Profile Entity | `Profile` | ORM entity after scoring |
-| Repository | `ProfileRepository` | Upsert API |
-| SQLite | `Database` | Local persistence |
+| Stage | Type | Layer |
+|-------|------|-------|
+| File | path | — |
+| RawDocument | `RawDocument` | domain value object |
+| Parser | `DocumentParser` + `ProfileImporter` | application + domain port |
+| Normalizer | `ProfileNormalizer` → `ProfileDraft` | application + domain entity |
+| Validator | `ProfileValidator` | application |
+| Profile Entity | `Profile` ORM | infrastructure |
+| Repository | `ProfileRepository` | infrastructure |
+| SQLite | `Database` | infrastructure |
 
 ## Error model
 
@@ -95,7 +101,7 @@ All platform errors inherit from `PipError`. Domain-specific subclasses (`Config
 
 ## Extension points
 
-1. **Importers** — subclass `ImporterPlugin`, place under `importers/plugins/` or external `plugins/<name>/` (e.g. `eurogirls`, `eros`, `custom`)
-2. **Migrations** — add `Migration` subclasses in `database/migrations/versions/` and register in `ALL_MIGRATIONS`
-3. **Services** — register additional factories on `Container` in `bootstrap.py`
-4. **AI** — enable via `ai.enabled` and implement adapters under `ai/`
+1. **Importers** — subclass `ProfileImporter`, place under `infrastructure/importers/plugins/` or external `plugins/<name>/`
+2. **Migrations** — add migration classes in `infrastructure/database/migrate.py`
+3. **Use cases** — register additional factories on `Container` in `bootstrap.py`
+4. **AI** — enable via `ai.enabled` and implement adapters later under infrastructure

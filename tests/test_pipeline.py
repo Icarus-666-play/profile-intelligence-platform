@@ -6,10 +6,10 @@ from pathlib import Path
 
 from openpyxl import Workbook, load_workbook
 
+from profile_intelligence.application.use_cases.application import ApplicationService
+from profile_intelligence.application.use_cases.import_service import ImportService
+from profile_intelligence.application.use_cases.profile_service import ProfileService
 from profile_intelligence.bootstrap import build_container
-from profile_intelligence.services.application import ApplicationService
-from profile_intelligence.services.import_service import ImportService
-from profile_intelligence.services.profile_service import ProfileService
 
 
 def _write_sample_csv(path: Path) -> None:

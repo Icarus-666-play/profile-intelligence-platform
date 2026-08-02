@@ -13,8 +13,8 @@ from typing import Any, ClassVar
 from profile_intelligence.core.exceptions import ImporterError
 from profile_intelligence.core.logging import get_logger
 from profile_intelligence.core.types import PathLike
-from profile_intelligence.importers.base import ImportResult, RawRecord
-from profile_intelligence.importers.profile_importer import (
+from profile_intelligence.infrastructure.importers.base import ImportResult, RawRecord
+from profile_intelligence.infrastructure.importers.profile_importer import (
     ProfileImporter,
     ProfileParseOutcome,
 )

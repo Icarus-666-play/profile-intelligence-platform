@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from profile_intelligence.core.config import ScoringSection
-from profile_intelligence.extractors import ProfileDraft
-from profile_intelligence.scoring import CompletenessScorer
+from profile_intelligence.domain.entities import ProfileDraft
+from profile_intelligence.infrastructure.scoring import CompletenessScorer
 
 
 def test_score_emptyish_profile() -> None:

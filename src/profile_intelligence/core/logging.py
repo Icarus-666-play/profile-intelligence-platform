@@ -18,9 +18,13 @@ from profile_intelligence.core.config import AppConfig, LoggingSection
 _CONFIGURED: bool = False
 _ROOT_LOGGER_NAME: Final[str] = "profile_intelligence"
 _IMPORT_LOGGER_PREFIXES: Final[tuple[str, ...]] = (
-    "profile_intelligence.importers",
-    "profile_intelligence.pipeline",
-    "profile_intelligence.services.import_service",
+    "profile_intelligence.infrastructure.importers",
+    "profile_intelligence.importers",  # compatibility shim path
+    "profile_intelligence.application.use_cases.import_pipeline",
+    "profile_intelligence.application.use_cases.import_service",
+    "profile_intelligence.application.use_cases.parse_document",
+    "profile_intelligence.application.use_cases.normalize_profiles",
+    "profile_intelligence.application.use_cases.validate_profiles",
 )
 
 

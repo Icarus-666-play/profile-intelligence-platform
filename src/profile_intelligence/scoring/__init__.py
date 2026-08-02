@@ -1,7 +1,5 @@
-"""Profile scoring engines and heuristics."""
+"""Compatibility shim — prefer ``profile_intelligence.infrastructure.scoring``."""
 
 from __future__ import annotations
 
-from profile_intelligence.scoring.completeness import CompletenessScorer
-
-__all__ = ["CompletenessScorer"]
+from profile_intelligence.infrastructure.scoring import *  # noqa: F403

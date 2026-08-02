@@ -5,8 +5,11 @@ from __future__ import annotations
 from sqlalchemy import text
 
 from profile_intelligence.core.config import AppConfig
-from profile_intelligence.database.connection import create_database
-from profile_intelligence.database.migrate import MigrationRunner, run_migrations
+from profile_intelligence.infrastructure.database.connection import create_database
+from profile_intelligence.infrastructure.database.migrate import (
+    MigrationRunner,
+    run_migrations,
+)
 
 
 def test_migrate_applies_initial_schema(app_config: AppConfig) -> None:

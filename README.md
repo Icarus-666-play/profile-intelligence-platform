@@ -48,15 +48,10 @@ See [docs/getting-started.md](docs/getting-started.md) and [docs/milestones.md](
 ├── src/profile_intelligence/
 │   ├── core/               # config, logging, DI, exceptions
 │   ├── database/           # connection, models, repository, migrate, seed
-│   ├── importers/          # plugin framework
-│   ├── pipeline/           # File→SQLite stages
-│   ├── extractors/         # field mapping helpers
-│   ├── services/           # application orchestration
-│   ├── scoring/            # completeness scoring
-│   ├── excel/              # Excel export
-│   ├── dashboard/          # console dashboard (UI later)
-│   ├── search/             # local search
-│   └── ai/                 # scaffold
+│   ├── domain/             # entities, value_objects, interfaces
+│   ├── application/        # use_cases (import, search, compare, …)
+│   ├── infrastructure/     # database, importers, excel, search, scoring
+│   └── core/               # config, logging, DI, exceptions
 └── tests/                  # unit & integration tests
 ```
 

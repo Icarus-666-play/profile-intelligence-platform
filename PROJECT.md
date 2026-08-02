@@ -32,8 +32,10 @@ Production-quality, local-first desktop application for profile analysis.
 
 ```
 src/profile_intelligence/
-  core/ database/ importers/ pipeline/ extractors/ services/
-  scoring/ excel/ dashboard/ search/ ai/
+  domain/          # entities, value_objects, interfaces
+  application/     # use_cases
+  infrastructure/  # database, importers, excel, search, scoring, dashboard
+  core/            # config, logging, DI, exceptions
 config/ docs/ scripts/ tests/ plugins/
 ```
 

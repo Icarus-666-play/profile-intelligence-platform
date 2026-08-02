@@ -9,7 +9,7 @@ File → RawDocument → Parser → Normalizer → Validator → Profile Entity 
 
 `ImportService.import_path()` / `ImportPipeline.process()` run that flow
 end-to-end. Parser uses a `ProfileImporter` plugin; later stages live under
-`profile_intelligence.pipeline`.
+`profile_intelligence.application.use_cases`.
 
 ## Built-in plugins (Milestone 1)
 
@@ -27,7 +27,7 @@ Prefer subclassing `ProfileImporter` (builds on `ImporterPlugin`) and implement
 ```python
 from pathlib import Path
 from typing import ClassVar
-from profile_intelligence.importers import ProfileImporter
+from profile_intelligence.infrastructure.importers import ProfileImporter
 
 class MyImporter(ProfileImporter):
     name: ClassVar[str] = "my_source"
@@ -65,7 +65,7 @@ class MyImporter(ProfileImporter):
 
 `ImporterRegistry.discover()`:
 
-1. Loads built-in modules under `profile_intelligence.importers.plugins`
+1. Loads built-in modules under `profile_intelligence.infrastructure.importers.plugins`
 2. Loads top-level `*.py` modules from the configured `plugins/` directory
 3. Loads each `plugins/<name>/` package (for example `eurogirls/`, `eros/`, `custom/`)
 4. Filters by `importers.enabled` when that list is non-empty

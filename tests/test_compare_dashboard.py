@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from profile_intelligence.application.use_cases.application import ApplicationService
+from profile_intelligence.application.use_cases.compare_service import CompareService
+from profile_intelligence.application.use_cases.import_service import ImportService
+from profile_intelligence.application.use_cases.profile_service import ProfileService
 from profile_intelligence.bootstrap import build_container
-from profile_intelligence.dashboard import DashboardService
+from profile_intelligence.infrastructure.dashboard import DashboardService
 from profile_intelligence.main import build_parser, main
-from profile_intelligence.services.application import ApplicationService
-from profile_intelligence.services.compare_service import CompareService
-from profile_intelligence.services.import_service import ImportService
-from profile_intelligence.services.profile_service import ProfileService
 
 
 def _seed_two_profiles(temp_root: Path) -> tuple[int, int]:

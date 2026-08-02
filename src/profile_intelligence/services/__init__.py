@@ -1,14 +1,15 @@
-"""Application services (use-case / orchestration layer)."""
+"""Compatibility shim — prefer ``profile_intelligence.application.use_cases``."""
 
 from __future__ import annotations
 
-from profile_intelligence.services.application import ApplicationService
-from profile_intelligence.services.compare_service import (
+from profile_intelligence.application.use_cases import (
+    ApplicationService,
     CompareService,
+    ImportService,
+    ImportSummary,
     ProfileComparison,
+    ProfileService,
 )
-from profile_intelligence.services.import_service import ImportService, ImportSummary
-from profile_intelligence.services.profile_service import ProfileService
 
 __all__ = [
     "ApplicationService",

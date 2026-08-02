@@ -6,18 +6,18 @@ from pathlib import Path
 
 import pytest
 
-from profile_intelligence.bootstrap import build_container
-from profile_intelligence.core.exceptions import ValidationError
-from profile_intelligence.extractors.profile import ProfileDraft
-from profile_intelligence.pipeline import (
+from profile_intelligence.application.use_cases import (
     DocumentParser,
     ImportPipeline,
     ProfileNormalizer,
     ProfileValidator,
     RawDocument,
 )
-from profile_intelligence.services.application import ApplicationService
-from profile_intelligence.services.profile_service import ProfileService
+from profile_intelligence.application.use_cases.application import ApplicationService
+from profile_intelligence.application.use_cases.profile_service import ProfileService
+from profile_intelligence.bootstrap import build_container
+from profile_intelligence.core.exceptions import ValidationError
+from profile_intelligence.domain.entities.profile import ProfileDraft
 
 
 def test_raw_document_from_path(tmp_path: Path) -> None:

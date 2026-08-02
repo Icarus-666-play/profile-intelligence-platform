@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from profile_intelligence.application.use_cases.application import ApplicationService
+from profile_intelligence.application.use_cases.import_service import ImportService
+from profile_intelligence.application.use_cases.profile_service import ProfileService
 from profile_intelligence.bootstrap import build_container
-from profile_intelligence.importers.base import ImportResult
-from profile_intelligence.services.application import ApplicationService
-from profile_intelligence.services.import_service import ImportService
-from profile_intelligence.services.profile_service import ProfileService
+from profile_intelligence.infrastructure.importers.base import ImportResult
 
 
 def test_importer_then_database_stages(temp_root: Path) -> None:

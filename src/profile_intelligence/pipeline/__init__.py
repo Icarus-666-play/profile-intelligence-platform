@@ -1,19 +1,11 @@
-"""File → SQLite import pipeline stages."""
+"""Compatibility shim — prefer ``profile_intelligence.application.use_cases``."""
 
 from __future__ import annotations
 
-from profile_intelligence.pipeline.documents import ParsedDocument, RawDocument
-from profile_intelligence.pipeline.normalizer import ProfileNormalizer
-from profile_intelligence.pipeline.parser import DocumentParser
-from profile_intelligence.pipeline.pipeline import ImportPipeline, PipelineResult
-from profile_intelligence.pipeline.validator import ProfileValidator
+from profile_intelligence.application.use_cases import ImportPipeline, PipelineResult
+from profile_intelligence.domain.value_objects.documents import (
+    ParsedDocument,
+    RawDocument,
+)
 
-__all__ = [
-    "DocumentParser",
-    "ImportPipeline",
-    "ParsedDocument",
-    "PipelineResult",
-    "ProfileNormalizer",
-    "ProfileValidator",
-    "RawDocument",
-]
+__all__ = ["ImportPipeline", "ParsedDocument", "PipelineResult", "RawDocument"]

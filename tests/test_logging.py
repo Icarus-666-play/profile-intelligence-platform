@@ -22,9 +22,11 @@ def test_configure_logging_writes_split_files(app_config: AppConfig) -> None:
     configure_logging(app_config)
 
     app_logger = get_logger("tests.logging")
-    import_logger = get_logger("profile_intelligence.services.import_service")
+    import_logger = get_logger(
+        "profile_intelligence.application.use_cases.import_service"
+    )
     importer_plugin_logger = get_logger(
-        "profile_intelligence.importers.plugins.csv_importer"
+        "profile_intelligence.infrastructure.importers.plugins.csv_importer"
     )
 
     app_logger.info("general application event")
