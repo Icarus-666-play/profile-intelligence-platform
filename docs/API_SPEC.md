@@ -51,9 +51,9 @@ Implementation: `src/profile_intelligence/api/` (FastAPI in `fastapi_app.py`).
 
 ### `POST /api/import/url`
 
-Run the URL import pipeline through Import:
+Run the URL import pipeline through Finished:
 
-`URL → Downloader → Snapshot → Parser → Extractor → Normalizer → Validator → Preview → Import`
+`Download → Parse → Preview → Import → Finished`
 
 ```json
 {
@@ -83,16 +83,16 @@ Import page panels + pipeline metadata:
 
 ```json
 {
-  "pipeline": ["url", "downloader", "snapshot", "parser", "extractor", "normalizer", "validator", "preview", "import"],
-  "stage_labels": { "snapshot": "Snapshot" },
+  "pipeline": ["download", "parse", "preview", "import", "finished"],
+  "stage_labels": { "finished": "Finished" },
   "recent_urls": [{ "url": "https://…", "at": "…" }],
   "import_queue": [{ "name": "a.csv", "path": "…", "file_size": 123 }],
   "progress": {
     "url": "…",
-    "stage": "validator",
-    "percent": 75,
+    "stage": "parse",
+    "percent": 25,
     "message": "…",
-    "stages_run": ["url", "downloader", "snapshot"],
+    "stages_run": ["download", "parse"],
     "snapshot": { "path": "…", "from_cache": false }
   },
   "errors": [{ "url": "…", "message": "…", "at": "…" }],

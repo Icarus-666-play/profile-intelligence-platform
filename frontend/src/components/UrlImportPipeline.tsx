@@ -1,25 +1,17 @@
 const DEFAULT_PIPELINE = [
-  'url',
-  'downloader',
-  'snapshot',
-  'parser',
-  'extractor',
-  'normalizer',
-  'validator',
+  'download',
+  'parse',
   'preview',
   'import',
+  'finished',
 ] as const
 
 const DEFAULT_LABELS: Record<string, string> = {
-  url: 'URL',
-  downloader: 'Downloader',
-  snapshot: 'Snapshot',
-  parser: 'Parser',
-  extractor: 'Extractor',
-  normalizer: 'Normalizer',
-  validator: 'Validator',
+  download: 'Download',
+  parse: 'Parse',
   preview: 'Preview',
   import: 'Import',
+  finished: 'Finished',
 }
 
 type Props = {
@@ -41,7 +33,8 @@ export default function UrlImportPipeline({
   return (
     <ol className="url-pipeline" aria-label="URL import pipeline">
       {pipeline.map((stage, index) => {
-        const done = completed.has(stage) || (currentIndex >= 0 && index < currentIndex)
+        const done =
+          completed.has(stage) || (currentIndex >= 0 && index < currentIndex)
         const active = stage === currentStage
         const className = [
           'url-pipeline-step',

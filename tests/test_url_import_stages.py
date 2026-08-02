@@ -11,21 +11,13 @@ from profile_intelligence.domain.value_objects.url_import import (
 
 def test_url_import_stage_order() -> None:
     assert URL_IMPORT_STAGES == (
-        "url",
-        "downloader",
-        "snapshot",
-        "parser",
-        "extractor",
-        "normalizer",
-        "validator",
+        "download",
+        "parse",
         "preview",
         "import",
+        "finished",
     )
-    assert stages_through("snapshot") == (
-        "url",
-        "downloader",
-        "snapshot",
-    )
-    assert stage_percent("url") == 0
-    assert stage_percent("import") == 100
-    assert 0 < stage_percent("parser") < 100
+    assert stages_through("parse") == ("download", "parse")
+    assert stage_percent("download") == 0
+    assert stage_percent("finished") == 100
+    assert 0 < stage_percent("preview") < 100

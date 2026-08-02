@@ -139,7 +139,7 @@ def test_import_url_preview_and_import_activity_api(temp_root: Path) -> None:
         assert body["accepted_count"] >= 1
         assert body["url"] == "https://example.com/people.csv"
         assert body["stage"] == "preview"
-        assert body["pipeline"][:3] == ["url", "downloader", "snapshot"]
+        assert body["pipeline"][:3] == ["download", "parse", "preview"]
         assert "preview" in body["stages_run"]
         assert body["snapshot"]["path"]
 
@@ -150,24 +150,20 @@ def test_import_url_preview_and_import_activity_api(temp_root: Path) -> None:
         assert imported.status_code == 200
         imported_body = imported.json()
         assert imported_body["created"] >= 1
-        assert imported_body["stage"] == "import"
-        assert imported_body["stages_run"][-1] == "import"
+        assert imported_body["stage"] == "finished"
+        assert imported_body["stages_run"][-1] == "finished"
 
         activity = client.get("/api/import/activity")
         assert activity.status_code == 200
         payload = activity.json()
         assert payload["pipeline"] == [
-            "url",
-            "downloader",
-            "snapshot",
-            "parser",
-            "extractor",
-            "normalizer",
-            "validator",
+            "download",
+            "parse",
             "preview",
             "import",
+            "finished",
         ]
-        assert payload["stage_labels"]["snapshot"] == "Snapshot"
+        assert payload["stage_labels"]["finished"] == "Finished"
         assert any(
             item["url"] == "https://example.com/people.csv"
             for item in payload["recent_urls"]

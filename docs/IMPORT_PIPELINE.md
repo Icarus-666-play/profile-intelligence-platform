@@ -5,23 +5,15 @@ End-to-end path from a local file to SQLite (and optional media / daily automati
 ## URL import flow (React Import page)
 
 ```
-URL
+Download
  ↓
-Downloader
- ↓
-Snapshot
- ↓
-Parser
- ↓
-Extractor
- ↓
-Normalizer
- ↓
-Validator
+Parse
  ↓
 Preview
  ↓
 Import
+ ↓
+Finished
 ```
 
 Constants: `domain/value_objects/url_import.py` (`URL_IMPORT_STAGES`).  

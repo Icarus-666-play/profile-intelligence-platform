@@ -202,7 +202,7 @@ def _url_progress(
 
     if activity is None:
         return
-    if stage == "url":
+    if stage == "download":
         activity.remember_url(url)
     activity.set_progress(
         url=url,
@@ -283,18 +283,11 @@ def _import_one_url(
 
     activity = ctx.import_activity
     prefix = f"[{batch_label}] " if batch_label else ""
-    _url_progress(
-        activity,
-        url=url,
-        stage="url",
-        message=f"{prefix}Accepted URL",
-        snapshot=None,
-    )
     try:
         _url_progress(
             activity,
             url=url,
-            stage="downloader",
+            stage="download",
             message=f"{prefix}Downloading…",
             snapshot=None,
         )
@@ -303,23 +296,17 @@ def _import_one_url(
         _url_progress(
             activity,
             url=url,
-            stage="snapshot",
-            message=f"{prefix}Snapshot ready: {snapshot.path.name}",
+            stage="parse",
+            message=f"{prefix}Parsing {snapshot.path.name}…",
             snapshot=snapshot.to_mapping(),
         )
-        for stage, message in (
-            ("parser", "Parsing snapshot…"),
-            ("extractor", "Extracting profiles…"),
-            ("normalizer", "Normalizing records…"),
-            ("validator", "Validating rows…"),
-        ):
-            _url_progress(
-                activity,
-                url=url,
-                stage=stage,
-                message=f"{prefix}{message}",
-                snapshot=snapshot.to_mapping(),
-            )
+        _url_progress(
+            activity,
+            url=url,
+            stage="preview",
+            message=f"{prefix}Preparing records…",
+            snapshot=snapshot.to_mapping(),
+        )
         _url_progress(
             activity,
             url=url,
@@ -337,14 +324,21 @@ def _import_one_url(
             raise
         raise ApiError(str(exc), status=400) from exc
 
+    _url_progress(
+        activity,
+        url=url,
+        stage="finished",
+        message=f"{prefix}Finished",
+        snapshot=snapshot.to_mapping(),
+    )
     payload = import_summary_to_dict(summary)
     payload["url"] = url
     payload["downloaded_path"] = str(artifact.path)
     payload["snapshot"] = snapshot.to_mapping()
     payload["pipeline"] = list(URL_IMPORT_STAGES)
-    payload["stages_run"] = list(stages_through("import"))
-    payload["stage"] = "import"
-    payload["percent"] = stage_percent("import")
+    payload["stages_run"] = list(stages_through("finished"))
+    payload["stage"] = "finished"
+    payload["percent"] = stage_percent("finished")
     if activity is not None:
         activity.record_completed(
             url=url,
@@ -379,18 +373,11 @@ def _preview_one_url(
 
     activity = ctx.import_activity
     prefix = f"[{batch_label}] " if batch_label else ""
-    _url_progress(
-        activity,
-        url=url,
-        stage="url",
-        message=f"{prefix}Accepted URL",
-        snapshot=None,
-    )
     try:
         _url_progress(
             activity,
             url=url,
-            stage="downloader",
+            stage="download",
             message=f"{prefix}Downloading…",
             snapshot=None,
         )
@@ -399,23 +386,10 @@ def _preview_one_url(
         _url_progress(
             activity,
             url=url,
-            stage="snapshot",
-            message=f"{prefix}Snapshot ready: {snapshot.path.name}",
+            stage="parse",
+            message=f"{prefix}Parsing {snapshot.path.name}…",
             snapshot=snapshot.to_mapping(),
         )
-        for stage, message in (
-            ("parser", "Parsing snapshot…"),
-            ("extractor", "Extracting profiles…"),
-            ("normalizer", "Normalizing records…"),
-            ("validator", "Validating rows…"),
-        ):
-            _url_progress(
-                activity,
-                url=url,
-                stage=stage,
-                message=f"{prefix}{message}",
-                snapshot=snapshot.to_mapping(),
-            )
         _url_progress(
             activity,
             url=url,

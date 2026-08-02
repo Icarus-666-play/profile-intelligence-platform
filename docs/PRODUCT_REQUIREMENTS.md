@@ -15,7 +15,7 @@ Requirements for Profile Intelligence Platform through Milestone 2 (shipped) and
 | FR-1.3 | Run staged pipeline: parser → normalizer → validator → duplicate_detector → scorer → repository | Done |
 | FR-1.4 | Allow forcing a plugin via `--plugin` / UI | Done |
 | FR-1.5 | Persist profile aggregate children (rates, services, reviews, photos, availability) | Done |
-| FR-1.6 | URL import pipeline: URL → Downloader → Snapshot → Parser → Extractor → Normalizer → Validator → Preview → Import | Done |
+| FR-1.6 | URL import progress: Download → Parse → Preview → Import → Finished | Done |
 
 ### FR-2 Search & list
 

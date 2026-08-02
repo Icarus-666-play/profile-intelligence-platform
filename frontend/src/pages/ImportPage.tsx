@@ -75,8 +75,8 @@ export default function ImportPage() {
     setLastImport(null)
     setImportBatch([])
     setBatchErrors([])
-    setActiveStage('url')
-    setStagesRun(['url'])
+    setActiveStage('download')
+    setStagesRun(['download'])
     setPanel('progress')
     try {
       const result = await api.previewUrl({
@@ -92,7 +92,7 @@ export default function ImportPage() {
       setStagesRun(
         result.stages_run?.length
           ? result.stages_run
-          : [...DEFAULT_PIPELINE].slice(0, 8),
+          : ['download', 'parse', 'preview'],
       )
       await refreshActivity()
     } catch (err) {
@@ -115,8 +115,8 @@ export default function ImportPage() {
     }
     setBusy(true)
     setError(null)
-    setActiveStage('url')
-    setStagesRun(['url'])
+    setActiveStage('download')
+    setStagesRun(['download'])
     setPanel('progress')
     try {
       const result = await api.importUrl({
@@ -130,9 +130,11 @@ export default function ImportPage() {
       setBatchErrors(result.errors ?? [])
       setPreview(null)
       setPreviewBatch([])
-      setActiveStage(result.stage || 'import')
+      setActiveStage(result.stage || 'finished')
       setStagesRun(
-        result.stages_run?.length ? result.stages_run : [...DEFAULT_PIPELINE],
+        result.stages_run?.length
+          ? result.stages_run
+          : [...DEFAULT_PIPELINE],
       )
       setPanel('completed')
       await refreshActivity()
@@ -186,8 +188,7 @@ export default function ImportPage() {
     <section>
       <h1 className="page-title">Import</h1>
       <p className="page-lead">
-        URL → Downloader → Snapshot → Parser → Extractor → Normalizer →
-        Validator → Preview → Import
+        Download → Parse → Preview → Import → Finished
       </p>
 
       <div className="panel import-pipeline-panel">

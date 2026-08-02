@@ -85,8 +85,7 @@ Select up to two rows, then open Compare with `?left=&right=`.
 ```
 Import
 
-URL → Downloader → Snapshot → Parser → Extractor
-  → Normalizer → Validator → Preview → Import
+Download → Parse → Preview → Import → Finished
   …pipeline stepper…
 
 URLs (one per line)

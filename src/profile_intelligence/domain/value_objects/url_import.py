@@ -1,23 +1,15 @@
-"""URL Import operator pipeline stages.
+"""URL Import operator progress stages.
 
 ```
-URL
+Download
  ↓
-Downloader
- ↓
-Snapshot
- ↓
-Parser
- ↓
-Extractor
- ↓
-Normalizer
- ↓
-Validator
+Parse
  ↓
 Preview
  ↓
 Import
+ ↓
+Finished
 ```
 """
 
@@ -29,33 +21,25 @@ from pathlib import Path
 from profile_intelligence.domain.interfaces.plugin_pipeline import DownloadArtifact
 
 URL_IMPORT_STAGES: tuple[str, ...] = (
-    "url",
-    "downloader",
-    "snapshot",
-    "parser",
-    "extractor",
-    "normalizer",
-    "validator",
+    "download",
+    "parse",
     "preview",
     "import",
+    "finished",
 )
 
 URL_IMPORT_STAGE_LABELS: dict[str, str] = {
-    "url": "URL",
-    "downloader": "Downloader",
-    "snapshot": "Snapshot",
-    "parser": "Parser",
-    "extractor": "Extractor",
-    "normalizer": "Normalizer",
-    "validator": "Validator",
+    "download": "Download",
+    "parse": "Parse",
     "preview": "Preview",
     "import": "Import",
+    "finished": "Finished",
 }
 
 
 @dataclass(frozen=True, slots=True)
 class UrlSnapshot:
-    """Local snapshot produced after the Downloader stage."""
+    """Local snapshot produced after the Download stage."""
 
     path: Path
     source: str
@@ -94,7 +78,7 @@ def stage_percent(stage: str) -> int:
 
 
 def stages_through(stage: str) -> tuple[str, ...]:
-    """Return pipeline stages from ``url`` through *stage* inclusive."""
+    """Return pipeline stages from ``download`` through *stage* inclusive."""
     try:
         index = URL_IMPORT_STAGES.index(stage)
     except ValueError:
