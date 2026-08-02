@@ -7,6 +7,8 @@ export default function SettingsPage() {
         environment overrides. Edit on disk and restart <code>pip-app ui</code>.
       </p>
       <div className="panel">
+        <h2>Entry flow</h2>
+        <p className="muted">Login (optional) → Home → Dashboard</p>
         <h2>Stack</h2>
         <p className="muted">
           Browser → React → REST API → FastAPI → Application Layer → Repository

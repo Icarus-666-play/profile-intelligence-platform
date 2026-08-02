@@ -52,6 +52,14 @@ search:
 dashboard:
   refresh_seconds: 30
 
+# Login (optional) → Home → Dashboard
+auth:
+  enabled: false
+  allow_guest: true
+  username: operator
+  password: null  # or PIP_AUTH_PASSWORD
+  session_ttl_seconds: 86400
+
 # Image → Download → Hash → Duplicate Detection → Thumbnail → Storage
 media:
   root_dir: data/media

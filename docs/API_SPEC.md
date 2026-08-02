@@ -19,6 +19,11 @@ Served by FastAPI (`create_fastapi_app`). Handlers live in
 
 ```
 GET    /api/health
+GET    /api/auth/status
+POST   /api/auth/login
+POST   /api/auth/guest
+POST   /api/auth/logout
+GET    /api/auth/session
 POST   /api/import/url
 POST   /api/import/files
 GET    /api/profiles
@@ -29,6 +34,8 @@ GET    /api/analytics
 GET    /api/plugins
 POST   /api/plugins/reload
 ```
+
+Auth supports the React entry flow **Login (optional) → Home → Dashboard**. Default `auth.enabled: false` (guest continue).
 
 Implementation: `src/profile_intelligence/api/` (FastAPI in `fastapi_app.py`).
 

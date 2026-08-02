@@ -65,6 +65,22 @@ export type Analytics = {
   }
 }
 
+export type AuthStatus = {
+  enabled: boolean
+  allow_guest: boolean
+  username_hint: string | null
+  flow: string[]
+}
+
+export type AuthSession = {
+  token: string
+  username: string
+  mode: string
+  expires_at: number
+  authenticated: boolean
+  guest: boolean
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     headers: {
@@ -121,4 +137,24 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(body),
     }),
+  authStatus: () => request<AuthStatus>('/api/auth/status'),
+  login: (username: string, password: string) =>
+    request<{ session: AuthSession; next: string }>('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
+    }),
+  guest: () =>
+    request<{ session: AuthSession; next: string }>('/api/auth/guest', {
+      method: 'POST',
+      body: JSON.stringify({}),
+    }),
+  logout: (token: string | null) =>
+    request<{ ok: boolean; next: string }>('/api/auth/logout', {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    }),
+  authSession: (token: string) =>
+    request<{ session: AuthSession | null }>(
+      `/api/auth/session?token=${encodeURIComponent(token)}`,
+    ),
 }

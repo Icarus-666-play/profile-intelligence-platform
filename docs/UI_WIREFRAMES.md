@@ -2,7 +2,25 @@
 
 Local Dashboard UI launched with `pip-app ui` (default `http://127.0.0.1:8765/`).
 
-Implementation: `src/profile_intelligence/ui/` (WSGI app + HTML pages). This document describes the shipped information architecture, not a separate design-tool mock.
+Primary implementation: React SPA (`frontend/`) served by FastAPI. Legacy WSGI pages remain under `src/profile_intelligence/ui/` (`--legacy-wsgi`).
+
+## Entry flow
+
+```
+Login (optional)
+ ↓
+Home
+ ↓
+Dashboard
+```
+
+| Step | Route | Notes |
+|------|-------|-------|
+| Login | `/login` | Optional; **Continue without login** → guest session |
+| Home | `/` | Brand landing + CTA to Dashboard |
+| Dashboard | `/dashboard` | Metrics overview (app shell) |
+
+Auth API: `/api/auth/status|login|guest|logout|session`. Config: `auth:` in `settings.yaml`.
 
 ## Shell
 

@@ -11,6 +11,7 @@ from profile_intelligence.application.use_cases.profile_service import ProfileSe
 from profile_intelligence.core.config import AppConfig
 from profile_intelligence.domain.interfaces.repositories import IProfileRepository
 from profile_intelligence.infrastructure.analysis import AnalysisService
+from profile_intelligence.infrastructure.auth import LocalAuthService
 from profile_intelligence.infrastructure.dashboard import DashboardService
 from profile_intelligence.infrastructure.download import DocumentDownloader
 from profile_intelligence.infrastructure.importers.registry import ImporterRegistry
@@ -30,6 +31,7 @@ class ApiContext:
     analysis: AnalysisService
     importers: ImporterRegistry
     downloader: DocumentDownloader | None = None
+    auth: LocalAuthService | None = None
 
 
 __all__ = ["ApiContext"]

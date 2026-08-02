@@ -41,6 +41,11 @@ API_ROUTES: tuple[tuple[str, str], ...] = (
     ("GET", "/api/analytics"),
     ("GET", "/api/plugins"),
     ("POST", "/api/plugins/reload"),
+    ("GET", "/api/auth/status"),
+    ("POST", "/api/auth/login"),
+    ("POST", "/api/auth/guest"),
+    ("POST", "/api/auth/logout"),
+    ("GET", "/api/auth/session"),
 )
 
 

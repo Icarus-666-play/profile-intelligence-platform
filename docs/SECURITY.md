@@ -14,11 +14,13 @@ PIP is a **local-first desktop** application. Security posture assumes a trusted
 ## Local UI / API binding
 
 - Default bind: `127.0.0.1:8765`
-- **No authentication** on UI or `/api` JSON routes
+- React entry flow: **Login (optional) → Home → Dashboard**
+- Optional local login (`auth.enabled`, default **false**) issues in-memory sessions for the SPA only; API data routes remain open on loopback
+- Guest continue is allowed when `auth.allow_guest: true` (default)
 - Do **not** expose `--host 0.0.0.0` on untrusted networks
 - `POST /api/import/url` respects `media.allow_remote_download`
 
-If you bind beyond loopback, treat the UI/API as an open local admin console.
+If you bind beyond loopback, treat the UI/API as an open local admin console. Optional login is not a multi-user access-control system.
 
 ## Secrets & configuration
 

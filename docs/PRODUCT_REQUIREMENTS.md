@@ -79,7 +79,7 @@ Requirements for Profile Intelligence Platform through Milestone 2 (shipped) and
 
 ## Out of scope
 
-- Account/auth system for the local UI
+- Multi-user account/auth system (SaaS-style) — optional local Login → Home → Dashboard gate only
 - Real-time collaborative editing
 - Hosted SaaS deployment
 

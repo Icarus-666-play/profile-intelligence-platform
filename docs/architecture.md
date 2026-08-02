@@ -63,10 +63,13 @@ unchanged; React talks only to REST. File blobs live under `FileStorage`
 Source for the SPA: `frontend/` (Vite + React). Rebuild with
 `cd frontend && npm install && npm run build`.
 
-React Dashboard navigation:
+React entry + navigation:
 
 ```
+Login (optional) → Home → Dashboard
+
 Profile Intelligence Platform
+Home
 Dashboard
 Search
 Import

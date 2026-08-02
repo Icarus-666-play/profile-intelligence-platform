@@ -33,6 +33,7 @@ ENV_CONFIG_PATH = "PIP_CONFIG_PATH"
 ENV_DATA_DIR = "PIP_DATA_DIR"
 ENV_LOG_LEVEL = "PIP_LOG_LEVEL"
 ENV_ENVIRONMENT = "PIP_ENVIRONMENT"
+ENV_AUTH_PASSWORD = "PIP_AUTH_PASSWORD"  # noqa: S105 — env var name, not a secret
 
 SETTINGS_FILENAME = "settings.yaml"
 LOGGING_FILENAME = "logging.yaml"
@@ -289,6 +290,30 @@ DEFAULT_PIPELINE_STAGES: tuple[str, ...] = (
 
 
 @dataclass(frozen=True, slots=True)
+class AuthSection:
+    """Optional local login gate for the React entry flow.
+
+    ```
+    Login (optional)
+     ↓
+    Home
+     ↓
+    Dashboard
+    ```
+
+    When ``enabled`` is false (default), operators continue as guest.
+    When true, credentials are checked but guest continue remains available
+    unless ``allow_guest`` is false.
+    """
+
+    enabled: bool = False
+    allow_guest: bool = True
+    username: str = "operator"
+    password: str | None = None
+    session_ttl_seconds: int = 86_400
+
+
+@dataclass(frozen=True, slots=True)
 class PipelineSection:
     """Ordered import processing stages after RawDocument load.
 
@@ -331,6 +356,7 @@ class AppConfig:
     media: MediaSection = field(default_factory=MediaSection)
     cache: CacheSection = field(default_factory=CacheSection)
     daily: DailySection = field(default_factory=DailySection)
+    auth: AuthSection = field(default_factory=AuthSection)
     pipeline: PipelineSection = field(default_factory=PipelineSection)
     config_dir: Path | None = None
     config_path: Path | None = None
@@ -602,12 +628,14 @@ def _build_config(
     dashboard_raw = _section(settings_raw, "dashboard")
     media_raw = _section(settings_raw, "media")
     cache_raw = _section(settings_raw, "cache")
+    auth_raw = _section(settings_raw, "auth")
     # Prefer ``daily:``; accept legacy ``nightly:`` as overlay base.
     daily_raw: dict[str, Any] = dict(_section(settings_raw, "nightly"))
     daily_raw.update(dict(_section(settings_raw, "daily")))
     pipeline_section = _parse_pipeline(settings_raw.get("pipeline"))
     logging_data = _normalize_logging_raw(logging_raw)
     scoring_data = _normalize_scoring_raw(scoring_raw)
+    auth_defaults = AuthSection()
 
     enabled = importers_raw.get("enabled", [])
     if enabled is None:
@@ -807,6 +835,21 @@ def _build_config(
                 daily_raw.get("email_to", daily_defaults.email_to)
             ),
         ),
+        auth=AuthSection(
+            enabled=bool(auth_raw.get("enabled", auth_defaults.enabled)),
+            allow_guest=bool(
+                auth_raw.get("allow_guest", auth_defaults.allow_guest)
+            ),
+            username=str(auth_raw.get("username", auth_defaults.username)),
+            password=_optional_str(
+                auth_raw.get("password", auth_defaults.password)
+            ),
+            session_ttl_seconds=int(
+                auth_raw.get(
+                    "session_ttl_seconds", auth_defaults.session_ttl_seconds
+                )
+            ),
+        ),
         pipeline=pipeline_section,
         config_dir=config_dir,
         config_path=config_path,
@@ -838,6 +881,13 @@ def _apply_env_overrides(
         )
         app_section["environment"] = environment
 
+    auth_password = os.environ.get(ENV_AUTH_PASSWORD)
+    if auth_password is not None:
+        auth_section = cast(
+            MutableMapping[str, Any], settings_raw.setdefault("auth", {})
+        )
+        auth_section["password"] = auth_password
+
 
 def _merge_file_pair(base_path: Path, local_path: Path) -> dict[str, Any]:
     merged = _load_yaml(base_path)
@@ -858,6 +908,7 @@ def __getattr__(name: str) -> object:
 
 __all__ = [
     "DEFAULT_PIPELINE_STAGES",
+    "ENV_AUTH_PASSWORD",
     "ENV_CONFIG_PATH",
     "ENV_DATA_DIR",
     "ENV_ENVIRONMENT",
@@ -868,6 +919,7 @@ __all__ = [
     "AISection",
     "AppConfig",
     "AppSection",
+    "AuthSection",
     "CacheSection",
     "DailySection",
     "DashboardSection",

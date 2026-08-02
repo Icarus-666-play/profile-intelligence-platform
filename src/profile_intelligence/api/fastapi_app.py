@@ -38,6 +38,11 @@ from starlette.responses import Response
 from profile_intelligence.api.context import ApiContext
 from profile_intelligence.api.http import ApiError
 from profile_intelligence.api.routes import (
+    auth_guest,
+    auth_login,
+    auth_logout,
+    auth_session,
+    auth_status,
     compare_profiles,
     get_analytics,
     get_dashboard,
@@ -172,6 +177,31 @@ def create_fastapi_app(
     @app.post("/api/plugins/reload")
     async def api_plugins_reload() -> dict[str, Any]:
         return reload_plugins(ctx)
+
+    @app.get("/api/auth/status")
+    def api_auth_status() -> dict[str, Any]:
+        return auth_status(ctx)
+
+    @app.post("/api/auth/login")
+    async def api_auth_login(request: Request) -> dict[str, Any]:
+        body = await _json_body(request)
+        return auth_login(ctx, body)
+
+    @app.post("/api/auth/guest")
+    def api_auth_guest() -> dict[str, Any]:
+        return auth_guest(ctx)
+
+    @app.post("/api/auth/logout")
+    async def api_auth_logout(request: Request) -> dict[str, Any]:
+        body = await _json_body(request)
+        return auth_logout(ctx, body)
+
+    @app.get("/api/auth/session")
+    def api_auth_session(token: str | None = None) -> dict[str, Any]:
+        query: dict[str, str] = {}
+        if token:
+            query["token"] = token
+        return auth_session(ctx, query)
 
     if serve_spa:
         _mount_react_spa(app)

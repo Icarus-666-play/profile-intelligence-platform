@@ -18,6 +18,8 @@ export default function AboutPage() {
         Profile Intelligence Platform — local-first desktop profile analysis.
       </p>
       <div className="panel">
+        <h2>Entry flow</h2>
+        <p>Login (optional) → Home → Dashboard</p>
         <h2>Presentation stack</h2>
         <p>
           Browser → React → REST API → FastAPI → Application Layer → Repository

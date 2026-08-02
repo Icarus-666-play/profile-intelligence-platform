@@ -65,6 +65,16 @@ SQLite
 File Storage
 ```
 
+Entry flow:
+
+```
+Login (optional)
+ ↓
+Home
+ ↓
+Dashboard
+```
+
 Product documentation (`docs/`):
 
 ```

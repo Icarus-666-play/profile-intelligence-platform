@@ -20,6 +20,7 @@ from profile_intelligence.api.serializers import (
 )
 from profile_intelligence.core.exceptions import PipError, ValidationError
 from profile_intelligence.core.logging import get_logger
+from profile_intelligence.infrastructure.auth import LocalAuthService
 from profile_intelligence.infrastructure.download import DocumentDownloader
 
 logger = get_logger(__name__)
@@ -55,6 +56,16 @@ def dispatch(
         return 200, list_plugins(ctx)
     if method == "POST" and path == "/api/plugins/reload":
         return 200, reload_plugins(ctx)
+    if method == "GET" and path == "/api/auth/status":
+        return 200, auth_status(ctx)
+    if method == "POST" and path == "/api/auth/login":
+        return 200, auth_login(ctx, body)
+    if method == "POST" and path == "/api/auth/guest":
+        return 200, auth_guest(ctx)
+    if method == "POST" and path == "/api/auth/logout":
+        return 200, auth_logout(ctx, body)
+    if method == "GET" and path == "/api/auth/session":
+        return 200, auth_session(ctx, query)
     raise ApiError(f"Not found: {method} {path}", status=404)
 
 
@@ -284,6 +295,53 @@ def reload_plugins(ctx: ApiContext) -> dict[str, Any]:
         "reloaded": count,
         "items": [plugin_to_dict(plugin) for plugin in ctx.importers.list_plugins()],
     }
+
+
+def _auth(ctx: ApiContext) -> LocalAuthService:
+    if ctx.auth is None:
+        raise ApiError("Auth service unavailable", status=500)
+    return ctx.auth
+
+
+def auth_status(ctx: ApiContext) -> dict[str, Any]:
+    """GET /api/auth/status — Login (optional) configuration."""
+    return _auth(ctx).status()
+
+
+def auth_login(ctx: ApiContext, body: dict[str, Any]) -> dict[str, Any]:
+    """POST /api/auth/login."""
+    username = str(body.get("username") or "").strip()
+    password = str(body.get("password") or "")
+    try:
+        session = _auth(ctx).login(username, password)
+    except ValidationError as exc:
+        raise ApiError(str(exc), status=401) from exc
+    return {"session": session.to_dict(), "next": "/"}
+
+
+def auth_guest(ctx: ApiContext) -> dict[str, Any]:
+    """POST /api/auth/guest — skip optional login → Home."""
+    try:
+        session = _auth(ctx).continue_as_guest()
+    except ValidationError as exc:
+        raise ApiError(str(exc), status=403) from exc
+    return {"session": session.to_dict(), "next": "/"}
+
+
+def auth_logout(ctx: ApiContext, body: dict[str, Any]) -> dict[str, Any]:
+    """POST /api/auth/logout."""
+    token = _optional_str(body, "token")
+    _auth(ctx).logout(token)
+    return {"ok": True, "next": "/login"}
+
+
+def auth_session(ctx: ApiContext, query: dict[str, str]) -> dict[str, Any]:
+    """GET /api/auth/session?token=…"""
+    token = (query.get("token") or "").strip() or None
+    session = _auth(ctx).resolve(token)
+    if session is None:
+        return {"session": None}
+    return {"session": session.to_dict()}
 
 
 def _optional_str(body: dict[str, Any], key: str) -> str | None:

@@ -37,6 +37,7 @@ from profile_intelligence.infrastructure.analysis import (
     ProfileSimilarityAnalyzer,
     ProfileSummarizer,
 )
+from profile_intelligence.infrastructure.auth import LocalAuthService
 from profile_intelligence.infrastructure.cache import create_cache
 from profile_intelligence.infrastructure.dashboard import DashboardService
 from profile_intelligence.infrastructure.database.child_repositories import (
@@ -194,6 +195,11 @@ def build_container(
         FileStorage,
         lambda: FileStorage(container.resolve(AppConfig)),
         name="file_storage",
+    )
+    container.register(
+        LocalAuthService,
+        lambda: LocalAuthService(container.resolve(AppConfig)),
+        name="auth",
     )
     container.register(
         ImageRepository,
