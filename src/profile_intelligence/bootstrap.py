@@ -7,6 +7,7 @@ from profile_intelligence.core.config_manager import ConfigManager
 from profile_intelligence.core.container import Container
 from profile_intelligence.core.logging import configure_logging, get_logger
 from profile_intelligence.core.types import PathLike
+from profile_intelligence.dashboard import DashboardService
 from profile_intelligence.database.connection import Database, create_database
 from profile_intelligence.database.repository import ProfileRepository
 from profile_intelligence.database.seed import DatabaseSeeder
@@ -17,6 +18,7 @@ from profile_intelligence.pipeline import ImportPipeline
 from profile_intelligence.scoring.completeness import CompletenessScorer
 from profile_intelligence.search.service import ProfileSearchService
 from profile_intelligence.services.application import ApplicationService
+from profile_intelligence.services.compare_service import CompareService
 from profile_intelligence.services.import_service import ImportService
 from profile_intelligence.services.profile_service import ProfileService
 
@@ -102,6 +104,16 @@ def build_container(
             scorer=container.resolve(CompletenessScorer),
         ),
         name="profile_service",
+    )
+    container.register(
+        CompareService,
+        lambda: CompareService(container.resolve(ProfileRepository)),
+        name="compare",
+    )
+    container.register(
+        DashboardService,
+        lambda: DashboardService(container.resolve(ProfileRepository)),
+        name="dashboard",
     )
     container.register(
         DatabaseSeeder,

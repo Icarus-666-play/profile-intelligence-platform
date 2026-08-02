@@ -68,37 +68,32 @@ Environment overrides:
 | `PIP_LOG_LEVEL` | Override log level (`DEBUG`, `INFO`, …) |
 | `PIP_ENVIRONMENT` | Override `app.environment` |
 
-## Milestone 1 workflows
+## Primary CLI (`pip-app`)
+
+After `pip install -e .`:
 
 ```bash
-# Apply migrations
-python -m profile_intelligence migrate
-
-# Load built-in demo profiles
-python -m profile_intelligence seed
-
-# List importer plugins (csv, excel + plugins/eurogirls|eros|custom)
-python -m profile_intelligence importers
-
-# Import sample profiles
-python -m profile_intelligence import samples/profiles.csv
-
-# List / search
-python -m profile_intelligence list
-python -m profile_intelligence search Lovelace
-
-# Export Excel report (writes exports/profiles.xlsx)
-python -m profile_intelligence export
-
-# Recompute completeness scores
-python -m profile_intelligence score
-```
-
-Console script after editable install:
-
-```bash
+pip-app migrate
 pip-app import samples/profiles.csv
+pip-app search Lovelace
+pip-app compare 1 2
+pip-app export
+pip-app dashboard
 ```
+
+| Command | Purpose |
+|---------|---------|
+| `migrate` | Apply SQLite migrations |
+| `import <path>` | File → … → SQLite pipeline |
+| `search <query>` | Local profile search |
+| `compare <id_a> <id_b>` | Side-by-side profile diff |
+| `compare --sources A B` | Compare two source labels |
+| `export` | Write Excel report under `exports/` |
+| `dashboard` | Console dashboard summary |
+
+Additional utilities: `seed`, `list`, `score`, `importers`.
+
+Equivalent module form: `python -m profile_intelligence <command> …`.
 
 On first start the application:
 

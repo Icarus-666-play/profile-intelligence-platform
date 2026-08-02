@@ -1,8 +1,11 @@
-"""Desktop dashboard / presentation layer scaffold.
+"""Desktop dashboard / presentation layer.
 
-Windows-first UI integration will be introduced in a later milestone.
+Milestone 1 ships a console dashboard via :class:`DashboardService`.
+A Windows-first graphical UI is planned for Milestone 2.
 """
 
 from __future__ import annotations
 
-__all__: list[str] = []
+from profile_intelligence.dashboard.service import DashboardService, DashboardSnapshot
+
+__all__ = ["DashboardService", "DashboardSnapshot"]

@@ -16,9 +16,10 @@ Local-first desktop application for profile analysis, scoring, Excel reporting, 
 - External plugin packages under `plugins/` (`eurogirls`, `eros`, `custom`)
 - Header-alias extractors → SQLite upsert
 - Completeness scoring (0–100)
-- Local profile search
+- Local profile search and compare
 - Excel workbook export
-- CLI: `import`, `list`, `search`, `export`, `score`
+- Console dashboard
+- CLI: `migrate`, `import`, `search`, `compare`, `export`, `dashboard`
 
 ## Quick start
 
@@ -30,10 +31,12 @@ source .venv/bin/activate
 pip install -U pip
 pip install -e ".[dev]"
 
-python -m profile_intelligence migrate
-python -m profile_intelligence import samples/profiles.csv
-python -m profile_intelligence search Lovelace
-python -m profile_intelligence export
+pip-app migrate
+pip-app import samples/profiles.csv
+pip-app search Lovelace
+pip-app compare 1 2
+pip-app export
+pip-app dashboard
 pytest
 ```
 
@@ -49,12 +52,13 @@ See [docs/getting-started.md](docs/getting-started.md) and [docs/milestones.md](
 │   ├── core/               # config, logging, DI, exceptions
 │   ├── database/           # connection, models, repository, migrate, seed
 │   ├── importers/          # plugin framework
-│   ├── extractors/         # scaffold
+│   ├── pipeline/           # File→SQLite stages
+│   ├── extractors/         # field mapping helpers
 │   ├── services/           # application orchestration
-│   ├── scoring/            # scaffold
-│   ├── excel/              # scaffold
-│   ├── dashboard/          # scaffold
-│   ├── search/             # scaffold
+│   ├── scoring/            # completeness scoring
+│   ├── excel/              # Excel export
+│   ├── dashboard/          # console dashboard (UI later)
+│   ├── search/             # local search
 │   └── ai/                 # scaffold
 └── tests/                  # unit & integration tests
 ```
