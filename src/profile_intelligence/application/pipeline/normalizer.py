@@ -6,7 +6,7 @@ from collections.abc import Mapping, Sequence
 
 from profile_intelligence.core.logging import get_logger
 from profile_intelligence.domain.entities.profile import ProfileDraft, ProfileExtractor
-from profile_intelligence.infrastructure.importers.base import RawRecord
+from profile_intelligence.domain.value_objects.importing import RawRecord
 
 logger = get_logger(__name__)
 

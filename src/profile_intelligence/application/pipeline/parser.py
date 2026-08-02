@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from profile_intelligence.core.exceptions import ImporterError
 from profile_intelligence.core.logging import get_logger
+from profile_intelligence.domain.interfaces.importers import ImporterPlugin
 from profile_intelligence.domain.value_objects.documents import (
     ParsedDocument,
     RawDocument,
 )
-from profile_intelligence.infrastructure.importers.base import ImporterPlugin
 from profile_intelligence.infrastructure.importers.registry import ImporterRegistry
 
 logger = get_logger(__name__)

@@ -6,18 +6,19 @@ from pathlib import Path
 
 import pytest
 
-from profile_intelligence.application.use_cases import (
+from profile_intelligence.application.pipeline import (
     DocumentParser,
-    ImportPipeline,
+    ProcessingChain,
     ProfileNormalizer,
     ProfileValidator,
-    RawDocument,
 )
+from profile_intelligence.application.use_cases import ImportPipeline
 from profile_intelligence.application.use_cases.application import ApplicationService
 from profile_intelligence.application.use_cases.profile_service import ProfileService
 from profile_intelligence.bootstrap import build_container
 from profile_intelligence.core.exceptions import ValidationError
 from profile_intelligence.domain.entities.profile import ProfileDraft
+from profile_intelligence.domain.value_objects.documents import RawDocument
 
 
 def test_raw_document_from_path(tmp_path: Path) -> None:
@@ -111,4 +112,27 @@ def test_document_parser_uses_registry(temp_root: Path) -> None:
     parser = DocumentParser(app.importers)
     parsed = parser.parse(RawDocument.from_path(path))
     assert parsed.records[0]["name"] == "Ada"
+    app.shutdown()
+
+
+def test_processing_chain_parser_normalizer_validator(temp_root: Path) -> None:
+    container = build_container(root_dir=temp_root)
+    app = container.resolve(ApplicationService)
+    app.start()
+
+    path = temp_root / "chain.csv"
+    path.write_text(
+        "name,email\n"
+        "Melinda Cross,melinda@example.com\n"
+        "Bad,not-an-email\n",
+        encoding="utf-8",
+    )
+    chain = ProcessingChain(app.importers)
+    processed = chain.run(RawDocument.from_path(path), source="csv")
+
+    assert processed.parsed.plugin_name == "csv"
+    assert len(processed.normalized) == 2
+    assert len(processed.validated) == 1
+    assert processed.validated[0].display_name == "Melinda Cross"
+    assert any("email is invalid" in error for error in processed.validation_errors)
     app.shutdown()

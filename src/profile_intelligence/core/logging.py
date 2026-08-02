@@ -20,11 +20,9 @@ _ROOT_LOGGER_NAME: Final[str] = "profile_intelligence"
 _IMPORT_LOGGER_PREFIXES: Final[tuple[str, ...]] = (
     "profile_intelligence.infrastructure.importers",
     "profile_intelligence.importers",  # compatibility shim path
+    "profile_intelligence.application.pipeline",
     "profile_intelligence.application.use_cases.import_pipeline",
     "profile_intelligence.application.use_cases.import_service",
-    "profile_intelligence.application.use_cases.parse_document",
-    "profile_intelligence.application.use_cases.normalize_profiles",
-    "profile_intelligence.application.use_cases.validate_profiles",
 )
 
 

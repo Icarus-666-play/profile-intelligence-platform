@@ -11,7 +11,8 @@ src/profile_intelligence/
     value_objects/     # RawDocument, ImportResult, …
     interfaces/        # ImporterPlugin, ProfileImporter, Repository ports
   application/
-    use_cases/         # Import, search, compare, export, dashboard, pipeline stages
+    pipeline/          # Parser → Normalizer → Validator
+    use_cases/         # Import, search, compare, export, dashboard
   infrastructure/
     database/          # SQLite connection, ORM models, repository, migrate, seed
     importers/         # Registry + built-in plugins (csv, excel, webarchive)
@@ -82,15 +83,25 @@ Repository
 SQLite
 ```
 
-Implemented by `ImportPipeline` (`application/use_cases/`), exposed via `ImportService`:
+Processing core (`application/pipeline/ProcessingChain`):
+
+```
+Parser
+ ↓
+Normalizer
+ ↓
+Validator
+```
+
+Full persist path is `ImportPipeline` (`application/use_cases/`), exposed via `ImportService`:
 
 | Stage | Type | Layer |
 |-------|------|-------|
 | File | path | — |
 | RawDocument | `RawDocument` | domain value object |
-| Parser | `DocumentParser` + `ProfileImporter` | application + domain port |
-| Normalizer | `ProfileNormalizer` → `ProfileDraft` | application + domain entity |
-| Validator | `ProfileValidator` | application |
+| Parser | `DocumentParser` + `ProfileImporter` | application/pipeline |
+| Normalizer | `ProfileNormalizer` → `ProfileDraft` | application/pipeline |
+| Validator | `ProfileValidator` | application/pipeline |
 | Profile Entity | `Profile` ORM | infrastructure |
 | Repository | `ProfileRepository` | infrastructure |
 | SQLite | `Database` | infrastructure |
