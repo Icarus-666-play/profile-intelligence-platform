@@ -137,16 +137,18 @@ POST → `CompareService.compare_ids`.
 
 ```
 Reports
-Generate Excel workbooks…
+Distributions and import trends from the local database.
 
-[ Export Excel ]
+Profiles   Duplicate pairs   Countries
+  N              N               N
 
-Exports folder
-  path/to/exports/
-  file.xlsx · bytes
+[ Countries | Average Prices | Languages | Services |
+  Duplicates | Monthly Imports | Import Trend ]
+  …table or bars for active panel…
 ```
 
-POST → `ProfileService.export_excel`.
+React primary surface. Data: `GET /api/analytics` (`ReportsAnalyticsService`).
+Excel exports remain via `pip-app export` (legacy WSGI Reports still exposes folder export).
 
 ### Settings `/settings`
 

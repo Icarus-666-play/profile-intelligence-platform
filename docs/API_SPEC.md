@@ -157,8 +157,23 @@ JSON form of `DashboardService.snapshot()` (totals, by_source, top/incomplete pr
 
 ### `GET /api/analytics`
 
-Aggregate analysis: score summary, duplicate scan, classification band counts.  
-Optional query: `threshold` (duplicate similarity).
+Aggregate analysis plus Reports panels. Optional query: `threshold` (duplicate similarity).
+
+```json
+{
+  "profiles": 12,
+  "duplicates": { "scanned": 12, "pairs": 1, "groups": 1, "threshold": 0.75 },
+  "classification": { "count": 12, "confidence_bands": {}, "completeness": {} },
+  "by_source": [{ "source": "eurogirls", "count": 8 }],
+  "countries": [{ "name": "Netherlands", "count": 4 }],
+  "average_prices": [{ "label": "1 hour", "average": 300, "currency": "EUR", "count": 5 }],
+  "languages": [{ "name": "English", "count": 10 }],
+  "services": [{ "name": "GFE", "count": 6 }],
+  "duplicate_pairs": [{ "left_id": 1, "right_id": 2, "left_name": "A", "right_name": "B", "score": 0.91 }],
+  "monthly_imports": [{ "period": "2026-08", "count": 3 }],
+  "import_trend": [{ "period": "2026-08-01", "count": 1 }]
+}
+```
 
 ### `GET /api/plugins`
 

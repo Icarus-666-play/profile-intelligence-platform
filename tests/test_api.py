@@ -19,7 +19,10 @@ from profile_intelligence.core.config import AppConfig
 from profile_intelligence.domain.entities.profile import ProfileDraft
 from profile_intelligence.domain.interfaces.repositories import IProfileRepository
 from profile_intelligence.infrastructure.analysis import AnalysisService
-from profile_intelligence.infrastructure.dashboard import DashboardService
+from profile_intelligence.infrastructure.dashboard import (
+    DashboardService,
+    ReportsAnalyticsService,
+)
 from profile_intelligence.infrastructure.database.connection import Database
 from profile_intelligence.infrastructure.importers.registry import ImporterRegistry
 
@@ -39,6 +42,7 @@ def _api_context(tmp_path: Path) -> tuple[ApiContext, ApplicationService, Any]:
         analysis=container.resolve(AnalysisService),
         importers=container.resolve(ImporterRegistry),
         database=container.resolve(Database),
+        reports_analytics=container.resolve(ReportsAnalyticsService),
     )
     return ctx, app, container
 

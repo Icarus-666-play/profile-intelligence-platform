@@ -79,6 +79,23 @@ export type Comparison = {
   }[]
 }
 
+export type NamedCount = {
+  name: string
+  count: number
+}
+
+export type AveragePriceBucket = {
+  label: string
+  average: number
+  currency: string
+  count: number
+}
+
+export type PeriodCount = {
+  period: string
+  count: number
+}
+
 export type Analytics = {
   profiles: number
   scored_profiles: number
@@ -95,6 +112,19 @@ export type Analytics = {
     confidence_bands: Record<string, number>
     completeness: Record<string, number>
   }
+  countries: NamedCount[]
+  average_prices: AveragePriceBucket[]
+  languages: NamedCount[]
+  services: NamedCount[]
+  duplicate_pairs: {
+    left_id: number
+    right_id: number
+    left_name: string
+    right_name: string
+    score: number
+  }[]
+  monthly_imports: PeriodCount[]
+  import_trend: PeriodCount[]
 }
 
 export type ImportSummary = {

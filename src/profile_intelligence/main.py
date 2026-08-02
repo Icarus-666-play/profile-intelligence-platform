@@ -36,7 +36,10 @@ from profile_intelligence.core.logging import get_logger
 from profile_intelligence.domain.interfaces.repositories import IProfileRepository
 from profile_intelligence.infrastructure.analysis import AnalysisService
 from profile_intelligence.infrastructure.auth import LocalAuthService
-from profile_intelligence.infrastructure.dashboard import DashboardService
+from profile_intelligence.infrastructure.dashboard import (
+    DashboardService,
+    ReportsAnalyticsService,
+)
 from profile_intelligence.infrastructure.database.connection import Database
 from profile_intelligence.infrastructure.database.seed import DatabaseSeeder
 from profile_intelligence.infrastructure.download import DocumentDownloader
@@ -652,6 +655,7 @@ def _cmd_ui(args: argparse.Namespace, container: Container) -> int:
         auth=container.resolve(LocalAuthService),
         import_activity=container.resolve(ImportActivityStore),
         database=container.resolve(Database),
+        reports_analytics=container.resolve(ReportsAnalyticsService),
     )
     if bool(getattr(args, "legacy_wsgi", False)):
         context = UiContext(

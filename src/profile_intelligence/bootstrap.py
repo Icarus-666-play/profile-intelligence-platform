@@ -39,7 +39,10 @@ from profile_intelligence.infrastructure.analysis import (
 )
 from profile_intelligence.infrastructure.auth import LocalAuthService
 from profile_intelligence.infrastructure.cache import create_cache
-from profile_intelligence.infrastructure.dashboard import DashboardService
+from profile_intelligence.infrastructure.dashboard import (
+    DashboardService,
+    ReportsAnalyticsService,
+)
 from profile_intelligence.infrastructure.database.child_repositories import (
     SQLitePhotoRepository,
     SQLiteRateRepository,
@@ -287,6 +290,16 @@ def build_container(
             config=container.resolve(AppConfig),
         ),
         name="dashboard",
+    )
+    container.register(
+        ReportsAnalyticsService,
+        lambda: ReportsAnalyticsService(
+            container.resolve(IProfileRepository),
+            database=container.resolve(Database),
+            analysis=container.resolve(AnalysisService),
+            import_ledger=container.resolve(ImportFileLedger),
+        ),
+        name="reports_analytics",
     )
     container.register(
         InMemoryEventBus,

@@ -12,7 +12,10 @@ from profile_intelligence.core.config import AppConfig
 from profile_intelligence.domain.interfaces.repositories import IProfileRepository
 from profile_intelligence.infrastructure.analysis import AnalysisService
 from profile_intelligence.infrastructure.auth import LocalAuthService
-from profile_intelligence.infrastructure.dashboard import DashboardService
+from profile_intelligence.infrastructure.dashboard import (
+    DashboardService,
+    ReportsAnalyticsService,
+)
 from profile_intelligence.infrastructure.database.connection import Database
 from profile_intelligence.infrastructure.download import DocumentDownloader
 from profile_intelligence.infrastructure.importers.import_activity import (
@@ -38,6 +41,7 @@ class ApiContext:
     auth: LocalAuthService | None = None
     import_activity: ImportActivityStore | None = None
     database: Database | None = None
+    reports_analytics: ReportsAnalyticsService | None = None
 
 
 __all__ = ["ApiContext"]

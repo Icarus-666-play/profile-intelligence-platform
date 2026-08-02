@@ -339,6 +339,11 @@ def get_dashboard(ctx: ApiContext) -> dict[str, Any]:
 
 def get_analytics(ctx: ApiContext, query: dict[str, str]) -> dict[str, Any]:
     """GET /api/analytics — aggregate analysis snapshot."""
+    from profile_intelligence.infrastructure.dashboard import (
+        ReportsAnalyticsService,
+        reports_analytics_to_dict,
+    )
+
     threshold = query.get("threshold")
     thr = float(threshold) if threshold not in {None, ""} else None
     duplicates = ctx.analysis.find_duplicates(threshold=thr)
@@ -351,7 +356,12 @@ def get_analytics(ctx: ApiContext, query: dict[str, str]) -> dict[str, Any]:
             completeness.get(item.completeness_class, 0) + 1
         )
     snapshot = ctx.dashboard.snapshot()
-    return {
+    reports_service = ctx.reports_analytics or ReportsAnalyticsService(
+        ctx.repository,
+        database=ctx.database,
+        analysis=ctx.analysis,
+    )
+    payload = {
         "profiles": snapshot.total_profiles,
         "scored_profiles": snapshot.scored_profiles,
         "average_score": snapshot.average_score,
@@ -371,6 +381,8 @@ def get_analytics(ctx: ApiContext, query: dict[str, str]) -> dict[str, Any]:
             "completeness": completeness,
         },
     }
+    payload.update(reports_analytics_to_dict(reports_service.build()))
+    return payload
 
 
 def list_plugins(ctx: ApiContext) -> dict[str, Any]:
