@@ -7,9 +7,18 @@ the staged pipeline:
 File → RawDocument → Parser → Normalizer → Validator → Profile Entity → Repository → SQLite
 ```
 
-`ImportService.import_path()` / `ImportPipeline.process()` run that flow
-end-to-end. Parser uses a `ProfileImporter` plugin; later stages live under
-`profile_intelligence.application.use_cases`.
+Processing core (`application/pipeline/ProcessingChain`):
+
+```
+Parser
+ ↓
+Normalizer
+ ↓
+Validator
+```
+
+`ImportService.import_path()` / `ImportPipeline.process()` run the full flow
+end-to-end (then Repository → SQLite). Parser uses a `ProfileImporter` plugin.
 
 ## Built-in plugins (Milestone 1)
 
