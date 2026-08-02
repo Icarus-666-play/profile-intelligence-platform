@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from profile_intelligence.domain.interfaces.ai import IAIProvider
 from profile_intelligence.domain.interfaces.cache import ICache
 from profile_intelligence.domain.interfaces.events import (
     EventHandler,
@@ -26,6 +27,7 @@ from profile_intelligence.domain.interfaces.repositories import (
 
 __all__ = [
     "EventHandler",
+    "IAIProvider",
     "ICache",
     "IEventBus",
     "IEventPublisher",

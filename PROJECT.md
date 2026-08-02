@@ -36,9 +36,18 @@ src/profile_intelligence/
   application/
     pipeline/      # parser → … → repository stages
     use_cases/
-  infrastructure/  # cache, database, importers, excel, media, search, scoring, dashboard
+  infrastructure/  # ai, cache, database, importers, excel, media, search, scoring, dashboard
   core/            # config, logging, DI, exceptions
 config/ docs/ scripts/ tests/ plugins/
+```
+
+AI providers:
+
+```
+AI
+  Null (default when disabled)
+  Local (future)
+  Remote (future)
 ```
 
 Confidence Score:

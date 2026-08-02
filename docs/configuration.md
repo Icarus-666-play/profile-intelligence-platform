@@ -47,9 +47,26 @@ Profile repository adapter is selected by `driver`:
 - `auto_discover` — discover plugins on startup
 - `enabled` — empty list means all plugins; otherwise allow-list of names
 
-### `excel`, `ai`, `search`, `dashboard`
+### `excel`, `search`, `dashboard`
 
-Scaffold settings for upcoming modules. AI remains disabled unless `ai.enabled: true`.
+Scaffold settings for upcoming modules.
+
+### `ai`
+
+```
+AI
+  Null (default when disabled)
+  Local (future)
+  Remote (future)
+```
+
+- `enabled` — master switch (default `false` → `NullAIProvider`)
+- `provider` — `null` \| `local`/`ollama` \| `remote`/`openai`
+- `model` — model id (reserved until M3)
+- `base_url` — local/remote endpoint (reserved)
+- `api_key` — remote credential (reserved)
+
+Local/Remote raise `AIError` until the M3 AI Assist milestone.
 
 ### `media`
 

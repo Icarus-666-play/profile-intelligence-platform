@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from profile_intelligence.domain.value_objects.ai import (
+    AICompletionRequest,
+    AICompletionResult,
+)
 from profile_intelligence.domain.value_objects.confidence import ConfidenceScore
 from profile_intelligence.domain.value_objects.documents import (
     ParsedDocument,
@@ -17,6 +21,8 @@ from profile_intelligence.domain.value_objects.profile_children import (
 )
 
 __all__ = [
+    "AICompletionRequest",
+    "AICompletionResult",
     "Availability",
     "ConfidenceScore",
     "ImportResult",

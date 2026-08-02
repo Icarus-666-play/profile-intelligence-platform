@@ -1,3 +1,3 @@
-"""Infrastructure adapters: cache, database, importers, excel, search, scoring."""
+"""Infrastructure adapters: ai, cache, database, importers, excel, search, scoring."""
 
 from __future__ import annotations

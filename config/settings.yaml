@@ -34,10 +34,16 @@ excel:
   default_sheet_name: Profiles
   date_format: "YYYY-MM-DD"
 
+# AI
+#   Null (default when disabled)
+#   Local (future)
+#   Remote (future)
 ai:
   enabled: false
-  provider: null
+  provider: null  # null | local | ollama | remote | openai
   model: null
+  base_url: null
+  api_key: null
 
 search:
   default_limit: 50

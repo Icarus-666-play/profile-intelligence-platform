@@ -24,9 +24,22 @@ Deliver a complete local import → extract → persist → search → score →
 ### Out of scope (later milestones)
 
 - Desktop dashboard UI
-- AI provider integrations
+- Live Local/Remote AI completions (scaffold is in place; providers stubbed)
 - Advanced fuzzy/full-text search engines
 - Network/cloud sync
+
+## Milestone 3 — AI Assist (planned)
+
+Optional AI assistance behind `IAIProvider`:
+
+```
+AI
+  Null (default when disabled)
+  Local (future)
+  Remote (future)
+```
+
+Config: `ai.enabled`, `ai.provider`, `ai.model`. Default remains off.
 
 ### Acceptance
 

@@ -10,12 +10,13 @@ src/profile_intelligence/
     entities/          # ProfileDraft (+ Rate→…→Availability), ProfileExtractor
     value_objects/     # RawDocument, ImportResult, Rate/Service/Review/Photo/Availability
     events/            # ProfileImported → … → DashboardUpdated
-    interfaces/        # ImporterPlugin, repository ports, IEventBus, ICache
+    interfaces/        # ImporterPlugin, repository ports, IEventBus, ICache, IAIProvider
   application/
     pipeline/          # Parser → Normalizer → Validator
     events/            # InMemoryEventBus
-    use_cases/         # Import, search, compare, export, dashboard, nightly
+    use_cases/         # Import, search, compare, export, dashboard, daily
   infrastructure/
+    ai/                # Null AI provider (+ Local/Remote stubs)
     cache/             # Memory / File / SQLite cache (+ Redis stub)
     database/          # SQLite connection, ORM models, repository, migrate, seed
     importers/         # Registry + built-in plugins (csv, excel, webarchive)
@@ -24,6 +25,7 @@ src/profile_intelligence/
     search/            # SQLite search adapter
     scoring/           # Confidence Score (0-100) via completeness engine
     dashboard/         # Console dashboard adapter
+    reporting/         # Email report stub (future)
   core/                # Shared kernel: config, logging, DI, exceptions
   bootstrap.py         # Composition root
   main.py              # CLI / process launcher
@@ -37,7 +39,7 @@ Supporting trees:
 - `docs/` — developer documentation
 - `scripts/` — convenience launchers
 - `tests/` — unit and integration tests
-- `plugins/` — external importer packages (`eurogirls`, `eros`, `custom`)
+- `plugins/` — external importer packages (`eurogirls`, `newwebsite`, `eros`, `custom`)
 
 ## Design principles
 
@@ -51,6 +53,7 @@ Supporting trees:
 | Caching | `ICache` → Memory / File / SQLite (+ Redis stub) |
 | Image pipeline | Download → Hash → Duplicate Detection → Thumbnail → Storage |
 | Confidence Score | Fixed **0–100** scale (`ConfidenceScorer` / completeness method) |
+| AI | `IAIProvider` → Null (default) / Local stub / Remote stub |
 | Dependency injection | Lightweight `Container` in `core.container` |
 | Typed | Python 3.12 + `py.typed`, mypy strict |
 | Configurable | YAML + env overrides |
@@ -181,4 +184,4 @@ Config: `daily:` in `config/settings.yaml` (legacy `nightly:` still accepted).
 1. **Importers** — subclass `ProfileImporter`, place under `infrastructure/importers/plugins/` or external `plugins/<name>/`
 2. **Migrations** — add migration classes in `infrastructure/database/migrate.py`
 3. **Use cases** — register additional factories on `Container` in `bootstrap.py`
-4. **AI** — enable via `ai.enabled` and implement adapters later under infrastructure
+4. **AI** — `IAIProvider` via `create_ai_provider`; enable with `ai.enabled` and implement Local/Remote adapters (M3)

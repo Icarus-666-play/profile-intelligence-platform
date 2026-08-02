@@ -140,11 +140,21 @@ class ExcelSection:
 
 @dataclass(frozen=True, slots=True)
 class AISection:
-    """AI integration settings (disabled by default)."""
+    """AI integration settings (disabled by default).
+
+    Providers::
+
+        AI
+          Null (default when disabled)
+          Local (future)
+          Remote (future)
+    """
 
     enabled: bool = False
     provider: str | None = None
     model: str | None = None
+    base_url: str | None = None
+    api_key: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -702,8 +712,12 @@ def _build_config(
         ),
         ai=AISection(
             enabled=bool(ai_raw.get("enabled", ai_defaults.enabled)),
-            provider=ai_raw.get("provider", ai_defaults.provider),
-            model=ai_raw.get("model", ai_defaults.model),
+            provider=_optional_str(ai_raw.get("provider", ai_defaults.provider)),
+            model=_optional_str(ai_raw.get("model", ai_defaults.model)),
+            base_url=_optional_str(
+                ai_raw.get("base_url", ai_defaults.base_url)
+            ),
+            api_key=_optional_str(ai_raw.get("api_key", ai_defaults.api_key)),
         ),
         search=SearchSection(
             default_limit=int(

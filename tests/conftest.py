@@ -53,7 +53,13 @@ def temp_root(tmp_path: Path) -> Path:
         },
         "importers": {"auto_discover": True, "enabled": []},
         "excel": {"default_sheet_name": "Profiles", "date_format": "YYYY-MM-DD"},
-        "ai": {"enabled": False, "provider": None, "model": None},
+        "ai": {
+            "enabled": False,
+            "provider": None,
+            "model": None,
+            "base_url": None,
+            "api_key": None,
+        },
         "search": {"default_limit": 50, "fuzzy": True},
         "dashboard": {"refresh_seconds": 30},
         "media": {
