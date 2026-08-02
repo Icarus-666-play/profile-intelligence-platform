@@ -53,7 +53,7 @@ Compatibility shims remain at legacy paths (`importers/`, `database/`, `services
 Supporting trees:
 
 - `config/` — `settings.yaml`, `logging.yaml`, `scoring.yaml`
-- `docs/` — developer documentation
+- `docs/` — product docs (`PRODUCT_VISION` … `ADR/`) + engineering guides
 - `scripts/` — convenience launchers
 - `tests/` — unit and integration tests
 - `plugins/` — external importer packages (`eurogirls`, `newwebsite`, `eros`, `custom`)

@@ -1,0 +1,125 @@
+# Import Pipeline
+
+End-to-end path from a local file to SQLite (and optional media / daily automation).
+
+## Happy path
+
+```
+File
+ ↓
+RawDocument          (importer plugin)
+ ↓
+parser
+ ↓
+normalizer
+ ↓
+validator
+ ↓
+duplicate_detector
+ ↓
+scorer               (Confidence Score 0–100)
+ ↓
+repository           (upsert Profile + children)
+ ↓
+SQLite
+```
+
+Configured in `config/settings.yaml`:
+
+```yaml
+pipeline:
+  - parser
+  - normalizer
+  - validator
+  - duplicate_detector
+  - scorer
+  - repository
+```
+
+Defaults: `DEFAULT_PIPELINE_STAGES` in `core/config.py`.
+
+## Code map
+
+| Piece | Path |
+|-------|------|
+| Operator entry | `ImportService` (`application/use_cases/import_service.py`) |
+| Pipeline facade | `ImportPipeline` (`application/use_cases/import_pipeline.py`) |
+| Stage chain | `ProcessingChain` (`application/pipeline/chain.py`) |
+| Stages | `application/pipeline/{parser,normalizer,validator,duplicate_detector,scorer,repository_stage}.py` |
+| Plugin load | `ImporterRegistry` + `ProfileImporter` |
+| Extract | `ProfileExtractor` → `ProfileDraft` |
+| Persist | `IProfileRepository.upsert_draft` |
+
+CLI: `pip-app import <path> [--plugin] [--source] [--recursive]`  
+UI: Import page POST.
+
+## Stage responsibilities
+
+| Stage | Responsibility |
+|-------|----------------|
+| parser | Choose plugin, load `RawDocument` / raw records |
+| normalizer | Header aliases → drafts / normalized rows |
+| validator | Drop/flag invalid rows |
+| duplicate_detector | Match existing profiles; decide create vs update |
+| scorer | Confidence Score 0–100 |
+| repository | Upsert aggregate to SQLite |
+
+## Image pipeline (related)
+
+When photos/URLs are present, media processing follows:
+
+```
+Image → Download → Hash → Duplicate Detection → Thumbnail → Storage
+```
+
+Implemented via `ImagePipeline` / `MediaPipeline` and `media_assets` / `profile_photos`.
+
+## Daily automation pipeline
+
+```
+Daily
+ ↓
+Import Folder
+ ↓
+Detect new files      (import_file_ledger)
+ ↓
+Import
+ ↓
+Update                (optional rescore)
+ ↓
+Generate Excel
+ ↓
+Create Dashboard
+ ↓
+Email Report (future)
+```
+
+Entry: `pip-app daily` / `scripts/run_daily.py` → `DailyPipeline`.
+
+Domain events published along the way:
+
+```
+ProfileImported → ScoreCalculated → ImagesExtracted → ExcelExported → DashboardUpdated
+```
+
+## Dedup & updates
+
+- Duplicate detection compares incoming drafts to stored profiles (identity heuristics)
+- Updates refresh fields rather than always inserting
+- Daily ledger keys files by content hash so unchanged inbox files are skipped
+
+## Import stats
+
+Import summaries report created / updated / skipped counts (and richer child/image stats where available). CLI prints a human report; UI Import shows a status notice.
+
+## Failure modes
+
+- Missing plugin for extension → error / skip with message
+- Invalid path → validation error
+- Per-row issues accumulate in summary `errors` without always aborting the whole batch
+
+## Related
+
+- [PLUGIN_SDK.md](PLUGIN_SDK.md)
+- [DATABASE_ERD.md](DATABASE_ERD.md)
+- [architecture.md](architecture.md)

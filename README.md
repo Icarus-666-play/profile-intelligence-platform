@@ -61,14 +61,18 @@ See [docs/getting-started.md](docs/getting-started.md) and [docs/milestones.md](
 
 ## Documentation
 
+Product set: [docs/README.md](docs/README.md) (`PRODUCT_VISION` … `ADR/`).
+
 | Document | Description |
 |----------|-------------|
+| [Product Vision](docs/PRODUCT_VISION.md) | Why PIP exists |
+| [Roadmap](docs/ROADMAP.md) | Milestones & next themes |
 | [Getting Started](docs/getting-started.md) | Install, configure, run |
 | [Architecture](docs/architecture.md) | Modules and design |
-| [Configuration](docs/configuration.md) | YAML & env reference |
-| [Database](docs/database.md) | SQLite, repos, migrations |
-| [Importers](docs/importers.md) | Plugin authoring |
-| [Milestones](docs/milestones.md) | Roadmap & acceptance |
+| [Plugin SDK](docs/PLUGIN_SDK.md) | Build importer plugins |
+| [Database ERD](docs/DATABASE_ERD.md) | Schema & relationships |
+| [Security](docs/SECURITY.md) | Local-first security |
+| [Milestones](docs/milestones.md) | Acceptance criteria |
 
 ## Development standards
 

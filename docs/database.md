@@ -142,6 +142,12 @@ Creates child tables owned by `profiles.id` (CASCADE delete):
 - `profile_photos`
 - `profile_availability`
 
+### Import file ledger migration (`005_import_file_ledger`)
+
+Creates `import_file_ledger` for Daily **Detect new files** (path, content hash, size, imported_at).
+
+For the full ERD see [DATABASE_ERD.md](DATABASE_ERD.md).
+
 ## Seeding
 
 `database/seed.py` upserts built-in demo profiles (source=`seed`):

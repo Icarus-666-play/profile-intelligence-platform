@@ -42,6 +42,24 @@ src/profile_intelligence/
 config/ docs/ scripts/ tests/ plugins/
 ```
 
+Product documentation (`docs/`):
+
+```
+docs/
+├── PRODUCT_VISION.md
+├── PRODUCT_REQUIREMENTS.md
+├── USER_STORIES.md
+├── UI_WIREFRAMES.md
+├── API_SPEC.md
+├── DATABASE_ERD.md
+├── PLUGIN_SDK.md
+├── IMPORT_PIPELINE.md
+├── SECURITY.md
+├── DEPLOYMENT.md
+├── ROADMAP.md
+└── ADR/
+```
+
 Dashboard UI navigation:
 
 ```
