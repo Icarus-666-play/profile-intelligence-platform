@@ -137,14 +137,28 @@ POST → `CompareService.compare_ids`.
 
 ```
 Reports
-Distributions and import trends from the local database.
+Countries, prices, languages, services, duplicates, and import trends…
 
-Profiles   Duplicate pairs   Countries
-  N              N               N
+Countries
+  …distribution…
 
-[ Countries | Average Prices | Languages | Services |
-  Duplicates | Monthly Imports | Import Trend ]
-  …table or bars for active panel…
+Average Prices
+  …by duration…
+
+Languages
+  …distribution…
+
+Services
+  …distribution…
+
+Duplicates
+  …near-duplicate pairs…
+
+Monthly Imports
+  …12-month bars…
+
+Import Trend
+  …30-day bars…
 ```
 
 React primary surface. Data: `GET /api/analytics` (`ReportsAnalyticsService`).
