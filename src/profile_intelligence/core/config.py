@@ -571,10 +571,16 @@ class ConfigManager:
             config_path=override_path,
             root_dir=self._root_dir,
         )
+        logger.debug(
+            "Configuration loaded from %s (environment=%s)",
+            config_dir,
+            self._config.app.environment,
+        )
         return self._config
 
     def reload(self) -> AppConfig:
         """Force a fresh load from disk, replacing the cached config."""
+        logger.info("Reloading configuration from %s", self.config_dir)
         self._config = None
         return self.load()
 
@@ -611,3 +617,10 @@ def load_config(
 ) -> AppConfig:
     """Load configuration via :class:`ConfigManager` (convenience wrapper)."""
     return ConfigManager(config_path, root_dir=root_dir).load()
+
+
+# Imported after ConfigManager/AppConfig definitions to avoid a circular import
+# with profile_intelligence.core.logging (which depends on AppConfig).
+from profile_intelligence.core.logging import get_logger  # noqa: E402
+
+logger = get_logger(__name__)

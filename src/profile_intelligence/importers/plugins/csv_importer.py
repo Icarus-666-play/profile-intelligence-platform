@@ -6,8 +6,11 @@ import csv
 from typing import Any, ClassVar
 
 from profile_intelligence.core.exceptions import ImporterError
+from profile_intelligence.core.logging import get_logger
 from profile_intelligence.core.types import PathLike
 from profile_intelligence.importers.base import ImporterPlugin, ImportResult
+
+logger = get_logger(__name__)
 
 
 class CsvImporter(ImporterPlugin):
@@ -49,6 +52,12 @@ class CsvImporter(ImporterPlugin):
                 cause=exc,
             ) from exc
 
+        logger.debug(
+            "Parsed CSV %s: records=%d skipped=%d",
+            resolved,
+            len(records),
+            skipped,
+        )
         return ImportResult.from_records(
             records,
             skipped=skipped,

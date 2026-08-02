@@ -8,6 +8,9 @@ from dataclasses import asdict, dataclass, fields
 from typing import Any
 
 from profile_intelligence.core.exceptions import ExtractorError
+from profile_intelligence.core.logging import get_logger
+
+logger = get_logger(__name__)
 
 _HEADER_ALIASES: dict[str, tuple[str, ...]] = {
     "display_name": (
@@ -145,6 +148,11 @@ class ProfileExtractor:
                 )
             except ExtractorError as exc:
                 errors.append(f"row {index}: {exc.message}")
+        logger.debug(
+            "Extracted %d draft(s) with %d error(s)",
+            len(drafts),
+            len(errors),
+        )
         return drafts, errors
 
     @staticmethod

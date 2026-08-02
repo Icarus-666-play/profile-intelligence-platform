@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import logging
 import sys
 from collections.abc import Sequence
 
@@ -16,6 +15,8 @@ from profile_intelligence.database.seed import DatabaseSeeder
 from profile_intelligence.services.application import ApplicationService
 from profile_intelligence.services.import_service import ImportService
 from profile_intelligence.services.profile_service import ProfileService
+
+logger = get_logger(__name__)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -116,15 +117,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         container = build_container(config_path=args.config_path)
         app = container.resolve(ApplicationService)
         app.start()
-        logger = get_logger(__name__)
         try:
-            return _dispatch(command, args, container, logger)
+            return _dispatch(command, args, container)
         finally:
             app.shutdown()
     except PipError as exc:
+        logger.error("%s", exc)
         print(f"error: {exc}", file=sys.stderr)
         return 1
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
+        logger.exception("Unexpected error")
         print(f"unexpected error: {exc}", file=sys.stderr)
         return 2
 
@@ -142,7 +144,6 @@ def _dispatch(
     command: str | None,
     args: argparse.Namespace,
     container: Container,
-    logger: logging.Logger,
 ) -> int:
     if command is None:
         logger.info(

@@ -7,18 +7,9 @@ from typing import Protocol
 
 from profile_intelligence.core.config import ScoringSection
 from profile_intelligence.core.exceptions import ScoringError
+from profile_intelligence.core.logging import get_logger
 
-_DEFAULT_WEIGHTS: Mapping[str, int] = {
-    "display_name": 25,
-    "email": 20,
-    "phone": 10,
-    "title": 10,
-    "organization": 10,
-    "location": 10,
-    "tags": 5,
-    "notes": 5,
-    "external_id": 5,
-}
+logger = get_logger(__name__)
 
 
 class ScoreableProfile(Protocol):
@@ -49,6 +40,11 @@ class CompletenessScorer:
         self._weights = dict(weights if weights is not None else section.weights)
         self._max_score = (
             max_score if max_score is not None else section.max_score
+        )
+        logger.debug(
+            "CompletenessScorer ready (max_score=%d, fields=%d)",
+            self._max_score,
+            len(self._weights),
         )
 
     def score(self, profile: ScoreableProfile) -> int:

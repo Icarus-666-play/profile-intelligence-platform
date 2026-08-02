@@ -10,8 +10,11 @@ from collections.abc import Callable, Iterator, MutableMapping
 from typing import Any, TypeVar, cast
 
 from profile_intelligence.core.exceptions import PipError
+from profile_intelligence.core.logging import get_logger
 
 T = TypeVar("T")
+
+logger = get_logger(__name__)
 
 
 class ContainerError(PipError):
@@ -41,6 +44,7 @@ class Container:
         self._factories[service_type] = factory
         if name is not None:
             self._aliases[name] = service_type
+        logger.debug("Registered factory for %s", service_type.__name__)
 
     def register_instance(
         self,
@@ -57,6 +61,7 @@ class Container:
         self._singletons[service_type] = instance
         if name is not None:
             self._aliases[name] = service_type
+        logger.debug("Registered instance for %s", service_type.__name__)
 
     def resolve(self, service_type: type[T]) -> T:
         """Resolve a service by type, creating a singleton on first use."""

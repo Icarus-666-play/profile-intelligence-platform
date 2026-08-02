@@ -7,8 +7,11 @@ from typing import Any, ClassVar
 from openpyxl import load_workbook
 
 from profile_intelligence.core.exceptions import ImporterError
+from profile_intelligence.core.logging import get_logger
 from profile_intelligence.core.types import PathLike
 from profile_intelligence.importers.base import ImporterPlugin, ImportResult
+
+logger = get_logger(__name__)
 
 
 class ExcelImporter(ImporterPlugin):
@@ -73,6 +76,13 @@ class ExcelImporter(ImporterPlugin):
         finally:
             workbook.close()
 
+        logger.debug(
+            "Parsed Excel %s sheet=%s records=%d skipped=%d",
+            resolved,
+            active_sheet_title,
+            len(records),
+            skipped,
+        )
         return ImportResult.from_records(
             records,
             skipped=skipped,

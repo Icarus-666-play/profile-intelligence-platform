@@ -9,9 +9,12 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from profile_intelligence.core.exceptions import RepositoryError
+from profile_intelligence.core.logging import get_logger
 from profile_intelligence.database.connection import Database
 from profile_intelligence.database.models import Profile
 from profile_intelligence.extractors.profile import ProfileDraft
+
+logger = get_logger(__name__)
 
 
 class Repository[T](ABC):
@@ -135,6 +138,11 @@ class ProfileRepository(Repository[Profile]):
                     session.flush()
                     session.refresh(profile)
                     session.expunge(profile)
+                    logger.debug(
+                        "Created profile %r (source=%s)",
+                        profile.display_name,
+                        profile.source,
+                    )
                     return profile, True
 
                 for key, value in _draft_to_columns(draft).items():
@@ -142,6 +150,11 @@ class ProfileRepository(Repository[Profile]):
                 session.flush()
                 session.refresh(existing)
                 session.expunge(existing)
+                logger.debug(
+                    "Updated profile id=%s (%r)",
+                    existing.id,
+                    existing.display_name,
+                )
                 return existing, False
         except RepositoryError:
             raise
