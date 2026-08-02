@@ -3,16 +3,22 @@
 PIP exposes three operator surfaces:
 
 1. **CLI** — `pip-app`
-2. **Local UI** — HTML pages via `pip-app ui`
-3. **Local JSON REST API** — same process, under `/api`
+2. **Local UI** — React SPA via `pip-app ui` (legacy WSGI: `--legacy-wsgi`)
+3. **Local JSON REST API** — FastAPI under `/api` (OpenAPI at `/api/docs`)
+
+```
+Browser → React → REST API → FastAPI → Application → Repository → SQLite → File Storage
+```
 
 Default bind: `127.0.0.1:8765` (loopback). No authentication layer — see [SECURITY.md](SECURITY.md).
 
 ## REST API
 
-Mounted by `pip-app ui` alongside the Dashboard UI.
+Served by FastAPI (`create_fastapi_app`). Handlers live in
+`profile_intelligence.api.routes` and are shared with the legacy WSGI `ApiApp`.
 
 ```
+GET    /api/health
 POST   /api/import/url
 POST   /api/import/files
 GET    /api/profiles
@@ -24,7 +30,7 @@ GET    /api/plugins
 POST   /api/plugins/reload
 ```
 
-Implementation: `src/profile_intelligence/api/`.
+Implementation: `src/profile_intelligence/api/` (FastAPI in `fastapi_app.py`).
 
 ### Conventions
 

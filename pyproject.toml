@@ -40,6 +40,8 @@ dependencies = [
     "Pillow>=11.0.0",
     "beautifulsoup4>=4.12.3",
     "typing-extensions>=4.12.2",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
 ]
 
 [project.optional-dependencies]
@@ -52,6 +54,8 @@ dev = [
     "mypy>=1.14.0",
     "ruff>=0.8.4",
     "types-PyYAML>=6.0.12",
+    "httpx>=0.27.0",
+    "httpx2>=2.0.0",
 ]
 
 [project.scripts]
@@ -66,7 +70,12 @@ Repository = "https://github.com/Icarus-666-play/profile-intelligence-platform"
 where = ["src"]
 
 [tool.setuptools.package-data]
-profile_intelligence = ["py.typed", "ui/static/*"]
+profile_intelligence = [
+    "py.typed",
+    "ui/static/*",
+    "web/dist/*",
+    "web/dist/assets/*",
+]
 
 [tool.pytest.ini_options]
 minversion = "8.0"
@@ -117,6 +126,10 @@ ignore_missing_imports = true
 module = ["bs4.*"]
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = ["fastapi.*", "uvicorn.*", "starlette.*"]
+ignore_missing_imports = true
+
 [tool.ruff]
 target-version = "py312"
 line-length = 88
@@ -150,6 +163,7 @@ ignore = [
 "scripts/**/*.py" = ["T201", "E402"]
 "src/profile_intelligence/main.py" = ["T201"]
 "src/profile_intelligence/ui/**" = ["E501", "T201"]
+"src/profile_intelligence/api/server.py" = ["T201"]
 "src/profile_intelligence/api/routes.py" = ["S310"]
 "src/profile_intelligence/infrastructure/download/**" = ["S310"]
 

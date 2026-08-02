@@ -21,7 +21,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from profile_intelligence import __version__
-from profile_intelligence.api import ApiContext
+from profile_intelligence.api import ApiContext, serve_fastapi
 from profile_intelligence.application.use_cases.application import ApplicationService
 from profile_intelligence.application.use_cases.compare_service import CompareService
 from profile_intelligence.application.use_cases.daily_pipeline import DailyPipeline
@@ -187,8 +187,8 @@ def build_parser() -> argparse.ArgumentParser:
     ui_parser = subparsers.add_parser(
         "ui",
         help=(
-            "Open the local Dashboard UI and JSON API "
-            "(UI pages + /api/import|/profiles|/compare|/dashboard|/analytics|/plugins)"
+            "Open React + FastAPI (Browser → React → REST → FastAPI → "
+            "Application → Repository → SQLite → File Storage)"
         ),
     )
     ui_parser.add_argument(
@@ -206,6 +206,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--no-browser",
         action="store_true",
         help="Do not open a system browser",
+    )
+    ui_parser.add_argument(
+        "--legacy-wsgi",
+        action="store_true",
+        help="Serve the legacy stdlib WSGI HTML UI instead of React+FastAPI",
     )
 
     daily_parser = subparsers.add_parser(
@@ -628,15 +633,6 @@ def _cmd_import(args: argparse.Namespace, container: Container) -> int:
 
 
 def _cmd_ui(args: argparse.Namespace, container: Container) -> int:
-    context = UiContext(
-        config=container.resolve(AppConfig),
-        dashboard=container.resolve(DashboardService),
-        profiles=container.resolve(ProfileService),
-        imports=container.resolve(ImportService),
-        compare=container.resolve(CompareService),
-        importers=container.resolve(ImporterRegistry),
-        import_flow=container.resolve(ImportFlow),
-    )
     api_context = ApiContext(
         config=container.resolve(AppConfig),
         profiles=container.resolve(ProfileService),
@@ -649,12 +645,30 @@ def _cmd_ui(args: argparse.Namespace, container: Container) -> int:
         importers=container.resolve(ImporterRegistry),
         downloader=container.resolve(DocumentDownloader),
     )
-    serve_ui(
-        context,
+    if bool(getattr(args, "legacy_wsgi", False)):
+        context = UiContext(
+            config=container.resolve(AppConfig),
+            dashboard=container.resolve(DashboardService),
+            profiles=container.resolve(ProfileService),
+            imports=container.resolve(ImportService),
+            compare=container.resolve(CompareService),
+            importers=container.resolve(ImporterRegistry),
+            import_flow=container.resolve(ImportFlow),
+        )
+        serve_ui(
+            context,
+            host=str(args.host),
+            port=int(args.port),
+            open_browser=not bool(args.no_browser),
+            api_context=api_context,
+        )
+        return 0
+
+    serve_fastapi(
+        api_context,
         host=str(args.host),
         port=int(args.port),
         open_browser=not bool(args.no_browser),
-        api_context=api_context,
     )
     return 0
 

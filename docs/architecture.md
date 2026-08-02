@@ -27,13 +27,43 @@ src/profile_intelligence/
     scoring/           # Confidence Score (0-100) via completeness engine
     dashboard/         # Console dashboard adapter / snapshot metrics
     reporting/         # Email report stub (future)
-  ui/                  # Milestone 2 Dashboard UI (local WSGI pages)
+  api/                 # FastAPI REST (+ legacy WSGI ApiApp)
+  web/dist/            # Built React SPA served by FastAPI
+  ui/                  # Legacy WSGI HTML UI (`pip-app ui --legacy-wsgi`)
   core/                # Shared kernel: config, logging, DI, exceptions
   bootstrap.py         # Composition root
   main.py              # CLI / process launcher
 ```
 
-Dashboard UI (`ui/`) navigation:
+## Presentation stack
+
+```
+Browser
+ ↓
+React
+ ↓
+REST API
+ ↓
+FastAPI
+ ↓
+Application Layer
+ ↓
+Repository Layer
+ ↓
+SQLite
+ ↓
+File Storage
+```
+
+Default `pip-app ui` runs uvicorn + FastAPI, serving the React SPA from
+`web/dist` and JSON under `/api`. Application use cases and repositories are
+unchanged; React talks only to REST. File blobs live under `FileStorage`
+(`data/media`, `data/inbox`, `exports/`) beside the SQLite database.
+
+Source for the SPA: `frontend/` (Vite + React). Rebuild with
+`cd frontend && npm install && npm run build`.
+
+React Dashboard navigation:
 
 ```
 Profile Intelligence Platform

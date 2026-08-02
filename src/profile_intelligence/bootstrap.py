@@ -69,6 +69,7 @@ from profile_intelligence.infrastructure.reporting import EmailReportService
 from profile_intelligence.infrastructure.scoring.completeness import CompletenessScorer
 from profile_intelligence.infrastructure.scoring.confidence import ConfidenceScorer
 from profile_intelligence.infrastructure.search.service import ProfileSearchService
+from profile_intelligence.infrastructure.storage import FileStorage
 
 logger = get_logger(__name__)
 
@@ -188,6 +189,11 @@ def build_container(
             ).media.download_timeout_seconds,
         ),
         name="document_downloader",
+    )
+    container.register(
+        FileStorage,
+        lambda: FileStorage(container.resolve(AppConfig)),
+        name="file_storage",
     )
     container.register(
         ImageRepository,

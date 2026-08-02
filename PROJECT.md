@@ -36,11 +36,33 @@ src/profile_intelligence/
   application/
     pipeline/      # parser → … → repository stages
     use_cases/
-  infrastructure/  # ai, analysis, cache, database, importers, excel, media, search, scoring
-  ui/              # Dashboard UI (Dashboard…About)
-  api/             # Local JSON REST (/api/…)
+  infrastructure/  # ai, analysis, cache, database, storage, importers, excel, media, search, scoring
+  api/             # FastAPI REST (/api/…)
+  web/dist/        # Built React SPA
+  ui/              # Legacy WSGI HTML UI
   core/            # config, logging, DI, exceptions
+frontend/          # React + Vite source
 config/ docs/ scripts/ tests/ plugins/
+```
+
+Presentation stack:
+
+```
+Browser
+ ↓
+React
+ ↓
+REST API
+ ↓
+FastAPI
+ ↓
+Application Layer
+ ↓
+Repository Layer
+ ↓
+SQLite
+ ↓
+File Storage
 ```
 
 Product documentation (`docs/`):
@@ -175,7 +197,7 @@ See [docs/milestones.md](docs/milestones.md).
 |-----------|--------|---------|
 | **M0 Foundation** | Complete | Scaffold, config, logging, DB, plugin framework |
 | **M1 Core Pipeline** | Complete | CSV/Excel import, extract, search, score, Excel export |
-| **M2 Dashboard UI** | Complete | Local multi-page UI (`pip-app ui`) |
+| **M2 Dashboard UI** | Complete | React + FastAPI UI (`pip-app ui`) |
 | M3 AI Assist | Planned | Optional local/remote AI adapters |
 
 ## Status

@@ -1,6 +1,6 @@
 # ADR 0004 — Local WSGI Dashboard UI
 
-- **Status:** Accepted
+- **Status:** Superseded by [ADR 0007](0007-react-fastapi-presentation-stack.md) (legacy via `pip-app ui --legacy-wsgi`)
 - **Date:** 2026-08-02
 
 ## Context
