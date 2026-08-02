@@ -1,27 +1,43 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { api, type Comparison } from '../api'
 
 export default function ComparePage() {
-  const [leftId, setLeftId] = useState('')
-  const [rightId, setRightId] = useState('')
+  const [params] = useSearchParams()
+  const [leftId, setLeftId] = useState(params.get('left') || '')
+  const [rightId, setRightId] = useState(params.get('right') || '')
   const [result, setResult] = useState<Comparison | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
-  async function onSubmit(event: FormEvent) {
-    event.preventDefault()
+  async function runCompare(left: string, right: string) {
     setBusy(true)
     setError(null)
     setResult(null)
     try {
-      const comparison = await api.compare(Number(leftId), Number(rightId))
+      const comparison = await api.compare(Number(left), Number(right))
       setResult(comparison)
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
     } finally {
       setBusy(false)
     }
+  }
+
+  useEffect(() => {
+    const left = params.get('left') || ''
+    const right = params.get('right') || ''
+    setLeftId(left)
+    setRightId(right)
+    if (left && right) {
+      void runCompare(left, right)
+    }
+  }, [params])
+
+  async function onSubmit(event: FormEvent) {
+    event.preventDefault()
+    await runCompare(leftId, rightId)
   }
 
   return (

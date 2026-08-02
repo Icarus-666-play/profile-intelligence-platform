@@ -70,9 +70,15 @@ Find profiles in the local SQLite database.
 
 [ query ________________________ ]  [ Search ]
 
+Compare (0/2 selected)              [ Select two profiles ]
+
 Results
-  #id  Name   source · confidence=NN
+  [Photo]  Name
+           Age · Country · Languages · Rating · Average Price · Imported
+           Compare ☑
 ```
+
+Select up to two rows, then open Compare with `?left=&right=`.
 
 ### Import `/import`
 
@@ -124,6 +130,7 @@ Field | Left | Right | Status
 ...
 ```
 
+Accepts `?left=&right=` from Search compare selection and auto-runs.
 POST → `CompareService.compare_ids`.
 
 ### Reports `/reports`

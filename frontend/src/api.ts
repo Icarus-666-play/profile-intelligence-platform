@@ -9,12 +9,20 @@ export type Profile = {
   title: string | null
   organization: string | null
   location: string | null
-  tags: string[]
+  tags: string[] | string | null
   source: string | null
   notes: string | null
   score: number | null
   created_at: string | null
   updated_at: string | null
+  photo: string | null
+  age: string | null
+  country: string | null
+  languages: string[]
+  rating: number | null
+  average_price: number | null
+  average_price_currency: string | null
+  imported: string | null
 }
 
 export type DashboardSnapshot = {

@@ -48,6 +48,8 @@ def _ctx(
         downloader = _LocalDownloader(csv_path)
     else:
         downloader = container.resolve(DocumentDownloader)
+    from profile_intelligence.infrastructure.database.connection import Database
+
     ctx = ApiContext(
         config=container.resolve(AppConfig),
         profiles=container.resolve(ProfileService),
@@ -61,6 +63,7 @@ def _ctx(
         downloader=downloader,  # type: ignore[arg-type]
         auth=container.resolve(LocalAuthService),
         import_activity=container.resolve(ImportActivityStore),
+        database=container.resolve(Database),
     )
     return ctx, app
 

@@ -13,6 +13,7 @@ from profile_intelligence.domain.interfaces.repositories import IProfileReposito
 from profile_intelligence.infrastructure.analysis import AnalysisService
 from profile_intelligence.infrastructure.auth import LocalAuthService
 from profile_intelligence.infrastructure.dashboard import DashboardService
+from profile_intelligence.infrastructure.database.connection import Database
 from profile_intelligence.infrastructure.download import DocumentDownloader
 from profile_intelligence.infrastructure.importers.import_activity import (
     ImportActivityStore,
@@ -36,6 +37,7 @@ class ApiContext:
     downloader: DocumentDownloader | None = None
     auth: LocalAuthService | None = None
     import_activity: ImportActivityStore | None = None
+    database: Database | None = None
 
 
 __all__ = ["ApiContext"]

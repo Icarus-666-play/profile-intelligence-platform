@@ -11,6 +11,7 @@ from urllib.parse import urlparse
 
 from profile_intelligence.api.context import ApiContext
 from profile_intelligence.api.http import ApiError
+from profile_intelligence.api.profile_list import enrich_list_fields_from_database
 from profile_intelligence.api.serializers import (
     comparison_to_dict,
     dashboard_to_dict,
@@ -292,11 +293,13 @@ def list_profiles(ctx: ApiContext, query: dict[str, str]) -> dict[str, Any]:
     else:
         rows = list(ctx.profiles.list_profiles(limit=limit, offset=offset))
         total = ctx.profiles.count()
+    items = [profile_to_dict(row) for row in rows]
+    enrich_list_fields_from_database(rows, ctx.database, items)
     return {
         "total": total,
         "limit": limit,
         "offset": offset,
-        "items": [profile_to_dict(row) for row in rows],
+        "items": items,
     }
 
 

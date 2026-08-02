@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
+from profile_intelligence.api.profile_list import list_fields_from_profile
 from profile_intelligence.application.use_cases.compare_service import (
     ProfileComparison,
 )
@@ -16,8 +17,8 @@ from profile_intelligence.infrastructure.dashboard import DashboardSnapshot
 
 
 def profile_to_dict(profile: ProfileEntity) -> dict[str, Any]:
-    """Serialize a profile entity."""
-    return {
+    """Serialize a profile entity, including Search-row list fields."""
+    payload = {
         "id": profile.id,
         "external_id": profile.external_id,
         "display_name": profile.display_name,
@@ -33,6 +34,8 @@ def profile_to_dict(profile: ProfileEntity) -> dict[str, Any]:
         "created_at": _dt(profile.created_at),
         "updated_at": _dt(profile.updated_at),
     }
+    payload.update(list_fields_from_profile(profile))
+    return payload
 
 
 def plugin_to_dict(plugin: ImporterPlugin) -> dict[str, Any]:

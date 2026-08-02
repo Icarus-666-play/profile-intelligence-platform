@@ -35,6 +35,8 @@ def _ctx(
         auth_service = LocalAuthService(config)
     else:
         auth_service = container.resolve(LocalAuthService)
+    from profile_intelligence.infrastructure.database.connection import Database
+
     ctx = ApiContext(
         config=config,
         profiles=container.resolve(ProfileService),
@@ -46,6 +48,7 @@ def _ctx(
         analysis=container.resolve(AnalysisService),
         importers=container.resolve(ImporterRegistry),
         auth=auth_service,
+        database=container.resolve(Database),
     )
     return ctx, app
 

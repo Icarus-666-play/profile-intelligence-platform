@@ -119,13 +119,29 @@ Query: `limit`, `offset`, optional `q` (search).
   "total": 12,
   "limit": 50,
   "offset": 0,
-  "items": [ { "id": 1, "display_name": "...", "score": 80 } ]
+  "items": [
+    {
+      "id": 1,
+      "display_name": "...",
+      "score": 80,
+      "photo": "https://…",
+      "age": "28",
+      "country": "Netherlands",
+      "languages": ["English", "Italian"],
+      "rating": 4.75,
+      "average_price": 275.0,
+      "average_price_currency": "EUR",
+      "imported": "2026-08-02T12:00:00"
+    }
+  ]
 }
 ```
 
+List/search items include Search-row fields derived from `raw_json` and child tables.
+
 ### `GET /api/profiles/{id}`
 
-Single profile object, or `404`.
+Single profile object (same field shape), or `404`.
 
 ### `POST /api/compare`
 
