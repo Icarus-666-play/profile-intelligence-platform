@@ -141,41 +141,40 @@ Redis raises `CacheError` until implemented.
 
 All platform errors inherit from `PipError`. Domain-specific subclasses (`ConfigurationError`, `DatabaseError`, `MigrationError`, `PluginError`, `CacheError`, …) allow precise handling without catching unrelated exceptions.
 
-## Nightly automation + workflow events
+## Daily automation + workflow events
 
-`NightlyPipeline` (`application/use_cases/nightly_pipeline.py`) runs stages and publishes domain events:
-
-```
-ProfileImported
- ↓
-ScoreCalculated
- ↓
-ImagesExtracted
- ↓
-ExcelExported
- ↓
-DashboardUpdated
-```
-
-Operational stages:
+`DailyPipeline` (`application/use_cases/daily_pipeline.py`) runs:
 
 ```
-Import every night
+Daily
  ↓
-Update database
+Import Folder
  ↓
-Recalculate scores
+Detect new files
  ↓
-Extract images
+Import
  ↓
-Generate Excel report
+Update
  ↓
-Export dashboard
+Generate Excel
+ ↓
+Create Dashboard
+ ↓
+Email Report (future)
 ```
 
-CLI: `pip-app nightly` (cron / Task Scheduler via `scripts/run_nightly.py`).
-Config section: `nightly:` in `config/settings.yaml` (`import_dir`, report paths).
-Event bus: `InMemoryEventBus` implementing `IEventBus`.
+Domain events published during Update / Excel / Dashboard:
+
+```
+ProfileImported → ScoreCalculated → ImagesExtracted → ExcelExported → DashboardUpdated
+```
+
+New files are detected via `import_file_ledger` (content hash). Email Report is a
+stub until the email milestone (`daily.email_enabled`).
+
+CLI: `pip-app daily` (alias: `pip-app nightly`).
+Scheduler: `scripts/run_daily.py`.
+Config: `daily:` in `config/settings.yaml` (legacy `nightly:` still accepted).
 
 ## Extension points
 

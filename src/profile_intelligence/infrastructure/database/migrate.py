@@ -337,11 +337,46 @@ class ProfileChildrenMigration(Migration):
         connection.execute(text("DROP TABLE IF EXISTS profile_rates"))
 
 
+class ImportFileLedgerMigration(Migration):
+    """Track imported inbox files for Daily detect-new-files."""
+
+    version = "005"
+    name = "import_file_ledger"
+
+    def up(self, connection: Connection) -> None:
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS import_file_ledger (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    path VARCHAR(2048) NOT NULL,
+                    content_hash VARCHAR(128) NOT NULL UNIQUE,
+                    file_size INTEGER NOT NULL DEFAULT 0,
+                    imported_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                CREATE INDEX IF NOT EXISTS ix_import_file_ledger_path
+                ON import_file_ledger (path)
+                """
+            )
+        )
+
+    def down(self, connection: Connection) -> None:
+        connection.execute(text("DROP INDEX IF EXISTS ix_import_file_ledger_path"))
+        connection.execute(text("DROP TABLE IF EXISTS import_file_ledger"))
+
+
 ALL_MIGRATIONS: tuple[type[Migration], ...] = (
     InitialSchemaMigration,
     EnrichProfilesMigration,
     MediaAssetsMigration,
     ProfileChildrenMigration,
+    ImportFileLedgerMigration,
 )
 
 

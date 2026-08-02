@@ -74,12 +74,14 @@ def temp_root(tmp_path: Path) -> Path:
             "sqlite_file": "data/cache.sqlite3",
             "redis_url": None,
         },
-        "nightly": {
+        "daily": {
             "import_dir": "data/inbox",
-            "excel_path": "exports/nightly-profiles.xlsx",
-            "dashboard_path": "exports/nightly-dashboard.txt",
+            "excel_path": "exports/daily-profiles.xlsx",
+            "dashboard_path": "exports/daily-dashboard.txt",
             "rescore": True,
             "recursive": False,
+            "email_enabled": False,
+            "email_to": None,
         },
         "pipeline": [
             "parser",

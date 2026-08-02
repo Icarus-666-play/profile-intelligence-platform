@@ -2,7 +2,7 @@
 
 Shipped files under ``config/``:
 - ``settings.yaml`` — app, paths, database, importers, excel, ai, search,
-  dashboard, media, nightly, pipeline
+  dashboard, media, daily (nightly alias), pipeline
 - ``logging.yaml`` — logging options
 - ``scoring.yaml`` — completeness scoring weights
 
@@ -203,27 +203,39 @@ class CacheSection:
 
 
 @dataclass(frozen=True, slots=True)
-class NightlySection:
-    """Nightly automation workflow settings.
+class DailySection:
+    """Daily automation workflow settings.
 
     Flow::
 
-        Import every night
+        Daily
          ↓
-        Update database
+        Import Folder
          ↓
-        Recalculate scores
+        Detect new files
          ↓
-        Generate Excel report
+        Import
          ↓
-        Export dashboard
+        Update
+         ↓
+        Generate Excel
+         ↓
+        Create Dashboard
+         ↓
+        Email Report (future)
     """
 
     import_dir: str = "data/inbox"
-    excel_path: str = "exports/nightly-profiles.xlsx"
-    dashboard_path: str = "exports/nightly-dashboard.txt"
+    excel_path: str = "exports/daily-profiles.xlsx"
+    dashboard_path: str = "exports/daily-dashboard.txt"
     rescore: bool = True
     recursive: bool = False
+    email_enabled: bool = False
+    email_to: str | None = None
+
+
+# Backward-compatible alias used by older config / docs.
+NightlySection = DailySection
 
 
 @dataclass(frozen=True, slots=True)
@@ -308,11 +320,16 @@ class AppConfig:
     dashboard: DashboardSection = field(default_factory=DashboardSection)
     media: MediaSection = field(default_factory=MediaSection)
     cache: CacheSection = field(default_factory=CacheSection)
-    nightly: NightlySection = field(default_factory=NightlySection)
+    daily: DailySection = field(default_factory=DailySection)
     pipeline: PipelineSection = field(default_factory=PipelineSection)
     config_dir: Path | None = None
     config_path: Path | None = None
     root_dir: Path = field(default_factory=_repo_root)
+
+    @property
+    def nightly(self) -> DailySection:
+        """Backward-compatible alias for :attr:`daily`."""
+        return self.daily
 
     def resolve_path(self, relative: PathLike) -> Path:
         """Resolve a configured path relative to :attr:`root_dir` when needed."""
@@ -372,19 +389,34 @@ class AppConfig:
         return self.resolve_path(self.cache.sqlite_file)
 
     @property
+    def daily_import_dir(self) -> Path:
+        """Absolute path to the Daily import folder."""
+        return self.resolve_path(self.daily.import_dir)
+
+    @property
+    def daily_excel_path(self) -> Path:
+        """Absolute path for the Daily Excel report."""
+        return self.resolve_path(self.daily.excel_path)
+
+    @property
+    def daily_dashboard_path(self) -> Path:
+        """Absolute path for the Daily dashboard export."""
+        return self.resolve_path(self.daily.dashboard_path)
+
+    @property
     def nightly_import_dir(self) -> Path:
-        """Absolute path to the nightly import inbox."""
-        return self.resolve_path(self.nightly.import_dir)
+        """Backward-compatible alias for :attr:`daily_import_dir`."""
+        return self.daily_import_dir
 
     @property
     def nightly_excel_path(self) -> Path:
-        """Absolute path for the nightly Excel report."""
-        return self.resolve_path(self.nightly.excel_path)
+        """Backward-compatible alias for :attr:`daily_excel_path`."""
+        return self.daily_excel_path
 
     @property
     def nightly_dashboard_path(self) -> Path:
-        """Absolute path for the nightly dashboard export."""
-        return self.resolve_path(self.nightly.dashboard_path)
+        """Backward-compatible alias for :attr:`daily_dashboard_path`."""
+        return self.daily_dashboard_path
 
     def ensure_directories(self) -> None:
         """Create runtime directories if they do not exist."""
@@ -398,10 +430,10 @@ class AppConfig:
             self.media_downloads_dir,
             self.cache_dir,
             self.cache_sqlite_path.parent,
-            self.nightly_import_dir,
+            self.daily_import_dir,
             self.database_path.parent,
-            self.nightly_excel_path.parent,
-            self.nightly_dashboard_path.parent,
+            self.daily_excel_path.parent,
+            self.daily_dashboard_path.parent,
         ):
             directory.mkdir(parents=True, exist_ok=True)
 
@@ -548,7 +580,7 @@ def _build_config(
     dashboard_defaults = DashboardSection()
     media_defaults = MediaSection()
     cache_defaults = CacheSection()
-    nightly_defaults = NightlySection()
+    daily_defaults = DailySection()
 
     app_raw = _section(settings_raw, "app")
     paths_raw = _section(settings_raw, "paths")
@@ -560,7 +592,9 @@ def _build_config(
     dashboard_raw = _section(settings_raw, "dashboard")
     media_raw = _section(settings_raw, "media")
     cache_raw = _section(settings_raw, "cache")
-    nightly_raw = _section(settings_raw, "nightly")
+    # Prefer ``daily:``; accept legacy ``nightly:`` as overlay base.
+    daily_raw: dict[str, Any] = dict(_section(settings_raw, "nightly"))
+    daily_raw.update(dict(_section(settings_raw, "daily")))
     pipeline_section = _parse_pipeline(settings_raw.get("pipeline"))
     logging_data = _normalize_logging_raw(logging_raw)
     scoring_data = _normalize_scoring_raw(scoring_raw)
@@ -736,21 +770,27 @@ def _build_config(
                 cache_raw.get("redis_url", cache_defaults.redis_url)
             ),
         ),
-        nightly=NightlySection(
+        daily=DailySection(
             import_dir=str(
-                nightly_raw.get("import_dir", nightly_defaults.import_dir)
+                daily_raw.get("import_dir", daily_defaults.import_dir)
             ),
             excel_path=str(
-                nightly_raw.get("excel_path", nightly_defaults.excel_path)
+                daily_raw.get("excel_path", daily_defaults.excel_path)
             ),
             dashboard_path=str(
-                nightly_raw.get(
-                    "dashboard_path", nightly_defaults.dashboard_path
+                daily_raw.get(
+                    "dashboard_path", daily_defaults.dashboard_path
                 )
             ),
-            rescore=bool(nightly_raw.get("rescore", nightly_defaults.rescore)),
+            rescore=bool(daily_raw.get("rescore", daily_defaults.rescore)),
             recursive=bool(
-                nightly_raw.get("recursive", nightly_defaults.recursive)
+                daily_raw.get("recursive", daily_defaults.recursive)
+            ),
+            email_enabled=bool(
+                daily_raw.get("email_enabled", daily_defaults.email_enabled)
+            ),
+            email_to=_optional_str(
+                daily_raw.get("email_to", daily_defaults.email_to)
             ),
         ),
         pipeline=pipeline_section,
@@ -815,6 +855,7 @@ __all__ = [
     "AppConfig",
     "AppSection",
     "CacheSection",
+    "DailySection",
     "DashboardSection",
     "DatabaseSection",
     "ExcelSection",

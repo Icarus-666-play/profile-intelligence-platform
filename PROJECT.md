@@ -110,18 +110,26 @@ pipeline:
   - repository
 ```
 
-Nightly automation (`pip-app nightly` / `scripts/run_nightly.py`) publishes:
+Daily automation (`pip-app daily` / `scripts/run_daily.py`):
 
 ```
-ProfileImported
+Daily
  ↓
-ScoreCalculated
+Import Folder
  ↓
-ImagesExtracted
+Detect new files
  ↓
-ExcelExported
+Import
  ↓
-DashboardUpdated
+Update
+ ↓
+Generate Excel
+ ↓
+Create Dashboard
+ ↓
+Email Report (future)
 ```
+
+Publishes: `ProfileImported → ScoreCalculated → ImagesExtracted → ExcelExported → DashboardUpdated`.
 
 The local import → search → score → Excel export loop is operational via CLI.

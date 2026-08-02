@@ -6,7 +6,7 @@ PIP uses split YAML configuration with typed dataclasses (`AppConfig` and nested
 
 | File | Role |
 |------|------|
-| `config/settings.yaml` | App, paths, database, importers, excel, ai, search, dashboard, media, cache, nightly, pipeline |
+| `config/settings.yaml` | App, paths, database, importers, excel, ai, search, dashboard, media, cache, daily, pipeline |
 | `config/logging.yaml` | Logging options |
 | `config/scoring.yaml` | Confidence Score (0–100) method/weights |
 | `config/*.local.yaml` | Optional machine-local overlays (gitignored) |
@@ -78,6 +78,23 @@ cache/
 - `file_dir` — directory for the `file` backend
 - `sqlite_file` — path for the `sqlite` backend
 - `redis_url` — reserved for the future Redis backend
+
+### `daily`
+
+```
+Daily → Import Folder → Detect new files → Import → Update →
+Generate Excel → Create Dashboard → Email Report (future)
+```
+
+- `import_dir` — import folder / inbox (default `data/inbox`)
+- `excel_path` — Daily Excel report path
+- `dashboard_path` — Daily dashboard export path
+- `rescore` — recompute Confidence Scores during Update
+- `recursive` — recurse import folder
+- `email_enabled` — reserved for Email Report (default `false`)
+- `email_to` — reserved recipient
+
+Legacy `nightly:` keys are still accepted and merged under `daily`.
 
 ## `logging.yaml`
 

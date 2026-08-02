@@ -1,4 +1,4 @@
-"""Tests for the nightly alias of the Daily automation workflow."""
+"""Tests for the Daily automation workflow."""
 
 from __future__ import annotations
 
@@ -6,20 +6,27 @@ from pathlib import Path
 
 import profile_intelligence.main as main_module
 from profile_intelligence.application.use_cases.application import ApplicationService
-from profile_intelligence.application.use_cases.daily_pipeline import DAILY_STAGES
-from profile_intelligence.application.use_cases.nightly_pipeline import (
-    NIGHTLY_STAGES,
-    NightlyPipeline,
+from profile_intelligence.application.use_cases.daily_pipeline import (
+    DAILY_STAGES,
+    DailyPipeline,
 )
 from profile_intelligence.bootstrap import build_container
 from profile_intelligence.main import build_parser, main
 
 
-def test_nightly_stages_match_daily() -> None:
-    assert NIGHTLY_STAGES == DAILY_STAGES
+def test_daily_stages_order() -> None:
+    assert DAILY_STAGES == (
+        "import_folder",
+        "detect_new_files",
+        "import",
+        "update",
+        "generate_excel",
+        "create_dashboard",
+        "email_report",
+    )
 
 
-def test_nightly_pipeline_delegates_to_daily(temp_root: Path) -> None:
+def test_daily_pipeline_end_to_end_and_skips_seen_files(temp_root: Path) -> None:
     container = build_container(root_dir=temp_root)
     app = container.resolve(ApplicationService)
     app.start()
@@ -32,28 +39,46 @@ def test_nightly_pipeline_delegates_to_daily(temp_root: Path) -> None:
         "Grace Hopper,grace@example.com,US Navy\n",
         encoding="utf-8",
     )
+    (inbox / "notes.txt").write_text("ignore me\n", encoding="utf-8")
 
-    result = container.resolve(NightlyPipeline).run()
-    assert result.stages_run == DAILY_STAGES
-    assert result.files_imported == 1
-    assert result.created == 2
-    assert result.profile_count == 2
-    assert result.event_names == (
+    pipeline = container.resolve(DailyPipeline)
+    first = pipeline.run()
+    assert first.stages_run == DAILY_STAGES
+    assert first.files_detected == 1
+    assert first.files_new == 1
+    assert first.files_imported == 1
+    assert first.created == 2
+    assert first.profile_count == 2
+    assert first.email_skipped is True
+    assert first.event_names == (
         "ProfileImported",
         "ScoreCalculated",
         "ImagesExtracted",
         "ExcelExported",
         "DashboardUpdated",
     )
-    assert result.success
+    assert first.excel_path is not None
+    assert Path(first.excel_path).is_file()
+    assert first.dashboard_path is not None
+    assert "Profiles: 2" in Path(first.dashboard_path).read_text(encoding="utf-8")
+    assert first.success
+
+    second = pipeline.run()
+    assert second.files_detected == 1
+    assert second.files_new == 0
+    assert second.files_imported == 0
+    assert second.created == 0
+    assert second.profile_count == 2
+    assert second.success
+
     app.shutdown()
 
 
-def test_parser_nightly_subcommand() -> None:
+def test_parser_daily_subcommand() -> None:
     parser = build_parser()
     args = parser.parse_args(
         [
-            "nightly",
+            "daily",
             "--import-dir",
             "inbox",
             "--excel-output",
@@ -62,17 +87,19 @@ def test_parser_nightly_subcommand() -> None:
             "dash.txt",
             "--no-rescore",
             "--recursive",
+            "--force-all-files",
         ]
     )
-    assert args.command == "nightly"
+    assert args.command == "daily"
     assert args.import_dir == "inbox"
     assert args.excel_output == "out.xlsx"
     assert args.dashboard_output == "dash.txt"
     assert args.no_rescore is True
     assert args.recursive is True
+    assert args.force_all_files is True
 
 
-def test_cli_nightly(
+def test_cli_daily(
     temp_root: Path,
     monkeypatch: object,
     capsys: object,
@@ -91,9 +118,10 @@ def test_cli_nightly(
         return original(*args, **kwargs)
 
     monkeypatch.setattr(main_module, "build_container", _build)  # type: ignore[attr-defined]
-    assert main(["nightly"]) == 0
+    assert main(["daily"]) == 0
     out = capsys.readouterr().out  # type: ignore[attr-defined]
-    assert "Daily alias" in out or "pipeline complete" in out
-    assert "import_folder" in out
+    assert "Daily pipeline complete" in out
+    assert "detect_new_files" in out
+    assert "email_report" in out or "email:" in out
     assert (temp_root / "exports" / "daily-profiles.xlsx").is_file()
     assert (temp_root / "exports" / "daily-dashboard.txt").is_file()

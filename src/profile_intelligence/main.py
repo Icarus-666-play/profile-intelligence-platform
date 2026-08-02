@@ -8,7 +8,7 @@ Primary commands::
     pip-app compare
     pip-app export
     pip-app dashboard
-    pip-app nightly
+    pip-app daily
 """
 
 from __future__ import annotations
@@ -21,8 +21,8 @@ from pathlib import Path
 from profile_intelligence import __version__
 from profile_intelligence.application.use_cases.application import ApplicationService
 from profile_intelligence.application.use_cases.compare_service import CompareService
+from profile_intelligence.application.use_cases.daily_pipeline import DailyPipeline
 from profile_intelligence.application.use_cases.import_service import ImportService
-from profile_intelligence.application.use_cases.nightly_pipeline import NightlyPipeline
 from profile_intelligence.application.use_cases.profile_service import ProfileService
 from profile_intelligence.bootstrap import build_container
 from profile_intelligence.core.container import Container
@@ -41,6 +41,7 @@ _PRIMARY_COMMANDS = (
     "compare",
     "export",
     "dashboard",
+    "daily",
     "nightly",
 )
 
@@ -62,7 +63,7 @@ def build_parser() -> argparse.ArgumentParser:
             "  pip-app compare <id_a> <id_b>\n"
             "  pip-app export\n"
             "  pip-app dashboard\n"
-            "  pip-app nightly\n"
+            "  pip-app daily\n"
         ),
     )
     parser.add_argument(
@@ -152,38 +153,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="Show a local console dashboard summary",
     )
 
-    nightly_parser = subparsers.add_parser(
-        "nightly",
+    daily_parser = subparsers.add_parser(
+        "daily",
         help=(
-            "Run nightly automation: import → update DB → rescore → "
-            "Excel report → dashboard export"
+            "Run Daily automation: Import Folder → Detect new files → "
+            "Import → Update → Generate Excel → Create Dashboard → "
+            "Email Report (future)"
         ),
     )
-    nightly_parser.add_argument(
-        "--import-dir",
-        default=None,
-        help="Inbox directory (default: config nightly.import_dir)",
+    _add_daily_arguments(daily_parser)
+
+    nightly_parser = subparsers.add_parser(
+        "nightly",
+        help="Alias for pip-app daily (backward compatible)",
     )
-    nightly_parser.add_argument(
-        "--excel-output",
-        default=None,
-        help="Excel report path (default: config nightly.excel_path)",
-    )
-    nightly_parser.add_argument(
-        "--dashboard-output",
-        default=None,
-        help="Dashboard text path (default: config nightly.dashboard_path)",
-    )
-    nightly_parser.add_argument(
-        "--no-rescore",
-        action="store_true",
-        help="Skip the recalculate scores stage",
-    )
-    nightly_parser.add_argument(
-        "--recursive",
-        action="store_true",
-        help="Recurse into subdirectories of the import inbox",
-    )
+    _add_daily_arguments(nightly_parser)
 
     # Additional utilities
     subparsers.add_parser("importers", help="List discovered importer plugins")
@@ -342,8 +326,8 @@ def _dispatch(
         logger.info("Dashboard rendered (%d chars)", len(text))
         return 0
 
-    if command == "nightly":
-        return _cmd_nightly(args, container)
+    if command in {"daily", "nightly"}:
+        return _cmd_daily(args, container, label=command)
 
     profiles = container.resolve(ProfileService)
 
@@ -381,25 +365,74 @@ def _dispatch(
     return 2
 
 
-def _cmd_nightly(args: argparse.Namespace, container: Container) -> int:
-    result = container.resolve(NightlyPipeline).run(
+def _add_daily_arguments(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--import-dir",
+        default=None,
+        help="Import folder (default: config daily.import_dir)",
+    )
+    parser.add_argument(
+        "--excel-output",
+        default=None,
+        help="Excel report path (default: config daily.excel_path)",
+    )
+    parser.add_argument(
+        "--dashboard-output",
+        default=None,
+        help="Dashboard text path (default: config daily.dashboard_path)",
+    )
+    parser.add_argument(
+        "--no-rescore",
+        action="store_true",
+        help="Skip confidence rescoring inside the Update stage",
+    )
+    parser.add_argument(
+        "--recursive",
+        action="store_true",
+        help="Recurse into subdirectories of the import folder",
+    )
+    parser.add_argument(
+        "--force-all-files",
+        action="store_true",
+        help="Import all detected files, ignoring the new-file ledger",
+    )
+
+
+def _cmd_daily(
+    args: argparse.Namespace,
+    container: Container,
+    *,
+    label: str = "daily",
+) -> int:
+    result = container.resolve(DailyPipeline).run(
         import_dir=args.import_dir,
         excel_path=args.excel_output,
         dashboard_path=args.dashboard_output,
         rescore=False if args.no_rescore else None,
         recursive=True if args.recursive else None,
+        force_all_files=bool(getattr(args, "force_all_files", False)),
     )
-    print("Nightly pipeline complete")
+    title = "Daily" if label == "daily" else "Nightly (Daily alias)"
+    print(f"{title} pipeline complete")
     print(f"  stages:   {' → '.join(result.stages_run)}")
+    print(f"  folder:   {result.import_folder}")
+    print(
+        f"  detect:   candidates={result.files_detected} "
+        f"new={result.files_new}"
+    )
     print(
         f"  import:   files={result.files_imported} "
         f"created={result.created} updated={result.updated} "
         f"skipped={result.skipped}"
     )
-    print(f"  database: profiles={result.profile_count}")
-    print(f"  scores:   rescored={result.rescored}")
+    print(f"  update:   profiles={result.profile_count} rescored={result.rescored}")
     print(f"  excel:    {result.excel_path}")
     print(f"  dashboard: {result.dashboard_path}")
+    print(
+        f"  email:    "
+        f"{'sent' if result.email_sent else 'skipped'} "
+        f"({result.email_message or 'n/a'})"
+    )
     for error in result.errors:
         print(f"issue: {error}", file=sys.stderr)
     return 0 if result.success else 1

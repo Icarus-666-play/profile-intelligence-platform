@@ -6,6 +6,7 @@ from profile_intelligence.application.events import InMemoryEventBus
 from profile_intelligence.application.use_cases import ImportPipeline
 from profile_intelligence.application.use_cases.application import ApplicationService
 from profile_intelligence.application.use_cases.compare_service import CompareService
+from profile_intelligence.application.use_cases.daily_pipeline import DailyPipeline
 from profile_intelligence.application.use_cases.import_service import ImportService
 from profile_intelligence.application.use_cases.media_pipeline import ImagePipeline
 from profile_intelligence.application.use_cases.nightly_pipeline import NightlyPipeline
@@ -44,6 +45,7 @@ from profile_intelligence.infrastructure.database.repository import (
 )
 from profile_intelligence.infrastructure.database.seed import DatabaseSeeder
 from profile_intelligence.infrastructure.excel.exporter import ExcelExporter
+from profile_intelligence.infrastructure.importers.import_ledger import ImportFileLedger
 from profile_intelligence.infrastructure.importers.registry import ImporterRegistry
 from profile_intelligence.infrastructure.media import (
     ImageDownloader,
@@ -51,6 +53,7 @@ from profile_intelligence.infrastructure.media import (
     ImageRepository,
     ThumbnailService,
 )
+from profile_intelligence.infrastructure.reporting import EmailReportService
 from profile_intelligence.infrastructure.scoring.completeness import CompletenessScorer
 from profile_intelligence.infrastructure.scoring.confidence import ConfidenceScorer
 from profile_intelligence.infrastructure.search.service import ProfileSearchService
@@ -248,8 +251,25 @@ def build_container(
         name="cache",
     )
     container.register(
-        NightlyPipeline,
-        lambda: NightlyPipeline(
+        ImportFileLedger,
+        lambda: ImportFileLedger(container.resolve(Database)),
+        name="import_ledger",
+    )
+    container.register(
+        EmailReportService,
+        lambda: EmailReportService(
+            enabled=container.resolve(AppConfig).daily.email_enabled,
+            recipients=(
+                (container.resolve(AppConfig).daily.email_to,)
+                if container.resolve(AppConfig).daily.email_to
+                else ()
+            ),
+        ),
+        name="email_report",
+    )
+    container.register(
+        DailyPipeline,
+        lambda: DailyPipeline(
             config=container.resolve(AppConfig),
             import_service=container.resolve(ImportService),
             profile_service=container.resolve(ProfileService),
@@ -260,7 +280,14 @@ def build_container(
             photo_repository=container.resolve(IPhotoRepository),
             image_repository=container.resolve(ImageRepository),
             image_pipeline=container.resolve(ImagePipeline),
+            import_ledger=container.resolve(ImportFileLedger),
+            email_report=container.resolve(EmailReportService),
         ),
+        name="daily",
+    )
+    container.register(
+        NightlyPipeline,
+        lambda: NightlyPipeline(container.resolve(DailyPipeline)),
         name="nightly",
     )
     container.register(

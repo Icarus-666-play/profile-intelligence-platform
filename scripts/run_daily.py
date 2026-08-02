@@ -1,9 +1,31 @@
 #!/usr/bin/env python3
-"""Backward-compatible launcher — prefer ``scripts/run_daily.py``.
+"""Run the Daily automation workflow (for cron / Task Scheduler).
+
+```
+Daily
+ ↓
+Import Folder
+ ↓
+Detect new files
+ ↓
+Import
+ ↓
+Update
+ ↓
+Generate Excel
+ ↓
+Create Dashboard
+ ↓
+Email Report (future)
+```
 
 Example crontab (02:15 local time)::
 
     15 2 * * * /path/to/.venv/bin/python /path/to/scripts/run_daily.py
+
+Or::
+
+    pip-app daily
 """
 
 from __future__ import annotations

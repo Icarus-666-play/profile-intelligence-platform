@@ -70,11 +70,35 @@ cache:
   sqlite_file: data/cache.sqlite3
   redis_url: null
 
-# Nightly automation: import → DB → scores → Excel → dashboard
+# Daily
+#  ↓
+# Import Folder
+#  ↓
+# Detect new files
+#  ↓
+# Import
+#  ↓
+# Update
+#  ↓
+# Generate Excel
+#  ↓
+# Create Dashboard
+#  ↓
+# Email Report (future)
+daily:
+  import_dir: data/inbox
+  excel_path: exports/daily-profiles.xlsx
+  dashboard_path: exports/daily-dashboard.txt
+  rescore: true
+  recursive: false
+  email_enabled: false
+  email_to: null
+
+# Legacy alias for daily (still accepted)
 nightly:
   import_dir: data/inbox
-  excel_path: exports/nightly-profiles.xlsx
-  dashboard_path: exports/nightly-dashboard.txt
+  excel_path: exports/daily-profiles.xlsx
+  dashboard_path: exports/daily-dashboard.txt
   rescore: true
   recursive: false
 
