@@ -1,15 +1,27 @@
-"""Shared dependencies for the local REST API."""
+"""Shared dependencies for the local REST API.
+
+Typical wiring::
+
+    from profile_intelligence.api.context import create_api_context
+    from profile_intelligence.api.fastapi_app import create_fastapi_app
+
+    ctx = create_api_context()
+    app = create_fastapi_app(ctx)
+"""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 
+from profile_intelligence.application.use_cases.application import ApplicationService
 from profile_intelligence.application.use_cases.compare_service import CompareService
 from profile_intelligence.application.use_cases.daily_pipeline import DailyPipeline
 from profile_intelligence.application.use_cases.import_flow import ImportFlow
 from profile_intelligence.application.use_cases.import_service import ImportService
 from profile_intelligence.application.use_cases.profile_service import ProfileService
 from profile_intelligence.core.config import AppConfig
+from profile_intelligence.core.container import Container
+from profile_intelligence.core.types import PathLike
 from profile_intelligence.domain.interfaces.repositories import IProfileRepository
 from profile_intelligence.infrastructure.analysis import AnalysisService
 from profile_intelligence.infrastructure.auth import LocalAuthService
@@ -52,4 +64,46 @@ class ApiContext:
     daily_activity: DailyActivityStore | None = None
 
 
-__all__ = ["ApiContext"]
+def create_api_context(
+    *,
+    container: Container | None = None,
+    config_path: PathLike | None = None,
+    root_dir: PathLike | None = None,
+    start: bool = True,
+) -> ApiContext:
+    """Build an :class:`ApiContext` from the DI container.
+
+    When *container* is omitted, :func:`build_container` wires a fresh stack
+    under *root_dir* (or the process default). With ``start=True`` (default),
+    migrations run and importer plugins are discovered.
+    """
+    if container is None:
+        from profile_intelligence.bootstrap import build_container
+
+        container = build_container(config_path=config_path, root_dir=root_dir)
+
+    if start:
+        container.resolve(ApplicationService).start()
+
+    return ApiContext(
+        config=container.resolve(AppConfig),
+        profiles=container.resolve(ProfileService),
+        repository=container.resolve(IProfileRepository),
+        imports=container.resolve(ImportService),
+        import_flow=container.resolve(ImportFlow),
+        compare=container.resolve(CompareService),
+        dashboard=container.resolve(DashboardService),
+        analysis=container.resolve(AnalysisService),
+        importers=container.resolve(ImporterRegistry),
+        downloader=container.resolve(DocumentDownloader),
+        auth=container.resolve(LocalAuthService),
+        import_activity=container.resolve(ImportActivityStore),
+        database=container.resolve(Database),
+        reports_analytics=container.resolve(ReportsAnalyticsService),
+        backups=container.resolve(BackupService),
+        daily=container.resolve(DailyPipeline),
+        daily_activity=container.resolve(DailyActivityStore),
+    )
+
+
+__all__ = ["ApiContext", "create_api_context"]

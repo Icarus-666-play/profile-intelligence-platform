@@ -14,8 +14,18 @@ Default bind: `127.0.0.1:8765` (loopback). No authentication layer — see [SECU
 
 ## REST API
 
-Served by FastAPI (`profile_intelligence.api.main.create_app`). Handlers live in
-`profile_intelligence.api.routes` and are shared with the legacy WSGI `ApiApp`.
+Served by FastAPI. Typical wiring:
+
+```python
+from profile_intelligence.api.context import create_api_context
+from profile_intelligence.api.fastapi_app import create_fastapi_app
+
+ctx = create_api_context()
+app = create_fastapi_app(ctx)
+```
+
+Handlers live in `profile_intelligence.api.routes` and are shared with the
+legacy WSGI `ApiApp`.
 
 ```
 GET    /api/health

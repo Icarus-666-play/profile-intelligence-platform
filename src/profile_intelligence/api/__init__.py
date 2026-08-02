@@ -32,7 +32,7 @@ GET    /api/health
 from __future__ import annotations
 
 from profile_intelligence.api.app import API_ROUTES, ApiApp, CombinedApp
-from profile_intelligence.api.context import ApiContext
+from profile_intelligence.api.context import ApiContext, create_api_context
 from profile_intelligence.api.main import create_app, create_fastapi_app
 from profile_intelligence.api.server import serve_fastapi
 
@@ -41,6 +41,7 @@ __all__ = [
     "ApiApp",
     "ApiContext",
     "CombinedApp",
+    "create_api_context",
     "create_app",
     "create_fastapi_app",
     "serve_fastapi",

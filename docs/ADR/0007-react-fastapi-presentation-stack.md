@@ -17,7 +17,7 @@ The Milestone 2 stdlib WSGI HTML UI (ADR 0004) called use cases in-process and m
 ## Decision
 
 1. **Default UI** — `pip-app ui` serves a **React** SPA (Vite build under `src/profile_intelligence/web/dist`) over **FastAPI** / uvicorn.
-2. **REST** — FastAPI entry is `profile_intelligence.api.main` (`create_app`); routes reuse `profile_intelligence.api.routes` handlers (shared with the legacy WSGI `ApiApp`).
+2. **REST** — Wire with `create_api_context()` + `create_fastapi_app(ctx)` (`api/context.py`, `api/fastapi_app.py` / `api/main.py`); routes reuse `profile_intelligence.api.routes` handlers (shared with the legacy WSGI `ApiApp`).
 3. **Legacy** — `pip-app ui --legacy-wsgi` keeps the ADR 0004 HTML UI for fallback.
 4. **File storage** — `FileStorage` documents/ensures media, inbox, cache, and exports roots beside SQLite.
 

@@ -73,6 +73,19 @@ def test_api_main_create_app_alias(temp_root: Path) -> None:
         app_svc.shutdown()
 
 
+def test_create_api_context_and_fastapi_app(temp_root: Path) -> None:
+    """Exact wiring used by the FastAPI entry docs."""
+    from profile_intelligence.api.context import create_api_context
+    from profile_intelligence.api.fastapi_app import create_fastapi_app as build_app
+
+    ctx = create_api_context(root_dir=temp_root)
+    app = build_app(ctx, serve_spa=False)
+    client = TestClient(app)
+    assert client.get("/api/health").status_code == 200
+    assert ctx.daily is not None
+    assert ctx.database is not None
+
+
 def test_fastapi_health_and_dashboard(temp_root: Path) -> None:
     ctx, app_svc = _api_context(temp_root)
     try:

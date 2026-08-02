@@ -60,6 +60,14 @@ Default `pip-app ui` runs uvicorn + FastAPI, serving the React SPA from
 unchanged; React talks only to REST. File blobs live under `FileStorage`
 (`data/media`, `data/inbox`, `exports/`) beside the SQLite database.
 
+```python
+from profile_intelligence.api.context import create_api_context
+from profile_intelligence.api.fastapi_app import create_fastapi_app
+
+ctx = create_api_context()
+app = create_fastapi_app(ctx)
+```
+
 Source for the SPA: `frontend/` (Vite + React). Rebuild with
 `cd frontend && npm install && npm run build`.
 

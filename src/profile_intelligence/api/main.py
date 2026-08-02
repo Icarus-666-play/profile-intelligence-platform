@@ -18,7 +18,16 @@ SQLite
 File Storage
 ```
 
-Canonical module: ``profile_intelligence.api.main``.  
+Canonical module: ``profile_intelligence.api.main``.
+
+Typical wiring::
+
+    from profile_intelligence.api.context import create_api_context
+    from profile_intelligence.api.fastapi_app import create_fastapi_app
+
+    ctx = create_api_context()
+    app = create_fastapi_app(ctx)
+
 Handlers reuse :mod:`profile_intelligence.api.routes` so WSGI and FastAPI
 share one implementation.
 """
