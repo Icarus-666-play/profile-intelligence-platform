@@ -77,7 +77,7 @@ python -m profile_intelligence migrate
 # Load built-in demo profiles
 python -m profile_intelligence seed
 
-# List importer plugins (csv, excel)
+# List importer plugins (csv, excel + plugins/eurogirls|eros|custom)
 python -m profile_intelligence importers
 
 # Import sample profiles

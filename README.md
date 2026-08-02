@@ -13,6 +13,7 @@ Local-first desktop application for profile analysis, scoring, Excel reporting, 
 
 ### Milestone 1 — Core Profile Pipeline
 - Built-in **CSV** and **Excel** importer plugins
+- External plugin packages under `plugins/` (`eurogirls`, `eros`, `custom`)
 - Header-alias extractors → SQLite upsert
 - Completeness scoring (0–100)
 - Local profile search
