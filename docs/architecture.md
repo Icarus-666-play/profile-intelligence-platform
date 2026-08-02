@@ -68,6 +68,12 @@ ctx = create_api_context()
 app = create_fastapi_app(ctx)
 ```
 
+`api/main.py` (uvicorn target) is the same assignment:
+
+```python
+app = create_fastapi_app(create_api_context())
+```
+
 ```bash
 uvicorn profile_intelligence.api.main:app --reload
 ```

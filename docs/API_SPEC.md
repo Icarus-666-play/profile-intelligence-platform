@@ -24,7 +24,11 @@ ctx = create_api_context()
 app = create_fastapi_app(ctx)
 ```
 
-Or:
+`api/main.py` assigns the same ASGI app for uvicorn:
+
+```python
+app = create_fastapi_app(create_api_context())
+```
 
 ```bash
 uvicorn profile_intelligence.api.main:app --reload
@@ -57,7 +61,8 @@ POST   /api/plugins/reload
 
 Auth supports the React entry flow **Login (optional) → Home → Dashboard**. Default `auth.enabled: false` (guest continue).
 
-Implementation: `src/profile_intelligence/api/` (FastAPI entry in `main.py`).
+Implementation: `src/profile_intelligence/api/` (`fastapi_app.py` factory;
+`main.py` assigns `app = create_fastapi_app(create_api_context())`).
 
 ### Conventions
 

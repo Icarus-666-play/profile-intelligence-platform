@@ -7,7 +7,7 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from profile_intelligence.api import ApiContext, create_app, create_fastapi_app
-from profile_intelligence.api.main import create_app as create_app_from_main
+from profile_intelligence.api.fastapi_app import create_app as create_app_from_factory
 from profile_intelligence.application.use_cases.application import ApplicationService
 from profile_intelligence.application.use_cases.compare_service import CompareService
 from profile_intelligence.application.use_cases.import_flow import ImportFlow
@@ -61,12 +61,12 @@ def test_file_storage_roots(temp_root: Path) -> None:
     assert nested.parent == storage.inbox_dir
 
 
-def test_api_main_create_app_alias(temp_root: Path) -> None:
+def test_create_fastapi_app_alias(temp_root: Path) -> None:
     assert create_app is create_fastapi_app
-    assert create_app_from_main is create_app
+    assert create_app_from_factory is create_fastapi_app
     ctx, app_svc = _api_context(temp_root)
     try:
-        app = create_app_from_main(ctx, serve_spa=False)
+        app = create_fastapi_app(ctx, serve_spa=False)
         client = TestClient(app)
         assert client.get("/api/health").json()["stack"] == "fastapi"
     finally:
@@ -86,25 +86,26 @@ def test_create_api_context_and_fastapi_app(temp_root: Path) -> None:
     assert ctx.database is not None
 
 
-def test_uvicorn_main_app_entry(
-    temp_root: Path, monkeypatch: object
-) -> None:
-    """``uvicorn profile_intelligence.api.main:app`` resolves a FastAPI app."""
-    import profile_intelligence.api.main as main_mod
+def test_uvicorn_main_app_entry(temp_root: Path, monkeypatch: object) -> None:
+    """``main.py`` assigns ``app = create_fastapi_app(...)``."""
     from profile_intelligence.api.context import create_api_context
+    import profile_intelligence.api.main as main_mod
 
-    monkeypatch.setattr(main_mod, "_app", None)
+    # Rebuild the module-level app against the temp root (import already
+    # created one against the process default).
     monkeypatch.setattr(
         main_mod,
-        "create_default_app",
-        lambda: main_mod.create_app(
+        "app",
+        create_fastapi_app(
             create_api_context(root_dir=temp_root),
             serve_spa=False,
         ),
     )
-    loaded = getattr(main_mod, "app")
-    client = TestClient(loaded)
+    client = TestClient(main_mod.app)
     assert client.get("/api/health").json()["stack"] == "fastapi"
+    assert "create_fastapi_app" in Path(main_mod.__file__).read_text(
+        encoding="utf-8"
+    )
 
 
 def test_fastapi_health_and_dashboard(temp_root: Path) -> None:
