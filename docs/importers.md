@@ -1,24 +1,20 @@
 # Importer Plugin Framework
 
 Importers convert external files into raw row records. Persistence goes through
-the staged pipeline:
+the staged pipeline (`config/settings.yaml`):
 
 ```
-File → RawDocument → Parser → Normalizer → Validator → Profile Entity → Repository → SQLite
+pipeline:
+  - parser
+  - normalizer
+  - validator
+  - duplicate_detector
+  - scorer
+  - repository
 ```
 
-Processing core (`application/pipeline/ProcessingChain`):
-
-```
-Parser
- ↓
-Normalizer
- ↓
-Validator
-```
-
-`ImportService.import_path()` / `ImportPipeline.process()` run the full flow
-end-to-end (then Repository → SQLite). Parser uses a `ProfileImporter` plugin.
+`ImportService.import_path()` / `ImportPipeline.process()` run the full chain
+end-to-end via `ProcessingChain`. Parser uses a `ProfileImporter` plugin.
 
 ## Built-in plugins (Milestone 1)
 

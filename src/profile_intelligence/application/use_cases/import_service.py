@@ -1,21 +1,13 @@
 """Importer → Database facade over the staged import pipeline.
 
 ```
-File
- ↓
-RawDocument
- ↓
-Parser
- ↓
-Normalizer
- ↓
-Validator
- ↓
-Profile Entity
- ↓
-Repository
- ↓
-SQLite
+pipeline:
+  - parser
+  - normalizer
+  - validator
+  - duplicate_detector
+  - scorer
+  - repository
 ```
 """
 

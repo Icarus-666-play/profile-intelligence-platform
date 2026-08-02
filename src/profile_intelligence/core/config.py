@@ -1,7 +1,8 @@
 """YAML-backed application configuration.
 
 Shipped files under ``config/``:
-- ``settings.yaml`` — app, paths, database, importers, excel, ai, search, dashboard
+- ``settings.yaml`` — app, paths, database, importers, excel, ai, search,
+  dashboard, pipeline
 - ``logging.yaml`` — logging options
 - ``scoring.yaml`` — completeness scoring weights
 
@@ -180,6 +181,42 @@ class ScoringSection:
     )
 
 
+DEFAULT_PIPELINE_STAGES: tuple[str, ...] = (
+    "parser",
+    "normalizer",
+    "validator",
+    "duplicate_detector",
+    "scorer",
+    "repository",
+)
+
+
+@dataclass(frozen=True, slots=True)
+class PipelineSection:
+    """Ordered import processing stages after RawDocument load.
+
+    YAML list form::
+
+        pipeline:
+          - parser
+          - normalizer
+          - validator
+          - duplicate_detector
+          - scorer
+          - repository
+
+    Or mapping form::
+
+        pipeline:
+          stages:
+            - parser
+            - normalizer
+            ...
+    """
+
+    stages: tuple[str, ...] = DEFAULT_PIPELINE_STAGES
+
+
 @dataclass(frozen=True, slots=True)
 class AppConfig:
     """Fully typed application configuration."""
@@ -194,6 +231,7 @@ class AppConfig:
     ai: AISection = field(default_factory=AISection)
     search: SearchSection = field(default_factory=SearchSection)
     dashboard: DashboardSection = field(default_factory=DashboardSection)
+    pipeline: PipelineSection = field(default_factory=PipelineSection)
     config_dir: Path | None = None
     config_path: Path | None = None
     root_dir: Path = field(default_factory=_repo_root)
@@ -280,6 +318,26 @@ def _section(data: Mapping[str, Any], name: str) -> Mapping[str, Any]:
     return cast(Mapping[str, Any], value)
 
 
+def _parse_pipeline(raw: object) -> PipelineSection:
+    """Parse ``pipeline`` as a stage list or ``{stages: [...]}`` mapping."""
+    if raw is None:
+        return PipelineSection()
+    if isinstance(raw, list):
+        stages = tuple(str(item) for item in raw)
+        return PipelineSection(stages=stages or DEFAULT_PIPELINE_STAGES)
+    if isinstance(raw, Mapping):
+        stages_raw = raw.get("stages", DEFAULT_PIPELINE_STAGES)
+        if stages_raw is None:
+            return PipelineSection()
+        if not isinstance(stages_raw, list):
+            raise ConfigurationError("pipeline.stages must be a list of strings")
+        stages = tuple(str(item) for item in stages_raw)
+        return PipelineSection(stages=stages or DEFAULT_PIPELINE_STAGES)
+    raise ConfigurationError(
+        "pipeline must be a list of stages or a mapping with 'stages'"
+    )
+
+
 def _normalize_logging_raw(raw: Mapping[str, Any]) -> dict[str, Any]:
     """Accept flat logging.yaml or nested ``logging:`` mapping."""
     if "logging" in raw and isinstance(raw.get("logging"), Mapping):
@@ -354,6 +412,7 @@ def _build_config(
     ai_raw = _section(settings_raw, "ai")
     search_raw = _section(settings_raw, "search")
     dashboard_raw = _section(settings_raw, "dashboard")
+    pipeline_section = _parse_pipeline(settings_raw.get("pipeline"))
     logging_data = _normalize_logging_raw(logging_raw)
     scoring_data = _normalize_scoring_raw(scoring_raw)
 
@@ -474,6 +533,7 @@ def _build_config(
                 )
             ),
         ),
+        pipeline=pipeline_section,
         config_dir=config_dir,
         config_path=config_path,
         root_dir=root_dir,
@@ -523,6 +583,7 @@ def __getattr__(name: str) -> object:
 
 
 __all__ = [
+    "DEFAULT_PIPELINE_STAGES",
     "ENV_CONFIG_PATH",
     "ENV_DATA_DIR",
     "ENV_ENVIRONMENT",
@@ -539,6 +600,7 @@ __all__ = [
     "ImportersSection",
     "LoggingSection",
     "PathsSection",
+    "PipelineSection",
     "ScoringSection",
     "SearchSection",
 ]

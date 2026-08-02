@@ -1,19 +1,23 @@
 """End-to-end import pipeline.
 
 ```
+pipeline:
+  - parser
+  - normalizer
+  - validator
+  - duplicate_detector
+  - scorer
+  - repository
+```
+
+Flow:
+
+```
 File
  ↓
 RawDocument
  ↓
-Parser
- ↓
-Normalizer
- ↓
-Validator
- ↓
-Profile Entity
- ↓
-Repository
+ProcessingChain (configured stages)
  ↓
 SQLite
 ```
@@ -21,6 +25,7 @@ SQLite
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 
 from profile_intelligence.application.pipeline import (
@@ -30,7 +35,11 @@ from profile_intelligence.application.pipeline import (
     ProfileNormalizer,
     ProfileValidator,
 )
-from profile_intelligence.core.exceptions import RepositoryError
+from profile_intelligence.application.pipeline.duplicate_detector import (
+    DuplicateDetector,
+)
+from profile_intelligence.application.pipeline.scorer import ProfileScorer
+from profile_intelligence.core.config import DEFAULT_PIPELINE_STAGES
 from profile_intelligence.core.logging import get_logger
 from profile_intelligence.core.types import PathLike
 from profile_intelligence.domain.entities.profile import ProfileExtractor
@@ -60,13 +69,12 @@ class PipelineResult:
     skipped: int
     errors: tuple[str, ...] = field(default_factory=tuple)
     entities: tuple[Profile, ...] = field(default_factory=tuple)
+    stages_run: tuple[str, ...] = field(default_factory=tuple)
 
     @property
     def success(self) -> bool:
         """True when at least one profile entity was written."""
-        return (self.created + self.updated) > 0 and not (
-            self.created == 0 and self.updated == 0 and self.errors
-        )
+        return (self.created + self.updated) > 0
 
     @property
     def written(self) -> int:
@@ -75,33 +83,46 @@ class PipelineResult:
 
 
 class ImportPipeline:
-    """Orchestrates File → … → SQLite through explicit pipeline stages."""
+    """Orchestrates File → configured stages → SQLite."""
 
     def __init__(
         self,
         registry: ImporterRegistry,
         repository: ProfileRepository,
         *,
+        stages: Sequence[str] | None = None,
         parser: DocumentParser | None = None,
         normalizer: ProfileNormalizer | None = None,
         validator: ProfileValidator | None = None,
+        duplicate_detector: DuplicateDetector | None = None,
         extractor: ProfileExtractor | None = None,
-        scorer: CompletenessScorer | None = None,
+        scorer: CompletenessScorer | ProfileScorer | None = None,
         processing: ProcessingChain | None = None,
     ) -> None:
         self._registry = registry
         self._repository = repository
+        if stages is not None:
+            resolved_stages = tuple(stages)
+        else:
+            resolved_stages = DEFAULT_PIPELINE_STAGES
+
         self.processing = processing or ProcessingChain(
             registry,
+            repository,
+            stages=resolved_stages,
             parser=parser,
             normalizer=normalizer,
             validator=validator,
+            duplicate_detector=duplicate_detector,
             extractor=extractor,
+            scorer=scorer,
         )
+        if processing is not None:
+            self.processing.set_repository(repository)
+
         self.parser = self.processing.parser
         self.normalizer = self.processing.normalizer
         self.validator = self.processing.validator
-        self._scorer = scorer or CompletenessScorer()
 
     def process(
         self,
@@ -111,21 +132,23 @@ class ImportPipeline:
         plugin_name: str | None = None,
         plugin: ImporterPlugin | None = None,
     ) -> PipelineResult:
-        """Run the full pipeline for a single file."""
+        """Run the full configured pipeline for a single file."""
         document = RawDocument.from_path(
             path,
             source=source,
             plugin_name=plugin_name,
         )
-        logger.info("Pipeline start: %s", document.path)
-
-        # Parser → Normalizer → Validator
+        logger.info(
+            "Pipeline start: %s stages=%s",
+            document.path,
+            " → ".join(self.processing.stages),
+        )
         processed = self.processing.run(
             document,
             source=source,
             plugin=plugin,
         )
-        return self._persist(processed)
+        return self._to_result(processed)
 
     def load_document(
         self,
@@ -155,8 +178,13 @@ class ImportPipeline:
         source: str | None = None,
         plugin: ImporterPlugin | None = None,
     ) -> ProcessingResult:
-        """Run Parser → Normalizer → Validator only (no persistence)."""
-        return self.processing.run(document, source=source, plugin=plugin)
+        """Run stages through scorer (no repository persistence)."""
+        return self.processing.run(
+            document,
+            source=source,
+            plugin=plugin,
+            exclude_stages=("repository",),
+        )
 
     def parse_file(
         self,
@@ -183,43 +211,22 @@ class ImportPipeline:
         *,
         source: str | None = None,
     ) -> PipelineResult:
-        """Run Normalizer → Validator → Repository → SQLite for *parsed*."""
+        """Run post-parser stages (including repository) for *parsed*."""
         processed = self.processing.run_from_parsed(parsed, source=source)
-        return self._persist(processed)
+        return self._to_result(processed)
 
-    def _persist(self, processed: ProcessingResult) -> PipelineResult:
-        """Validator → Profile Entity → Repository → SQLite."""
-        created = 0
-        updated = 0
-        persist_errors: list[str] = []
-        entities: list[Profile] = []
-        for draft in processed.validated:
-            draft.score = self._scorer.score(draft)
-            try:
-                entity, was_created = self._repository.upsert_draft(draft)
-            except RepositoryError as exc:
-                persist_errors.append(str(exc))
-                logger.exception(
-                    "Repository stage failed for draft %r",
-                    draft.display_name,
-                )
-                continue
-            entities.append(entity)
-            if was_created:
-                created += 1
-            else:
-                updated += 1
-
-        errors = tuple(list(processed.errors) + persist_errors)
+    def _to_result(self, processed: ProcessingResult) -> PipelineResult:
+        """Map a :class:`ProcessingResult` into a :class:`PipelineResult`."""
         result = PipelineResult(
             path=str(processed.parsed.path),
             plugin=processed.parsed.plugin_name,
             records_read=processed.parsed.records_read,
-            created=created,
-            updated=updated,
+            created=processed.created,
+            updated=processed.updated,
             skipped=processed.skipped,
-            errors=errors,
-            entities=tuple(entities),
+            errors=processed.errors,
+            entities=processed.entities,
+            stages_run=processed.stages_run,
         )
         logger.info(
             "Pipeline complete: created=%d updated=%d skipped=%d errors=%d",

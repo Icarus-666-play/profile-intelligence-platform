@@ -21,6 +21,14 @@ def test_load_default_config(temp_root: Path) -> None:
     assert config.logging.level == "DEBUG"
     assert config.scoring.weights["email"] == 20
     assert config.config_dir == temp_root / "config"
+    assert config.pipeline.stages == (
+        "parser",
+        "normalizer",
+        "validator",
+        "duplicate_detector",
+        "scorer",
+        "repository",
+    )
 
 
 def test_local_settings_override(temp_root: Path) -> None:
@@ -31,6 +39,25 @@ def test_local_settings_override(temp_root: Path) -> None:
     )
     config = load_config(root_dir=temp_root)
     assert config.app.environment == "production"
+
+
+def test_pipeline_stages_mapping_form(temp_root: Path) -> None:
+    override = {
+        "pipeline": {
+            "stages": ["parser", "normalizer", "validator", "repository"],
+        }
+    }
+    (temp_root / "config" / "settings.local.yaml").write_text(
+        yaml.safe_dump(override),
+        encoding="utf-8",
+    )
+    config = load_config(root_dir=temp_root)
+    assert config.pipeline.stages == (
+        "parser",
+        "normalizer",
+        "validator",
+        "repository",
+    )
 
 
 def test_local_logging_override(temp_root: Path) -> None:

@@ -34,7 +34,7 @@ Production-quality, local-first desktop application for profile analysis.
 src/profile_intelligence/
   domain/          # entities, value_objects, interfaces
   application/
-    pipeline/      # Parser → Normalizer → Validator
+    pipeline/      # parser → … → repository stages
     use_cases/
   infrastructure/  # database, importers, excel, search, scoring, dashboard
   core/            # config, logging, DI, exceptions
@@ -54,10 +54,16 @@ See [docs/milestones.md](docs/milestones.md).
 
 ## Status
 
-Milestones 0 and 1 are complete. Core import flow:
+Milestones 0 and 1 are complete. Core import pipeline (`config/settings.yaml`):
 
 ```
-File → RawDocument → Parser → Normalizer → Validator → Profile Entity → Repository → SQLite
+pipeline:
+  - parser
+  - normalizer
+  - validator
+  - duplicate_detector
+  - scorer
+  - repository
 ```
 
 The local import → search → score → Excel export loop is operational via CLI.

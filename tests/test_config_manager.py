@@ -43,6 +43,8 @@ def test_config_manager_get_section(temp_root: Path) -> None:
     manager = ConfigManager(root_dir=temp_root, autoload=True)
     app = manager.get("app")
     assert app.short_name == "PIP"
+    pipeline = manager.get("pipeline")
+    assert pipeline.stages[0] == "parser"
     with pytest.raises(ConfigurationError, match="Unknown configuration section"):
         manager.get("missing")
 

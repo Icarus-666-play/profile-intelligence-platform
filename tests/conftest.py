@@ -56,6 +56,14 @@ def temp_root(tmp_path: Path) -> Path:
         "ai": {"enabled": False, "provider": None, "model": None},
         "search": {"default_limit": 50, "fuzzy": True},
         "dashboard": {"refresh_seconds": 30},
+        "pipeline": [
+            "parser",
+            "normalizer",
+            "validator",
+            "duplicate_detector",
+            "scorer",
+            "repository",
+        ],
     }
     logging_cfg = {
         "level": "DEBUG",

@@ -106,6 +106,24 @@ class ProfileRepository(DatabaseRepository[Profile]):
                 cause=exc,
             ) from exc
 
+    def find_existing(self, draft: ProfileDraft) -> Profile | None:
+        """Return an existing profile matching *draft*, if any.
+
+        Match order: ``external_id``, then ``display_name`` + ``source``.
+        """
+        try:
+            with self._database.session() as session:
+                existing = self._find_existing(session, draft)
+                if existing is None:
+                    return None
+                session.expunge(existing)
+                return existing
+        except Exception as exc:
+            raise RepositoryError(
+                "Failed to look up existing profile",
+                cause=exc,
+            ) from exc
+
     def upsert_draft(self, draft: ProfileDraft) -> tuple[Profile, bool]:
         """Insert or update a profile from a draft.
 

@@ -82,6 +82,7 @@ def build_container(
         lambda: ImportPipeline(
             registry=container.resolve(ImporterRegistry),
             repository=container.resolve(ProfileRepository),
+            stages=container.resolve(AppConfig).pipeline.stages,
             extractor=container.resolve(ProfileExtractor),
             scorer=container.resolve(CompletenessScorer),
         ),

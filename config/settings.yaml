@@ -40,3 +40,12 @@ search:
 
 dashboard:
   refresh_seconds: 30
+
+# Ordered import stages after File → RawDocument
+pipeline:
+  - parser
+  - normalizer
+  - validator
+  - duplicate_detector
+  - scorer
+  - repository

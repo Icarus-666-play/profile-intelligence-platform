@@ -127,7 +127,15 @@ def test_processing_chain_parser_normalizer_validator(temp_root: Path) -> None:
         "Bad,not-an-email\n",
         encoding="utf-8",
     )
-    chain = ProcessingChain(app.importers)
+    from profile_intelligence.infrastructure.database.repository import (
+        ProfileRepository,
+    )
+
+    chain = ProcessingChain(
+        app.importers,
+        container.resolve(ProfileRepository),
+        stages=["parser", "normalizer", "validator"],
+    )
     processed = chain.run(RawDocument.from_path(path), source="csv")
 
     assert processed.parsed.plugin_name == "csv"
@@ -135,4 +143,40 @@ def test_processing_chain_parser_normalizer_validator(temp_root: Path) -> None:
     assert len(processed.validated) == 1
     assert processed.validated[0].display_name == "Melinda Cross"
     assert any("email is invalid" in error for error in processed.validation_errors)
+    assert processed.stages_run == ("parser", "normalizer", "validator")
+    app.shutdown()
+
+
+def test_full_configured_pipeline_stages(temp_root: Path) -> None:
+    container = build_container(root_dir=temp_root)
+    app = container.resolve(ApplicationService)
+    app.start()
+
+    path = temp_root / "dupes.csv"
+    path.write_text(
+        "name,email\n"
+        "Ada Lovelace,ada@example.com\n"
+        "Ada Lovelace,ada@example.com\n",
+        encoding="utf-8",
+    )
+    pipeline = container.resolve(ImportPipeline)
+    result = pipeline.process(path, source="csv")
+
+    assert result.stages_run == (
+        "parser",
+        "normalizer",
+        "validator",
+        "duplicate_detector",
+        "scorer",
+        "repository",
+    )
+    assert result.created == 1
+    assert result.skipped >= 1
+    assert container.resolve(ProfileService).count() == 1
+
+    # Re-import same identity → update path through duplicate_detector
+    second = pipeline.process(path, source="csv")
+    assert second.updated == 1
+    assert second.created == 0
+    assert container.resolve(ProfileService).count() == 1
     app.shutdown()

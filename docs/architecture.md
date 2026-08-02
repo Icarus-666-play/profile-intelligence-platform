@@ -65,32 +65,20 @@ main()
 
 ## Core data flow
 
-```
-File
- ↓
-RawDocument
- ↓
-Parser
- ↓
-Normalizer
- ↓
-Validator
- ↓
-Profile Entity
- ↓
-Repository
- ↓
-SQLite
-```
-
-Processing core (`application/pipeline/ProcessingChain`):
+Configured in `config/settings.yaml` and run by `ProcessingChain`:
 
 ```
-Parser
- ↓
-Normalizer
- ↓
-Validator
+pipeline:
+  - parser
+  - normalizer
+  - validator
+  - duplicate_detector
+  - scorer
+  - repository
+```
+
+```
+File → RawDocument → ProcessingChain → SQLite
 ```
 
 Full persist path is `ImportPipeline` (`application/use_cases/`), exposed via `ImportService`:
@@ -99,11 +87,12 @@ Full persist path is `ImportPipeline` (`application/use_cases/`), exposed via `I
 |-------|------|-------|
 | File | path | — |
 | RawDocument | `RawDocument` | domain value object |
-| Parser | `DocumentParser` + `ProfileImporter` | application/pipeline |
-| Normalizer | `ProfileNormalizer` → `ProfileDraft` | application/pipeline |
-| Validator | `ProfileValidator` | application/pipeline |
-| Profile Entity | `Profile` ORM | infrastructure |
-| Repository | `ProfileRepository` | infrastructure |
+| parser | `DocumentParser` + `ProfileImporter` | application/pipeline |
+| normalizer | `ProfileNormalizer` → `ProfileDraft` | application/pipeline |
+| validator | `ProfileValidator` | application/pipeline |
+| duplicate_detector | `DuplicateDetector` | application/pipeline |
+| scorer | `ProfileScorer` | application/pipeline |
+| repository | `RepositoryStage` → `ProfileRepository` | application/pipeline + infrastructure |
 | SQLite | `Database` | infrastructure |
 
 ## Error model
