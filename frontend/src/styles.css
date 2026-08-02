@@ -13,6 +13,43 @@
   --font-display: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
   --font-body: "Manrope", "Avenir Next", "Segoe UI", sans-serif;
   --nav-width: 15.5rem;
+  --bg-1: #f4f7fb;
+  --bg-2: var(--mist);
+  --bg-3: #eef3f1;
+  --glow-a: rgba(13, 110, 106, 0.18);
+  --glow-b: rgba(217, 196, 163, 0.28);
+}
+
+html[data-theme='harbor'] {
+  --ink: #16324f;
+  --ink-soft: #4a6078;
+  --mist: #e4eef6;
+  --paper: #f5f9fc;
+  --teal: #1f6f8b;
+  --teal-deep: #15566c;
+  --sand: #b7c7d4;
+  --line: rgba(22, 50, 79, 0.14);
+  --bg-1: #eef4f8;
+  --bg-2: #e2ebf2;
+  --bg-3: #edf3f6;
+  --glow-a: rgba(31, 111, 139, 0.2);
+  --glow-b: rgba(183, 199, 212, 0.35);
+}
+
+html[data-theme='forest'] {
+  --ink: #1c3224;
+  --ink-soft: #45604f;
+  --mist: #e7f0e8;
+  --paper: #f6faf6;
+  --teal: #2f6b4f;
+  --teal-deep: #214c38;
+  --sand: #c5d2b8;
+  --line: rgba(28, 50, 36, 0.14);
+  --bg-1: #f2f7f2;
+  --bg-2: #e5eee6;
+  --bg-3: #eef4ef;
+  --glow-a: rgba(47, 107, 79, 0.2);
+  --glow-b: rgba(197, 210, 184, 0.35);
 }
 
 *,
@@ -32,10 +69,11 @@ body {
   color: var(--ink);
   font-family: var(--font-body);
   background:
-    radial-gradient(1200px 600px at 10% -10%, rgba(13, 110, 106, 0.18), transparent 55%),
-    radial-gradient(900px 500px at 100% 0%, rgba(217, 196, 163, 0.28), transparent 50%),
-    linear-gradient(160deg, #f4f7fb 0%, var(--mist) 45%, #eef3f1 100%);
+    radial-gradient(1200px 600px at 10% -10%, var(--glow-a), transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, var(--glow-b), transparent 50%),
+    linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 45%, var(--bg-3) 100%);
   background-attachment: fixed;
+  transition: background 280ms ease, color 280ms ease;
 }
 
 body::before {
@@ -267,6 +305,104 @@ a {
 
 .report-dist-table td:last-child {
   min-width: 8rem;
+}
+
+.settings-section {
+  scroll-margin-top: 1.25rem;
+}
+
+.settings-section-title {
+  margin: 0 0 0.85rem;
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  letter-spacing: -0.02em;
+}
+
+.settings-kv {
+  margin: 0 0 1rem;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.settings-kv > div {
+  display: grid;
+  grid-template-columns: 9rem minmax(0, 1fr);
+  gap: 0.75rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.settings-kv dt {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-weight: 600;
+}
+
+.settings-kv dd {
+  margin: 0;
+  word-break: break-word;
+}
+
+.settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin: 0.75rem 0 1rem;
+}
+
+.theme-options {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.theme-option {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.75rem;
+  align-items: start;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--line);
+  background: rgba(247, 249, 252, 0.7);
+  cursor: pointer;
+}
+
+.theme-option.active {
+  border-color: var(--teal);
+  background: rgba(13, 110, 106, 0.1);
+}
+
+.theme-option strong {
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.theme-option .muted {
+  display: block;
+}
+
+.settings-plugin-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.settings-plugin-list li {
+  display: grid;
+  gap: 0.15rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid var(--line);
+}
+
+@media (max-width: 720px) {
+  .settings-kv > div {
+    grid-template-columns: 1fr;
+  }
 }
 
 .report-bar-track {

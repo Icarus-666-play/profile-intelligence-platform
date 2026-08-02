@@ -39,6 +39,7 @@ from profile_intelligence.infrastructure.analysis import (
 )
 from profile_intelligence.infrastructure.auth import LocalAuthService
 from profile_intelligence.infrastructure.cache import create_cache
+from profile_intelligence.infrastructure.backups import BackupService
 from profile_intelligence.infrastructure.dashboard import (
     DashboardService,
     ReportsAnalyticsService,
@@ -300,6 +301,11 @@ def build_container(
             import_ledger=container.resolve(ImportFileLedger),
         ),
         name="reports_analytics",
+    )
+    container.register(
+        BackupService,
+        lambda: BackupService(container.resolve(AppConfig)),
+        name="backups",
     )
     container.register(
         InMemoryEventBus,

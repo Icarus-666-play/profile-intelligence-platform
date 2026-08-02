@@ -44,13 +44,16 @@ from profile_intelligence.api.routes import (
     auth_session,
     auth_status,
     compare_profiles,
+    create_backup,
     get_analytics,
     get_dashboard,
     get_profile,
+    get_settings,
     import_activity,
     import_files,
     import_url,
     import_url_preview,
+    list_backups,
     list_plugins,
     list_profiles,
     reload_plugins,
@@ -188,6 +191,18 @@ def create_fastapi_app(
     @app.post("/api/plugins/reload")
     async def api_plugins_reload() -> dict[str, Any]:
         return reload_plugins(ctx)
+
+    @app.get("/api/settings")
+    def api_settings() -> dict[str, Any]:
+        return get_settings(ctx)
+
+    @app.get("/api/backups")
+    def api_list_backups() -> dict[str, Any]:
+        return list_backups(ctx)
+
+    @app.post("/api/backups")
+    def api_create_backup() -> dict[str, Any]:
+        return create_backup(ctx)
 
     @app.get("/api/auth/status")
     def api_auth_status() -> dict[str, Any]:

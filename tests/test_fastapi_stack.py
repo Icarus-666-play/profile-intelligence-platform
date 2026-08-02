@@ -27,6 +27,7 @@ def _api_context(tmp_path: Path) -> tuple[ApiContext, ApplicationService]:
     container = build_container(root_dir=tmp_path)
     app = container.resolve(ApplicationService)
     app.start()
+    from profile_intelligence.infrastructure.backups import BackupService
     from profile_intelligence.infrastructure.dashboard import ReportsAnalyticsService
     from profile_intelligence.infrastructure.database.connection import Database
 
@@ -42,6 +43,7 @@ def _api_context(tmp_path: Path) -> tuple[ApiContext, ApplicationService]:
         importers=container.resolve(ImporterRegistry),
         database=container.resolve(Database),
         reports_analytics=container.resolve(ReportsAnalyticsService),
+        backups=container.resolve(BackupService),
     )
     return ctx, app
 

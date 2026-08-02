@@ -18,6 +18,9 @@ GET    /api/dashboard
 GET    /api/analytics
 GET    /api/plugins
 POST   /api/plugins/reload
+GET    /api/settings
+GET    /api/backups
+POST   /api/backups
 GET    /api/health
 ```
 """

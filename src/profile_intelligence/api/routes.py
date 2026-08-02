@@ -63,6 +63,12 @@ def dispatch(
         return 200, list_plugins(ctx)
     if method == "POST" and path == "/api/plugins/reload":
         return 200, reload_plugins(ctx)
+    if method == "GET" and path == "/api/settings":
+        return 200, get_settings(ctx)
+    if method == "GET" and path == "/api/backups":
+        return 200, list_backups(ctx)
+    if method == "POST" and path == "/api/backups":
+        return 200, create_backup(ctx)
     if method == "GET" and path == "/api/auth/status":
         return 200, auth_status(ctx)
     if method == "POST" and path == "/api/auth/login":
@@ -391,6 +397,69 @@ def list_plugins(ctx: ApiContext) -> dict[str, Any]:
     return {
         "count": len(plugins),
         "items": [plugin_to_dict(plugin) for plugin in plugins],
+    }
+
+
+def get_settings(ctx: ApiContext) -> dict[str, Any]:
+    """GET /api/settings — redacted configuration snapshot."""
+    from profile_intelligence.api.settings_snapshot import settings_to_dict
+    from profile_intelligence.infrastructure.backups import BackupService
+
+    payload = settings_to_dict(ctx.config)
+    backups = ctx.backups or BackupService(ctx.config)
+    payload["backups"]["items"] = [
+        {
+            "name": item.name,
+            "path": item.path,
+            "size_bytes": item.size_bytes,
+            "created_at": item.created_at,
+        }
+        for item in backups.list_backups()
+    ]
+    plugins = list_plugins(ctx)
+    payload["plugins"]["count"] = plugins["count"]
+    payload["plugins"]["items"] = plugins["items"]
+    return payload
+
+
+def list_backups(ctx: ApiContext) -> dict[str, Any]:
+    """GET /api/backups."""
+    from profile_intelligence.infrastructure.backups import BackupService
+
+    backups = ctx.backups or BackupService(ctx.config)
+    items = backups.list_backups()
+    return {
+        "directory": str(backups.backup_dir),
+        "count": len(items),
+        "items": [
+            {
+                "name": item.name,
+                "path": item.path,
+                "size_bytes": item.size_bytes,
+                "created_at": item.created_at,
+            }
+            for item in items
+        ],
+    }
+
+
+def create_backup(ctx: ApiContext) -> dict[str, Any]:
+    """POST /api/backups — copy the SQLite database into exports/backups."""
+    from profile_intelligence.infrastructure.backups import BackupService
+
+    backups = ctx.backups or BackupService(ctx.config)
+    try:
+        item = backups.create_backup()
+    except PipError as exc:
+        raise ApiError(str(exc), status=400) from exc
+    return {
+        "ok": True,
+        "backup": {
+            "name": item.name,
+            "path": item.path,
+            "size_bytes": item.size_bytes,
+            "created_at": item.created_at,
+        },
     }
 
 

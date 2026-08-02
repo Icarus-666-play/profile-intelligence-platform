@@ -168,14 +168,19 @@ Excel exports remain via `pip-app export` (legacy WSGI Reports still exposes fol
 
 ```
 Settings
-Active local configuration (read-only).
+Local configuration snapshot…
 
-App            …
-Database       …
-AI enabled     …
-Cache backend  …
-Daily paths    …
+Theme
+Database
+Plugins
+Scoring
+Import Folder
+Playwright
+Backups
 ```
+
+React primary surface. Data: `GET /api/settings`; backups via `GET/POST /api/backups`.
+Theme is browser-local. YAML under `config/` remains the durable source.
 
 ### Plugins `/plugins`
 

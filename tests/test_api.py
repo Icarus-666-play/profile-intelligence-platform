@@ -19,6 +19,7 @@ from profile_intelligence.core.config import AppConfig
 from profile_intelligence.domain.entities.profile import ProfileDraft
 from profile_intelligence.domain.interfaces.repositories import IProfileRepository
 from profile_intelligence.infrastructure.analysis import AnalysisService
+from profile_intelligence.infrastructure.backups import BackupService
 from profile_intelligence.infrastructure.dashboard import (
     DashboardService,
     ReportsAnalyticsService,
@@ -43,6 +44,7 @@ def _api_context(tmp_path: Path) -> tuple[ApiContext, ApplicationService, Any]:
         importers=container.resolve(ImporterRegistry),
         database=container.resolve(Database),
         reports_analytics=container.resolve(ReportsAnalyticsService),
+        backups=container.resolve(BackupService),
     )
     return ctx, app, container
 
@@ -86,6 +88,9 @@ def test_api_routes_catalog() -> None:
     assert ("GET", "/api/analytics") in methods_paths
     assert ("GET", "/api/plugins") in methods_paths
     assert ("POST", "/api/plugins/reload") in methods_paths
+    assert ("GET", "/api/settings") in methods_paths
+    assert ("GET", "/api/backups") in methods_paths
+    assert ("POST", "/api/backups") in methods_paths
 
 
 def test_profiles_dashboard_plugins_analytics(temp_root: Path) -> None:

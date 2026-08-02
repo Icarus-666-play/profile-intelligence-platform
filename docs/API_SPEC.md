@@ -187,6 +187,16 @@ Clear registry and rediscover built-ins + `plugins/` directory.
 { "reloaded": 7, "items": [ ... ] }
 ```
 
+### `GET /api/settings`
+
+Redacted configuration snapshot for Settings sections:
+
+`theme`, `database`, `plugins`, `scoring`, `import_folder`, `playwright`, `backups`, `meta`.
+
+### `GET /api/backups` / `POST /api/backups`
+
+List or create timestamped SQLite copies under `exports/backups/`.
+
 ## CLI (`pip-app`)
 
 | Command | Args / flags | Result |

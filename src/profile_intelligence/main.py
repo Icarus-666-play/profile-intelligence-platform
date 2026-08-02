@@ -36,6 +36,7 @@ from profile_intelligence.core.logging import get_logger
 from profile_intelligence.domain.interfaces.repositories import IProfileRepository
 from profile_intelligence.infrastructure.analysis import AnalysisService
 from profile_intelligence.infrastructure.auth import LocalAuthService
+from profile_intelligence.infrastructure.backups import BackupService
 from profile_intelligence.infrastructure.dashboard import (
     DashboardService,
     ReportsAnalyticsService,
@@ -656,6 +657,7 @@ def _cmd_ui(args: argparse.Namespace, container: Container) -> int:
         import_activity=container.resolve(ImportActivityStore),
         database=container.resolve(Database),
         reports_analytics=container.resolve(ReportsAnalyticsService),
+        backups=container.resolve(BackupService),
     )
     if bool(getattr(args, "legacy_wsgi", False)):
         context = UiContext(

@@ -35,6 +35,7 @@ def _ctx(
         auth_service = LocalAuthService(config)
     else:
         auth_service = container.resolve(LocalAuthService)
+    from profile_intelligence.infrastructure.backups import BackupService
     from profile_intelligence.infrastructure.dashboard import ReportsAnalyticsService
     from profile_intelligence.infrastructure.database.connection import Database
 
@@ -51,6 +52,7 @@ def _ctx(
         auth=auth_service,
         database=container.resolve(Database),
         reports_analytics=container.resolve(ReportsAnalyticsService),
+        backups=container.resolve(BackupService),
     )
     return ctx, app
 

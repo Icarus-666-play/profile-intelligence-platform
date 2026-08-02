@@ -12,6 +12,7 @@ from profile_intelligence.core.config import AppConfig
 from profile_intelligence.domain.interfaces.repositories import IProfileRepository
 from profile_intelligence.infrastructure.analysis import AnalysisService
 from profile_intelligence.infrastructure.auth import LocalAuthService
+from profile_intelligence.infrastructure.backups import BackupService
 from profile_intelligence.infrastructure.dashboard import (
     DashboardService,
     ReportsAnalyticsService,
@@ -42,6 +43,7 @@ class ApiContext:
     import_activity: ImportActivityStore | None = None
     database: Database | None = None
     reports_analytics: ReportsAnalyticsService | None = None
+    backups: BackupService | None = None
 
 
 __all__ = ["ApiContext"]

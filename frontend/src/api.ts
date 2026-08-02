@@ -233,9 +233,89 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return payload
 }
 
+export type SettingsSnapshot = {
+  theme: {
+    options: string[]
+    note: string
+    source: string
+  }
+  database: {
+    driver: string
+    path: string
+    url: string | null
+    echo_sql: boolean
+    timeout_seconds: number
+    foreign_keys: boolean
+    check_same_thread: boolean
+    exists: boolean
+  }
+  plugins: {
+    directory: string
+    auto_discover: boolean
+    enabled: string[]
+    note: string
+    count?: number
+    items?: PluginInfo[]
+  }
+  scoring: {
+    method: string
+    max_score: number
+    weights: Record<string, number>
+    daily_rescore: boolean
+    config_file: string
+  }
+  import_folder: {
+    path: string
+    configured: string
+    recursive: boolean
+    excel_path: string
+    dashboard_path: string
+    exists: boolean
+  }
+  playwright: {
+    available: boolean
+    enabled: boolean
+    status: string
+    note: string
+  }
+  backups: {
+    directory: string
+    log_backup_count: number
+    note: string
+    items: {
+      name: string
+      path: string
+      size_bytes: number
+      created_at: string | null
+    }[]
+  }
+  meta: {
+    app: string
+    version: string
+    environment: string
+    config_dir: string | null
+    root_dir: string
+  }
+}
+
 export const api = {
   health: () => request<{ status: string; stack: string }>('/api/health'),
   dashboard: () => request<DashboardSnapshot>('/api/dashboard'),
+  settings: () => request<SettingsSnapshot>('/api/settings'),
+  backups: () =>
+    request<{
+      directory: string
+      count: number
+      items: SettingsSnapshot['backups']['items']
+    }>('/api/backups'),
+  createBackup: () =>
+    request<{
+      ok: boolean
+      backup: SettingsSnapshot['backups']['items'][number]
+    }>('/api/backups', {
+      method: 'POST',
+      body: JSON.stringify({}),
+    }),
   profiles: (params?: { q?: string; limit?: number; offset?: number }) => {
     const query = new URLSearchParams()
     if (params?.q) query.set('q', params.q)

@@ -47,6 +47,7 @@ Requirements for Profile Intelligence Platform through Milestone 2 (shipped) and
 | FR-5.1 | Local multi-page UI: Dashboard, Search, Import, Compare, Reports, Settings, Plugins, Logs, About | Done |
 | FR-5.2 | Bind loopback by default (`127.0.0.1`) | Done |
 | FR-5.3 | Reports panels: Countries, Average Prices, Languages, Services, Duplicates, Monthly Imports, Import Trend | Done |
+| FR-5.4 | Settings sections: Theme, Database, Plugins, Scoring, Import Folder, Playwright, Backups | Done |
 
 ### FR-6 Daily automation
 

@@ -48,6 +48,7 @@ def _ctx(
         downloader = _LocalDownloader(csv_path)
     else:
         downloader = container.resolve(DocumentDownloader)
+    from profile_intelligence.infrastructure.backups import BackupService
     from profile_intelligence.infrastructure.dashboard import ReportsAnalyticsService
     from profile_intelligence.infrastructure.database.connection import Database
 
@@ -66,6 +67,7 @@ def _ctx(
         import_activity=container.resolve(ImportActivityStore),
         database=container.resolve(Database),
         reports_analytics=container.resolve(ReportsAnalyticsService),
+        backups=container.resolve(BackupService),
     )
     return ctx, app
 
