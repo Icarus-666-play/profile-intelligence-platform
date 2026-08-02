@@ -7,7 +7,7 @@ lazily. This keeps wiring explicit without requiring a heavy DI framework.
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator, MutableMapping
-from typing import Any, TypeVar, cast
+from typing import Any, TypeVar
 
 from profile_intelligence.core.exceptions import PipError
 from profile_intelligence.core.logging import get_logger
@@ -31,12 +31,15 @@ class Container:
 
     def register(
         self,
-        service_type: type[T],
-        factory: Callable[[], T],
+        service_type: type[object],
+        factory: Callable[[], object],
         *,
         name: str | None = None,
     ) -> None:
-        """Register a factory that produces ``service_type`` instances."""
+        """Register a factory that produces ``service_type`` instances.
+
+        ``service_type`` may be a concrete class or an abstract port (ABC).
+        """
         if service_type in self._factories or service_type in self._singletons:
             raise ContainerError(
                 f"Service already registered: {service_type.__name__}"
@@ -48,8 +51,8 @@ class Container:
 
     def register_instance(
         self,
-        service_type: type[T],
-        instance: T,
+        service_type: type[object],
+        instance: object,
         *,
         name: str | None = None,
     ) -> None:
@@ -63,17 +66,21 @@ class Container:
             self._aliases[name] = service_type
         logger.debug("Registered instance for %s", service_type.__name__)
 
-    def resolve(self, service_type: type[T]) -> T:
-        """Resolve a service by type, creating a singleton on first use."""
+    def resolve(self, service_type: type[object]) -> Any:  # noqa: ANN401
+        """Resolve a service by type, creating a singleton on first use.
+
+        Returns ``Any`` so abstract ports (Protocols / ABCs) can be resolved
+        without mypy ``type-abstract`` errors at call sites.
+        """
         if service_type in self._singletons:
-            return cast(T, self._singletons[service_type])
+            return self._singletons[service_type]
         if service_type not in self._factories:
             raise ContainerError(
                 f"No service registered for type: {service_type.__name__}"
             )
         instance = self._factories[service_type]()
         self._singletons[service_type] = instance
-        return cast(T, instance)
+        return instance
 
     def resolve_by_name(self, name: str) -> object:
         """Resolve a service by optional registration name."""

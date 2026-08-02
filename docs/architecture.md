@@ -9,7 +9,7 @@ src/profile_intelligence/
   domain/
     entities/          # ProfileDraft (+ Rate→…→Availability), ProfileExtractor
     value_objects/     # RawDocument, ImportResult, Rate/Service/Review/Photo/Availability
-    interfaces/        # ImporterPlugin, ProfileImporter, Repository ports
+    interfaces/        # ImporterPlugin, IProfile/IRate/IService/IReview/IPhotoRepository
   application/
     pipeline/          # Parser → Normalizer → Validator
     use_cases/         # Import, search, compare, export, dashboard
@@ -43,7 +43,7 @@ Supporting trees:
 | Local-first | SQLite file under `data/`; no required network services |
 | Clean architecture | Domain ← Application ← Infrastructure |
 | Plugin importers | `ProfileImporter` port + `ImporterRegistry` discovery |
-| Repository pattern | Domain `Repository` port / infrastructure `SQLiteRepository` |
+| Repository pattern | `IProfileRepository` (+ child ports) → `SQLiteRepository` adapters |
 | Dependency injection | Lightweight `Container` in `core.container` |
 | Typed | Python 3.12 + `py.typed`, mypy strict |
 | Configurable | YAML + env overrides |
@@ -93,7 +93,7 @@ Full persist path is `ImportPipeline` (`application/use_cases/`), exposed via `I
 | validator | `ProfileValidator` | application/pipeline |
 | duplicate_detector | `DuplicateDetector` | application/pipeline |
 | scorer | `ProfileScorer` | application/pipeline |
-| repository | `RepositoryStage` → `SQLiteRepository` | application/pipeline + infrastructure |
+| repository | `RepositoryStage` → `IProfileRepository` | application/pipeline + infrastructure |
 | SQLite | `Database` | infrastructure |
 
 ## Error model

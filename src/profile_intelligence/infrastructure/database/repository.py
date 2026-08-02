@@ -11,21 +11,16 @@ from profile_intelligence.core.exceptions import RepositoryError
 from profile_intelligence.core.logging import get_logger
 from profile_intelligence.domain.entities.profile import ProfileDraft
 from profile_intelligence.domain.interfaces.repositories import Repository
-from profile_intelligence.domain.value_objects.profile_children import (
-    Availability,
-    Photo,
-    Rate,
-    Review,
-    Service,
+from profile_intelligence.infrastructure.database.child_repositories import (
+    replace_photos_in_session,
+    replace_rates_in_session,
+    replace_reviews_in_session,
+    replace_services_in_session,
 )
 from profile_intelligence.infrastructure.database.connection import Database
 from profile_intelligence.infrastructure.database.models import Profile
 from profile_intelligence.infrastructure.database.models_profile_children import (
     ProfileAvailability,
-    ProfilePhoto,
-    ProfileRate,
-    ProfileReview,
-    ProfileService,
 )
 
 logger = get_logger(__name__)
@@ -39,7 +34,7 @@ class DatabaseRepository[T](Repository[T]):
 
 
 class SQLiteRepository(DatabaseRepository[Profile]):
-    """SQLite repository for the Profile aggregate.
+    """SQLite adapter for ``IProfileRepository``.
 
     Persists ``Profile`` and child collections::
 
@@ -224,35 +219,27 @@ class SQLiteRepository(DatabaseRepository[Profile]):
         profile_id: int,
         draft: ProfileDraft,
     ) -> None:
-        """Delete existing children and insert draft children in one session."""
-        session.execute(
-            delete(ProfileRate).where(ProfileRate.profile_id == profile_id)
-        )
-        session.execute(
-            delete(ProfileService).where(ProfileService.profile_id == profile_id)
-        )
-        session.execute(
-            delete(ProfileReview).where(ProfileReview.profile_id == profile_id)
-        )
-        session.execute(
-            delete(ProfilePhoto).where(ProfilePhoto.profile_id == profile_id)
-        )
+        """Replace child collections via child-repository session helpers."""
+        replace_rates_in_session(session, profile_id, draft.rates)
+        replace_services_in_session(session, profile_id, draft.services)
+        replace_reviews_in_session(session, profile_id, draft.reviews)
+        replace_photos_in_session(session, profile_id, draft.photos)
         session.execute(
             delete(ProfileAvailability).where(
                 ProfileAvailability.profile_id == profile_id
             )
         )
-
-        for rate in draft.rates:
-            session.add(_rate_to_model(profile_id, rate))
-        for service in draft.services:
-            session.add(_service_to_model(profile_id, service))
-        for review in draft.reviews:
-            session.add(_review_to_model(profile_id, review))
-        for photo in draft.photos:
-            session.add(_photo_to_model(profile_id, photo))
         for slot in draft.availability:
-            session.add(_availability_to_model(profile_id, slot))
+            session.add(
+                ProfileAvailability(
+                    profile_id=profile_id,
+                    day_of_week=slot.day_of_week,
+                    start_time=slot.start_time,
+                    end_time=slot.end_time,
+                    status=slot.status,
+                    notes=slot.notes,
+                )
+            )
 
 
 def _draft_to_columns(draft: ProfileDraft) -> dict[str, object | None]:
@@ -270,60 +257,6 @@ def _draft_to_columns(draft: ProfileDraft) -> dict[str, object | None]:
         "raw_json": draft.raw_json,
         "score": draft.score,
     }
-
-
-def _rate_to_model(profile_id: int, rate: Rate) -> ProfileRate:
-    return ProfileRate(
-        profile_id=profile_id,
-        duration=rate.duration,
-        price=rate.price,
-        currency=rate.currency,
-        incall=rate.incall,
-        outcall=rate.outcall,
-    )
-
-
-def _service_to_model(profile_id: int, service: Service) -> ProfileService:
-    return ProfileService(
-        profile_id=profile_id,
-        name=service.name,
-        available=service.available,
-    )
-
-
-def _review_to_model(profile_id: int, review: Review) -> ProfileReview:
-    return ProfileReview(
-        profile_id=profile_id,
-        text=review.text,
-        author=review.author,
-        rating=review.rating,
-        reviewed_at=review.reviewed_at,
-        source_url=review.source_url,
-    )
-
-
-def _photo_to_model(profile_id: int, photo: Photo) -> ProfilePhoto:
-    return ProfilePhoto(
-        profile_id=profile_id,
-        original_url=photo.original_url,
-        sha256=photo.sha256,
-        role=photo.role,
-        content_type=photo.content_type,
-    )
-
-
-def _availability_to_model(
-    profile_id: int,
-    slot: Availability,
-) -> ProfileAvailability:
-    return ProfileAvailability(
-        profile_id=profile_id,
-        day_of_week=slot.day_of_week,
-        start_time=slot.start_time,
-        end_time=slot.end_time,
-        status=slot.status,
-        notes=slot.notes,
-    )
 
 
 # Backward-compatible alias.

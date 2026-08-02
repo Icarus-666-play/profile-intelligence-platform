@@ -35,12 +35,14 @@ from profile_intelligence.core.exceptions import ConfigurationError
 from profile_intelligence.core.logging import get_logger
 from profile_intelligence.domain.entities.profile import ProfileDraft, ProfileExtractor
 from profile_intelligence.domain.interfaces.importers import ImporterPlugin
+from profile_intelligence.domain.interfaces.repositories import (
+    IProfileRepository,
+    ProfileEntity,
+)
 from profile_intelligence.domain.value_objects.documents import (
     ParsedDocument,
     RawDocument,
 )
-from profile_intelligence.infrastructure.database.models import Profile
-from profile_intelligence.infrastructure.database.repository import SQLiteRepository
 from profile_intelligence.infrastructure.importers.registry import ImporterRegistry
 from profile_intelligence.infrastructure.scoring.completeness import CompletenessScorer
 
@@ -58,7 +60,7 @@ class ProcessingResult:
     validated: tuple[ProfileDraft, ...]
     unique: tuple[ProfileDraft, ...]
     scored: tuple[ProfileDraft, ...]
-    entities: tuple[Profile, ...] = ()
+    entities: tuple[ProfileEntity, ...] = ()
     created: int = 0
     updated: int = 0
     normalize_errors: tuple[str, ...] = field(default_factory=tuple)
@@ -104,7 +106,7 @@ class ProcessingChain:
     def __init__(
         self,
         registry: ImporterRegistry,
-        repository: SQLiteRepository | None = None,
+        repository: IProfileRepository | None = None,
         *,
         stages: Sequence[str] | None = None,
         parser: DocumentParser | None = None,
@@ -139,11 +141,11 @@ class ProcessingChain:
         if "repository" in self.stages and self.repository_stage is None:
             if repository is None:
                 raise ConfigurationError(
-                    "pipeline stage 'repository' requires a SQLiteRepository"
+                    "pipeline stage 'repository' requires an IProfileRepository"
                 )
             self.repository_stage = RepositoryStage(repository)
 
-    def set_repository(self, repository: SQLiteRepository) -> None:
+    def set_repository(self, repository: IProfileRepository) -> None:
         """Attach or replace the repository used by later stages."""
         self._repository = repository
         self.duplicate_detector = DuplicateDetector(repository)

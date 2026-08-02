@@ -7,8 +7,10 @@ from dataclasses import dataclass
 
 from profile_intelligence.core.exceptions import ValidationError
 from profile_intelligence.core.logging import get_logger
-from profile_intelligence.infrastructure.database.models import Profile
-from profile_intelligence.infrastructure.database.repository import SQLiteRepository
+from profile_intelligence.domain.interfaces.repositories import (
+    IProfileRepository,
+    ProfileEntity,
+)
 
 logger = get_logger(__name__)
 
@@ -61,7 +63,7 @@ class ProfileComparison:
 class CompareService:
     """Build structured comparisons between stored profiles."""
 
-    def __init__(self, repository: SQLiteRepository) -> None:
+    def __init__(self, repository: IProfileRepository) -> None:
         self._repository = repository
 
     def compare_ids(self, left_id: int, right_id: int) -> ProfileComparison:
@@ -78,8 +80,8 @@ class CompareService:
 
     def compare_profiles(
         self,
-        left: Profile,
-        right: Profile,
+        left: ProfileEntity,
+        right: ProfileEntity,
     ) -> ProfileComparison:
         """Compare two profile entities field-by-field."""
         if left.id is None or right.id is None:
@@ -152,7 +154,7 @@ def _fmt(value: object) -> str:
     return text or "-"
 
 
-def _avg_score(profiles: Sequence[Profile]) -> str:
+def _avg_score(profiles: Sequence[ProfileEntity]) -> str:
     scores = [row.score for row in profiles if row.score is not None]
     if not scores:
         return "-"

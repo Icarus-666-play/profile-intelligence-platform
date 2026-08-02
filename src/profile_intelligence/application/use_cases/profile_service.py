@@ -4,11 +4,14 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from pathlib import Path
+from typing import cast
 
 from profile_intelligence.core.logging import get_logger
 from profile_intelligence.core.types import PathLike
-from profile_intelligence.infrastructure.database.models import Profile
-from profile_intelligence.infrastructure.database.repository import SQLiteRepository
+from profile_intelligence.domain.interfaces.repositories import (
+    IProfileRepository,
+    ProfileEntity,
+)
 from profile_intelligence.infrastructure.excel.exporter import ExcelExporter
 from profile_intelligence.infrastructure.scoring.completeness import CompletenessScorer
 from profile_intelligence.infrastructure.search.service import ProfileSearchService
@@ -21,14 +24,14 @@ class ProfileService:
 
     def __init__(
         self,
-        repository: SQLiteRepository,
+        repository: IProfileRepository,
         search_service: ProfileSearchService,
         exporter: ExcelExporter,
         scorer: CompletenessScorer | None = None,
     ) -> None:
         self._repository = repository
         self._search = search_service
-        self._exporter = exporter
+        self._excel = exporter
         self._scorer = scorer or CompletenessScorer()
 
     def list_profiles(
@@ -36,7 +39,7 @@ class ProfileService:
         *,
         limit: int = 100,
         offset: int = 0,
-    ) -> Sequence[Profile]:
+    ) -> Sequence[ProfileEntity]:
         """Return a page of profiles."""
         return self._repository.list_all(limit=limit, offset=offset)
 
@@ -49,9 +52,12 @@ class ProfileService:
         query: str,
         *,
         limit: int | None = None,
-    ) -> Sequence[Profile]:
+    ) -> Sequence[ProfileEntity]:
         """Search profiles."""
-        return self._search.search(query, limit=limit)
+        return cast(
+            Sequence[ProfileEntity],
+            self._search.search(query, limit=limit),
+        )
 
     def export_excel(
         self,
@@ -61,7 +67,7 @@ class ProfileService:
     ) -> Path:
         """Export profiles to Excel."""
         profiles = self._repository.list_all(limit=limit, offset=0)
-        return self._exporter.export(profiles, output_path)
+        return self._excel.export(profiles, output_path)
 
     def rescore_all(self, *, limit: int = 100_000) -> int:
         """Recompute completeness scores for all profiles."""

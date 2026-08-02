@@ -25,6 +25,12 @@ from profile_intelligence.infrastructure.database.models_profile_children import
     ProfileReview,
     ProfileService,
 )
+from profile_intelligence.infrastructure.database.child_repositories import (
+    SQLitePhotoRepository,
+    SQLiteRateRepository,
+    SQLiteReviewRepository,
+    SQLiteServiceRepository,
+)
 from profile_intelligence.infrastructure.database.repository import (
     DatabaseRepository,
     ProfileRepository,
@@ -54,7 +60,11 @@ __all__ = [
     "ProfileReview",
     "ProfileService",
     "Repository",
+    "SQLitePhotoRepository",
+    "SQLiteRateRepository",
     "SQLiteRepository",
+    "SQLiteReviewRepository",
+    "SQLiteServiceRepository",
     "SchemaMigration",
     "SeedResult",
     "create_database",

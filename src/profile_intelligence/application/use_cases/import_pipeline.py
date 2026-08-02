@@ -49,13 +49,15 @@ from profile_intelligence.core.logging import get_logger
 from profile_intelligence.core.types import PathLike
 from profile_intelligence.domain.entities.profile import ProfileExtractor
 from profile_intelligence.domain.interfaces.importers import ImporterPlugin
+from profile_intelligence.domain.interfaces.repositories import (
+    IProfileRepository,
+    ProfileEntity,
+)
 from profile_intelligence.domain.value_objects.documents import (
     ParsedDocument,
     RawDocument,
 )
 from profile_intelligence.domain.value_objects.importing import ImportResult
-from profile_intelligence.infrastructure.database.models import Profile
-from profile_intelligence.infrastructure.database.repository import SQLiteRepository
 from profile_intelligence.infrastructure.importers.registry import ImporterRegistry
 from profile_intelligence.infrastructure.scoring.completeness import CompletenessScorer
 
@@ -73,7 +75,7 @@ class PipelineResult:
     updated: int
     skipped: int
     errors: tuple[str, ...] = field(default_factory=tuple)
-    entities: tuple[Profile, ...] = field(default_factory=tuple)
+    entities: tuple[ProfileEntity, ...] = field(default_factory=tuple)
     stages_run: tuple[str, ...] = field(default_factory=tuple)
     stats: ImportStats = field(default_factory=ImportStats)
 
@@ -94,7 +96,7 @@ class ImportPipeline:
     def __init__(
         self,
         registry: ImporterRegistry,
-        repository: SQLiteRepository,
+        repository: IProfileRepository,
         *,
         stages: Sequence[str] | None = None,
         parser: DocumentParser | None = None,

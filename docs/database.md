@@ -51,12 +51,32 @@ Availability
 
 `Repository[T]` defines `get_by_id`, `list_all`, `add`, and `delete`.
 
-`SQLiteRepository` is the SQLite adapter for the Profile aggregate. Its `upsert_draft` upserts the parent row and **replaces** all child collections in the same session. (`ProfileRepository` remains a compatibility alias.)
+Domain ports (interfaces):
+
+```
+IProfileRepository
+IRateRepository
+IServiceRepository
+IReviewRepository
+IPhotoRepository
+```
+
+SQLite adapters:
+
+| Port | Adapter |
+|------|---------|
+| `IProfileRepository` | `SQLiteRepository` |
+| `IRateRepository` | `SQLiteRateRepository` |
+| `IServiceRepository` | `SQLiteServiceRepository` |
+| `IReviewRepository` | `SQLiteReviewRepository` |
+| `IPhotoRepository` | `SQLitePhotoRepository` |
+
+`SQLiteRepository.upsert_draft` upserts the parent and replaces child collections in one session (delegating to the child session helpers). `ProfileRepository` remains a compatibility alias for `SQLiteRepository`.
 
 ```
 Domain ProfileDraft
  ↓
-SQLiteRepository
+IProfileRepository  (SQLiteRepository)
  ↓
 SQLite
 ```
@@ -68,7 +88,8 @@ src/profile_intelligence/infrastructure/database/
   connection.py              # engine + session management
   models.py                  # Base, Profile, MediaAsset
   models_profile_children.py # Rate / Service / Review / Photo / Availability
-  repository.py              # SQLiteRepository (+ DatabaseRepository base)
+  repository.py              # SQLiteRepository (IProfileRepository)
+  child_repositories.py      # Rate / Service / Review / Photo adapters
   migrate.py                 # migration framework + versions
   seed.py                    # demo data seeder
 ```

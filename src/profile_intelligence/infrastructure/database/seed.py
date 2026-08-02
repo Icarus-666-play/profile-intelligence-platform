@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 from profile_intelligence.core.logging import get_logger
 from profile_intelligence.domain.entities.profile import ProfileDraft
-from profile_intelligence.infrastructure.database.repository import SQLiteRepository
+from profile_intelligence.domain.interfaces.repositories import IProfileRepository
 from profile_intelligence.infrastructure.scoring.completeness import CompletenessScorer
 
 logger = get_logger(__name__)
@@ -103,7 +103,7 @@ class DatabaseSeeder:
 
     def __init__(
         self,
-        repository: SQLiteRepository,
+        repository: IProfileRepository,
         scorer: CompletenessScorer | None = None,
         *,
         source: str = "seed",
@@ -169,7 +169,7 @@ class DatabaseSeeder:
 
 
 def seed_database(
-    repository: SQLiteRepository,
+    repository: IProfileRepository,
     *,
     only_if_empty: bool = False,
     profiles: Sequence[SeedProfile] | None = None,

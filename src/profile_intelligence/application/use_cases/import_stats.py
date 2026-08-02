@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from profile_intelligence.domain.entities.profile import ProfileDraft
-from profile_intelligence.infrastructure.database.models import Profile
+from profile_intelligence.domain.interfaces.repositories import ProfileEntity
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,7 +79,7 @@ class ImportStats:
 def collect_import_stats(
     *,
     drafts: Sequence[ProfileDraft] = (),
-    entities: Sequence[Profile] = (),
+    entities: Sequence[ProfileEntity] = (),
     duplicates: int = 0,
     profiles: int | None = None,
     execution_seconds: float = 0.0,

@@ -7,8 +7,10 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 from profile_intelligence.core.logging import get_logger
-from profile_intelligence.infrastructure.database.models import Profile
-from profile_intelligence.infrastructure.database.repository import SQLiteRepository
+from profile_intelligence.domain.interfaces.repositories import (
+    IProfileRepository,
+    ProfileEntity,
+)
 
 logger = get_logger(__name__)
 
@@ -21,14 +23,14 @@ class DashboardSnapshot:
     scored_profiles: int
     average_score: float | None
     by_source: tuple[tuple[str, int], ...]
-    top_profiles: tuple[Profile, ...]
-    incomplete_profiles: tuple[Profile, ...]
+    top_profiles: tuple[ProfileEntity, ...]
+    incomplete_profiles: tuple[ProfileEntity, ...]
 
 
 class DashboardService:
     """Build local dashboard snapshots for CLI / future UI."""
 
-    def __init__(self, repository: SQLiteRepository) -> None:
+    def __init__(self, repository: IProfileRepository) -> None:
         self._repository = repository
 
     def snapshot(
@@ -123,7 +125,7 @@ class DashboardService:
         return "\n".join(lines)
 
 
-def _profile_lines(profiles: Sequence[Profile]) -> list[str]:
+def _profile_lines(profiles: Sequence[ProfileEntity]) -> list[str]:
     lines: list[str] = []
     for profile in profiles:
         score = profile.score if profile.score is not None else "-"

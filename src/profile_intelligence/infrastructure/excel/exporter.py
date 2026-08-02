@@ -13,7 +13,7 @@ from profile_intelligence.core.config import AppConfig
 from profile_intelligence.core.exceptions import ExcelError
 from profile_intelligence.core.logging import get_logger
 from profile_intelligence.core.types import PathLike
-from profile_intelligence.infrastructure.database.models import Profile
+from profile_intelligence.domain.interfaces.repositories import ProfileEntity
 
 logger = get_logger(__name__)
 
@@ -43,7 +43,7 @@ class ExcelExporter:
 
     def export(
         self,
-        profiles: Sequence[Profile],
+        profiles: Sequence[ProfileEntity],
         output_path: PathLike | None = None,
         *,
         sheet_name: str | None = None,

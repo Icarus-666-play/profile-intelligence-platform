@@ -145,23 +145,9 @@ class MediaAsset(Base):
         )
 
 
-# Register Profile child mappers for relationship resolution.
-from profile_intelligence.infrastructure.database.models_profile_children import (  # noqa: E402
-    ProfileAvailability,
-    ProfilePhoto,
-    ProfileRate,
-    ProfileReview,
-    ProfileService,
-)
-
 __all__ = [
     "Base",
     "MediaAsset",
     "Profile",
-    "ProfileAvailability",
-    "ProfilePhoto",
-    "ProfileRate",
-    "ProfileReview",
-    "ProfileService",
     "SchemaMigration",
 ]

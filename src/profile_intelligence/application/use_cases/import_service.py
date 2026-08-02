@@ -26,12 +26,12 @@ from profile_intelligence.core.logging import get_logger
 from profile_intelligence.core.types import PathLike
 from profile_intelligence.domain.entities.profile import ProfileExtractor
 from profile_intelligence.domain.interfaces.importers import ImporterPlugin
+from profile_intelligence.domain.interfaces.repositories import IProfileRepository
 from profile_intelligence.domain.value_objects.documents import (
     ParsedDocument,
     RawDocument,
 )
 from profile_intelligence.domain.value_objects.importing import ImportResult
-from profile_intelligence.infrastructure.database.repository import SQLiteRepository
 from profile_intelligence.infrastructure.importers.registry import ImporterRegistry
 from profile_intelligence.infrastructure.scoring.completeness import CompletenessScorer
 
@@ -74,7 +74,7 @@ class ImportService:
     def __init__(
         self,
         registry: ImporterRegistry,
-        repository: SQLiteRepository,
+        repository: IProfileRepository,
         extractor: ProfileExtractor | None = None,
         scorer: CompletenessScorer | None = None,
         pipeline: ImportPipeline | None = None,
@@ -248,7 +248,7 @@ class ImportService:
         plugin_name: str,
         source: str,
     ) -> ImportSummary:
-        """Normalizer → Validator → Profile Entity → SQLiteRepository → SQLite."""
+        """Normalizer → Validator → Profile Entity → IProfileRepository → SQLite."""
         document = RawDocument.reference(
             path,
             source=source,

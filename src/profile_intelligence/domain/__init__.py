@@ -8,6 +8,12 @@ from profile_intelligence.domain.interfaces.importers import (
     ProfileImporter,
 )
 from profile_intelligence.domain.interfaces.repositories import (
+    IPhotoRepository,
+    IProfileRepository,
+    IRateRepository,
+    IReviewRepository,
+    IServiceRepository,
+    ProfileEntity,
     ProfileRepositoryPort,
     Repository,
 )
@@ -18,10 +24,16 @@ from profile_intelligence.domain.value_objects.documents import (
 from profile_intelligence.domain.value_objects.importing import ImportResult, RawRecord
 
 __all__ = [
+    "IPhotoRepository",
+    "IProfileRepository",
+    "IRateRepository",
+    "IReviewRepository",
+    "IServiceRepository",
     "ImportResult",
     "ImporterPlugin",
     "ParsedDocument",
     "ProfileDraft",
+    "ProfileEntity",
     "ProfileExtractor",
     "ProfileImporter",
     "ProfileRepositoryPort",

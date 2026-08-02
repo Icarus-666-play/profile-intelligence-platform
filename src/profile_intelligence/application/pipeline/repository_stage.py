@@ -8,8 +8,10 @@ from dataclasses import dataclass, field
 from profile_intelligence.core.exceptions import RepositoryError
 from profile_intelligence.core.logging import get_logger
 from profile_intelligence.domain.entities.profile import ProfileDraft
-from profile_intelligence.infrastructure.database.models import Profile
-from profile_intelligence.infrastructure.database.repository import SQLiteRepository
+from profile_intelligence.domain.interfaces.repositories import (
+    IProfileRepository,
+    ProfileEntity,
+)
 
 logger = get_logger(__name__)
 
@@ -18,16 +20,16 @@ logger = get_logger(__name__)
 class RepositoryStageResult:
     """Outcome of persisting scored drafts."""
 
-    entities: tuple[Profile, ...] = field(default_factory=tuple)
+    entities: tuple[ProfileEntity, ...] = field(default_factory=tuple)
     created: int = 0
     updated: int = 0
     errors: tuple[str, ...] = field(default_factory=tuple)
 
 
 class RepositoryStage:
-    """Persist scored profile drafts through :class:`SQLiteRepository`."""
+    """Persist scored profile drafts through :class:`IProfileRepository`."""
 
-    def __init__(self, repository: SQLiteRepository) -> None:
+    def __init__(self, repository: IProfileRepository) -> None:
         self._repository = repository
 
     def persist_many(
@@ -38,7 +40,7 @@ class RepositoryStage:
         created = 0
         updated = 0
         errors: list[str] = []
-        entities: list[Profile] = []
+        entities: list[ProfileEntity] = []
 
         for draft in drafts:
             try:

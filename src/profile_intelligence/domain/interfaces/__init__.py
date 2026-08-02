@@ -8,12 +8,24 @@ from profile_intelligence.domain.interfaces.importers import (
     ProfileParseOutcome,
 )
 from profile_intelligence.domain.interfaces.repositories import (
+    IPhotoRepository,
+    IProfileRepository,
+    IRateRepository,
+    IReviewRepository,
+    IServiceRepository,
+    ProfileEntity,
     ProfileRepositoryPort,
     Repository,
 )
 
 __all__ = [
+    "IPhotoRepository",
+    "IProfileRepository",
+    "IRateRepository",
+    "IReviewRepository",
+    "IServiceRepository",
     "ImporterPlugin",
+    "ProfileEntity",
     "ProfileImporter",
     "ProfileParseOutcome",
     "ProfileRepositoryPort",
