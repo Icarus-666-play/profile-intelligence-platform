@@ -19,6 +19,7 @@ from profile_intelligence.application.use_cases.daily_pipeline import (
     DailyPipeline,
     DailyResult,
 )
+from profile_intelligence.application.use_cases.import_flow import ImportFlow
 from profile_intelligence.application.use_cases.import_pipeline import (
     ImportPipeline,
     PipelineResult,
@@ -59,6 +60,7 @@ __all__ = [
     "ImagePipelineItemResult",
     "ImagePipelineResult",
     "ImageSource",
+    "ImportFlow",
     "ImportPipeline",
     "ImportService",
     "ImportStats",

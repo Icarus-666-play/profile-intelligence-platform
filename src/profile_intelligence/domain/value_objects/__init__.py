@@ -11,6 +11,14 @@ from profile_intelligence.domain.value_objects.documents import (
     ParsedDocument,
     RawDocument,
 )
+from profile_intelligence.domain.value_objects.import_flow import (
+    IMPORT_FLOW_STAGES,
+    InputResolution,
+    PreviewResult,
+    PreviewRow,
+    ValidationIssue,
+    ValidationResult,
+)
 from profile_intelligence.domain.value_objects.importing import ImportResult, RawRecord
 from profile_intelligence.domain.value_objects.profile_children import (
     Availability,
@@ -21,16 +29,22 @@ from profile_intelligence.domain.value_objects.profile_children import (
 )
 
 __all__ = [
+    "IMPORT_FLOW_STAGES",
     "AICompletionRequest",
     "AICompletionResult",
     "Availability",
     "ConfidenceScore",
     "ImportResult",
+    "InputResolution",
     "ParsedDocument",
     "Photo",
+    "PreviewResult",
+    "PreviewRow",
     "Rate",
     "RawDocument",
     "RawRecord",
     "Review",
     "Service",
+    "ValidationIssue",
+    "ValidationResult",
 ]

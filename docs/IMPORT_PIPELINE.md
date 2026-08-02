@@ -2,7 +2,31 @@
 
 End-to-end path from a local file to SQLite (and optional media / daily automation).
 
-## Happy path
+## Operator flow
+
+Staged control surface for CLI / Dashboard UI (`ImportFlow`):
+
+```
+Input
+ ↓
+Preview
+ ↓
+Validate
+ ↓
+Import
+```
+
+| Stage | Meaning | CLI |
+|-------|---------|-----|
+| Input | Resolve path + plugin | `pip-app import PATH --input` |
+| Preview | Dry-run rows (no DB write) | `pip-app import PATH --preview` |
+| Validate | Gate on accepted/rejected rows | `pip-app import PATH --validate` |
+| Import | Persist full pipeline | `pip-app import PATH` |
+
+Implementation: `application/use_cases/import_flow.py`  
+Value objects: `domain/value_objects/import_flow.py`
+
+## Internal transform stages
 
 ```
 File
@@ -42,6 +66,7 @@ Defaults: `DEFAULT_PIPELINE_STAGES` in `core/config.py`.
 
 | Piece | Path |
 |-------|------|
+| Operator flow | `ImportFlow` (`application/use_cases/import_flow.py`) |
 | Operator entry | `ImportService` (`application/use_cases/import_service.py`) |
 | Pipeline facade | `ImportPipeline` (`application/use_cases/import_pipeline.py`) |
 | Stage chain | `ProcessingChain` (`application/pipeline/chain.py`) |

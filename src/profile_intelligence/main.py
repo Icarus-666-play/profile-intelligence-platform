@@ -24,6 +24,7 @@ from profile_intelligence import __version__
 from profile_intelligence.application.use_cases.application import ApplicationService
 from profile_intelligence.application.use_cases.compare_service import CompareService
 from profile_intelligence.application.use_cases.daily_pipeline import DailyPipeline
+from profile_intelligence.application.use_cases.import_flow import ImportFlow
 from profile_intelligence.application.use_cases.import_service import ImportService
 from profile_intelligence.application.use_cases.profile_service import ProfileService
 from profile_intelligence.bootstrap import build_container
@@ -114,6 +115,24 @@ def build_parser() -> argparse.ArgumentParser:
         "--recursive",
         action="store_true",
         help="When path is a directory, recurse into subfolders",
+    )
+    import_mode = import_parser.add_mutually_exclusive_group()
+    import_mode.add_argument(
+        "--input",
+        action="store_true",
+        dest="import_input_only",
+        help="Input stage only: resolve path and plugin",
+    )
+    import_mode.add_argument(
+        "--preview",
+        action="store_true",
+        help="Preview stage: dry-run rows (no database write)",
+    )
+    import_mode.add_argument(
+        "--validate",
+        action="store_true",
+        dest="import_validate_only",
+        help="Validate stage: gate check before Import",
     )
 
     search_parser = subparsers.add_parser(
@@ -366,37 +385,7 @@ def _dispatch(
         return 0
 
     if command == "import":
-        service = container.resolve(ImportService)
-        target = Path(args.path)
-        if target.is_dir():
-            summary = service.import_directory(
-                target,
-                source=args.source,
-                plugin_name=args.plugin,
-                recursive=bool(args.recursive),
-            )
-        else:
-            summary = service.import_path(
-                target,
-                source=args.source,
-                plugin_name=args.plugin,
-            )
-        report = summary.render_report()
-        logger.info("%s", report.replace("\n", " | "))
-        print(report)
-        detail = (
-            f"via {summary.plugin}: created={summary.created} "
-            f"updated={summary.updated} skipped={summary.skipped}"
-        )
-        logger.info("Import detail %s %s", summary.path, detail)
-        print()
-        print(detail)
-        for error in summary.errors:
-            logger.warning("Import issue: %s", error)
-            print(f"issue: {error}", file=sys.stderr)
-        if (summary.created + summary.updated) > 0:
-            return 0
-        return 1 if summary.errors else 0
+        return _cmd_import(args, container)
 
     if command == "compare":
         return _cmd_compare(args, container)
@@ -555,6 +544,87 @@ def _add_daily_arguments(parser: argparse.ArgumentParser) -> None:
     )
 
 
+def _cmd_import(args: argparse.Namespace, container: Container) -> int:
+    """Run Input → Preview → Validate → Import (or a single stage)."""
+    flow = container.resolve(ImportFlow)
+    target = Path(args.path)
+    source = args.source
+    plugin = args.plugin
+
+    if args.import_input_only:
+        resolved = flow.resolve_input(
+            target, source=source, plugin_name=plugin
+        )
+        print("Import flow: Input")
+        print(f"  path:   {resolved.path}")
+        print(f"  plugin: {resolved.plugin or '(none)'}")
+        print(f"  source: {resolved.source or '(default)'}")
+        print(f"  ok:     {resolved.ok}")
+        for error in resolved.errors:
+            print(f"issue: {error}", file=sys.stderr)
+        return 0 if resolved.ok else 1
+
+    if args.preview:
+        preview = flow.preview(target, source=source, plugin_name=plugin)
+        print("Import flow: Preview")
+        print(f"  path:     {preview.path}")
+        print(f"  plugin:   {preview.plugin}")
+        print(f"  records:  {preview.records_read}")
+        print(
+            f"  accepted: {preview.accepted_count}  "
+            f"rejected: {preview.rejected_count}  "
+            f"duplicates: {preview.duplicate_count}  "
+            f"updates: {preview.update_count}"
+        )
+        for row in preview.rows[:50]:
+            score = row.score if row.score is not None else "-"
+            print(
+                f"  [{row.index}] {row.display_name} | "
+                f"{row.status} | confidence={score}"
+            )
+        for error in preview.errors:
+            print(f"issue: {error}", file=sys.stderr)
+        return 0 if preview.ok else 1
+
+    if args.import_validate_only:
+        gate = flow.validate(target, source=source, plugin_name=plugin)
+        print("Import flow: Validate")
+        print(f"  path:     {gate.path}")
+        print(f"  plugin:   {gate.plugin}")
+        print(f"  ok:       {gate.ok}")
+        print(f"  accepted: {gate.accepted}  rejected: {gate.rejected}")
+        for issue in gate.issues:
+            prefix = "warning" if issue.severity == "warning" else "issue"
+            loc = f"row {issue.index}: " if issue.index is not None else ""
+            print(f"{prefix}: {loc}{issue.message}", file=sys.stderr)
+        return 0 if gate.ok else 1
+
+    # Import stage (full persist)
+    summary = flow.run_import(
+        target,
+        source=source,
+        plugin_name=plugin,
+        recursive=bool(args.recursive),
+    )
+    report = summary.render_report()
+    logger.info("%s", report.replace("\n", " | "))
+    print("Import flow: Import")
+    print(report)
+    detail = (
+        f"via {summary.plugin}: created={summary.created} "
+        f"updated={summary.updated} skipped={summary.skipped}"
+    )
+    logger.info("Import detail %s %s", summary.path, detail)
+    print()
+    print(detail)
+    for error in summary.errors:
+        logger.warning("Import issue: %s", error)
+        print(f"issue: {error}", file=sys.stderr)
+    if (summary.created + summary.updated) > 0:
+        return 0
+    return 1 if summary.errors else 0
+
+
 def _cmd_ui(args: argparse.Namespace, container: Container) -> int:
     context = UiContext(
         config=container.resolve(AppConfig),
@@ -563,6 +633,7 @@ def _cmd_ui(args: argparse.Namespace, container: Container) -> int:
         imports=container.resolve(ImportService),
         compare=container.resolve(CompareService),
         importers=container.resolve(ImporterRegistry),
+        import_flow=container.resolve(ImportFlow),
     )
     serve_ui(
         context,

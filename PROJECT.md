@@ -174,6 +174,18 @@ pipeline:
   - repository
 ```
 
+Operator import flow:
+
+```
+Input
+ ↓
+Preview
+ ↓
+Validate
+ ↓
+Import
+```
+
 Daily automation (`pip-app daily` / `scripts/run_daily.py`):
 
 ```

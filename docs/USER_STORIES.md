@@ -14,6 +14,16 @@ Primary actor: **Operator** — a local user running PIP on their workstation.
 - Profiles appear in `pip-app list` / Dashboard
 - Confidence scores are assigned when fields allow
 
+### US-I1b — Staged import flow
+**As an** operator  
+**I want to** run Input → Preview → Validate → Import  
+**So that** I can inspect rows before writing to the database.
+
+**Acceptance**
+- `--input` / `--preview` / `--validate` CLI stages work
+- Preview does not persist profiles
+- UI Import exposes the four stage actions
+
 ### US-I2 — Import an inbox folder
 **As an** operator  
 **I want to** process a folder of new files  

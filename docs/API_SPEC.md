@@ -20,7 +20,7 @@ Global flags:
 | Command | Args / flags | Result |
 |---------|--------------|--------|
 | `migrate` | — | Apply SQL migrations |
-| `import PATH` | `--source`, `--plugin`, `--recursive` | Import file/dir → SQLite |
+| `import PATH` | `--source`, `--plugin`, `--recursive`, `--input` / `--preview` / `--validate` | Input → Preview → Validate → Import |
 | `list` | `--limit`, `--offset` | Print profiles |
 | `search QUERY` | `--limit` | Search profiles |
 | `compare [LEFT] [RIGHT]` | `--sources A B` | Diff profiles or sources |

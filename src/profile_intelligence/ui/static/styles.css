@@ -394,6 +394,38 @@ th {
   box-shadow: var(--shadow);
 }
 
+.flow-steps {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin: 0 0 1.75rem;
+  padding: 0.85rem 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  max-width: 40rem;
+}
+
+.flow-step {
+  position: relative;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.flow-step.is-active {
+  color: var(--teal-deep);
+  font-weight: 700;
+}
+
+.flow-step:not(:last-child)::after {
+  content: "→";
+  position: absolute;
+  right: -1rem;
+  color: rgba(16, 35, 63, 0.28);
+}
+
 .pill-list {
   display: flex;
   flex-wrap: wrap;

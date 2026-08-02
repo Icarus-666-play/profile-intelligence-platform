@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from profile_intelligence.application.use_cases.compare_service import CompareService
+from profile_intelligence.application.use_cases.import_flow import ImportFlow
 from profile_intelligence.application.use_cases.import_service import ImportService
 from profile_intelligence.application.use_cases.profile_service import ProfileService
 from profile_intelligence.core.config import AppConfig
@@ -22,6 +23,7 @@ class UiContext:
     imports: ImportService
     compare: CompareService
     importers: ImporterRegistry
+    import_flow: ImportFlow | None = None
 
 
 __all__ = ["UiContext"]

@@ -67,18 +67,20 @@ Results
 
 ```
 Import
-Load profiles from a local file or folder into SQLite.
+Staged operator flow for local files.
+
+Input → Preview → Validate → Import     ← step indicator
 
 Path        [ /path/to/file ________ ]
 Source      [ optional _____________ ]
 Plugin      [ Auto-detect ▼ ]
-[ ] Recurse folders
-[ Run import ]
+[ ] Recurse folders (Import stage)
+[ Input ] [ Preview ] [ Validate ] [ Import ]
 
-status notice (ok / error)
+Preview table / Validate issues (when run)
 ```
 
-POST → `ImportService.import_path` / `import_directory`.
+POST `action=` → `ImportFlow` (`input` / `preview` / `validate` / `import`).
 
 ### Compare `/compare`
 

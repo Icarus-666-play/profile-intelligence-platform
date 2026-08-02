@@ -7,6 +7,7 @@ from profile_intelligence.application.use_cases import ImportPipeline
 from profile_intelligence.application.use_cases.application import ApplicationService
 from profile_intelligence.application.use_cases.compare_service import CompareService
 from profile_intelligence.application.use_cases.daily_pipeline import DailyPipeline
+from profile_intelligence.application.use_cases.import_flow import ImportFlow
 from profile_intelligence.application.use_cases.import_service import ImportService
 from profile_intelligence.application.use_cases.media_pipeline import ImagePipeline
 from profile_intelligence.application.use_cases.nightly_pipeline import NightlyPipeline
@@ -224,6 +225,15 @@ def build_container(
             pipeline=container.resolve(ImportPipeline),
         ),
         name="import",
+    )
+    container.register(
+        ImportFlow,
+        lambda: ImportFlow(
+            container.resolve(ImportService),
+            registry=container.resolve(ImporterRegistry),
+            pipeline=container.resolve(ImportPipeline),
+        ),
+        name="import_flow",
     )
     container.register(
         ProfileService,
