@@ -1,0 +1,85 @@
+"""Completeness-based profile scoring (Milestone 1)."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Protocol
+
+from profile_intelligence.core.config import ScoringSection
+from profile_intelligence.core.exceptions import ScoringError
+from profile_intelligence.core.logging import get_logger
+
+logger = get_logger(__name__)
+
+
+class ScoreableProfile(Protocol):
+    """Minimal profile shape required by the completeness scorer."""
+
+    display_name: str
+    email: str | None
+    phone: str | None
+    title: str | None
+    organization: str | None
+    location: str | None
+    tags: str | None
+    notes: str | None
+    external_id: str | None
+
+
+class CompletenessScorer:
+    """Weighted field-completeness engine used for Confidence Score (0-100)."""
+
+    def __init__(
+        self,
+        scoring: ScoringSection | None = None,
+        *,
+        weights: Mapping[str, int] | None = None,
+        max_score: int | None = None,
+    ) -> None:
+        section = scoring or ScoringSection()
+        self._weights = dict(weights if weights is not None else section.weights)
+        self._max_score = (
+            max_score if max_score is not None else section.max_score
+        )
+        logger.debug(
+            "CompletenessScorer ready (max_score=%d, fields=%d)",
+            self._max_score,
+            len(self._weights),
+        )
+
+    @property
+    def max_score(self) -> int:
+        """Configured upper bound before normalization to 0-100."""
+        return self._max_score
+
+    def score(self, profile: ScoreableProfile) -> int:
+        """Return an integer completeness total in ``[0, max_score]``."""
+        try:
+            total = 0
+            for field_name, weight in self._weights.items():
+                value = getattr(profile, field_name, None)
+                if _has_value(value):
+                    total += int(weight)
+            return min(max(total, 0), self._max_score)
+        except Exception as exc:
+            raise ScoringError(
+                "Failed to compute completeness score",
+                cause=exc,
+            ) from exc
+
+    def apply(self, profile: ScoreableProfile) -> int:
+        """Compute score and assign it to ``profile.score`` when mutable."""
+        value = self.score(profile)
+        try:
+            profile.score = value  # type: ignore[attr-defined]
+        except AttributeError:
+            pass
+        return value
+
+
+def _has_value(value: object | None) -> bool:
+    if value is None:
+        return False
+    if isinstance(value, str):
+        return bool(value.strip())
+    return True

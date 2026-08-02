@@ -1,0 +1,126 @@
+# Profile Intelligence Platform — application settings
+# Optional override: config/settings.local.yaml or PIP_CONFIG_PATH
+
+app:
+  name: Profile Intelligence Platform
+  short_name: PIP
+  version: "0.1.0"
+  environment: development  # development | production
+
+paths:
+  # Relative paths resolve against the repository / install root.
+  data_dir: data
+  database_file: data/pip.sqlite3
+  logs_dir: logs
+  exports_dir: exports
+  plugins_dir: plugins
+
+database:
+  # sqlite (default) | postgresql
+  driver: sqlite
+  # Required when driver=postgresql, e.g.
+  # url: postgresql+psycopg://user:pass@localhost:5432/pip
+  url: null
+  echo_sql: false
+  timeout_seconds: 30.0
+  check_same_thread: false
+  foreign_keys: true
+
+importers:
+  auto_discover: true
+  enabled: []  # empty = all discovered plugins; otherwise plugin names
+
+excel:
+  default_sheet_name: Profiles
+  date_format: "YYYY-MM-DD"
+
+# AI
+#   Null (default when disabled)
+#   Local (future)
+#   Remote (future)
+ai:
+  enabled: false
+  provider: null  # null | local | ollama | remote | openai
+  model: null
+  base_url: null
+  api_key: null
+
+search:
+  default_limit: 50
+  fuzzy: true
+
+dashboard:
+  refresh_seconds: 30
+
+# Login (optional) → Home → Dashboard
+auth:
+  enabled: false
+  allow_guest: true
+  username: operator
+  password: null  # or PIP_AUTH_PASSWORD
+  session_ttl_seconds: 86400
+
+# Image → Download → Hash → Duplicate Detection → Thumbnail → Storage
+media:
+  root_dir: data/media
+  thumbnails_dir: data/media/thumbnails
+  downloads_dir: data/media/downloads
+  hash_algorithm: sha256
+  thumbnail_max_size: 256
+  thumbnail_format: JPEG
+  thumbnail_quality: 85
+  allow_remote_download: true
+  download_timeout_seconds: 30.0
+
+# cache/
+#   SQLite
+#   Memory
+#   File
+#   Redis (future)
+cache:
+  backend: memory  # memory | file | sqlite | redis
+  ttl_seconds: 3600
+  file_dir: data/cache
+  sqlite_file: data/cache.sqlite3
+  redis_url: null
+
+# Daily
+#  ↓
+# Import Folder
+#  ↓
+# Detect new files
+#  ↓
+# Import
+#  ↓
+# Update
+#  ↓
+# Generate Excel
+#  ↓
+# Create Dashboard
+#  ↓
+# Email Report (future)
+daily:
+  import_dir: data/inbox
+  excel_path: exports/daily-profiles.xlsx
+  dashboard_path: exports/daily-dashboard.txt
+  rescore: true
+  recursive: false
+  email_enabled: false
+  email_to: null
+
+# Legacy alias for daily (still accepted)
+nightly:
+  import_dir: data/inbox
+  excel_path: exports/daily-profiles.xlsx
+  dashboard_path: exports/daily-dashboard.txt
+  rescore: true
+  recursive: false
+
+# Ordered import stages after File → RawDocument
+pipeline:
+  - parser
+  - normalizer
+  - validator
+  - duplicate_detector
+  - scorer
+  - repository

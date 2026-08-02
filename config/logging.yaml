@@ -1,0 +1,19 @@
+# Profile Intelligence Platform — logging configuration
+# Optional override: config/logging.local.yaml
+#
+# File outputs (under logs/):
+#   application.log — general application activity
+#   import.log      — importer / import-pipeline activity
+#   errors.log      — ERROR and above from all loggers
+
+level: INFO  # DEBUG | INFO | WARNING | ERROR | CRITICAL
+console: true
+file: true
+files:
+  application: application.log
+  import: import.log
+  errors: errors.log
+max_bytes: 10485760  # 10 MiB
+backup_count: 5
+format: "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
+date_format: "%Y-%m-%d %H:%M:%S"

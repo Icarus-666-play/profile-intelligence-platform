@@ -1,0 +1,6 @@
+# Copy to config/scoring.local.yaml and customize.
+# Confidence Score is always reported on a 0-100 scale.
+
+weights:
+  email: 25
+  phone: 15
