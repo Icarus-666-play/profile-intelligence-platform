@@ -4,6 +4,7 @@ import type { ImportPreviewRow } from '../api'
 type Props = {
   profile: ImportPreviewRow
   busy?: boolean
+  importLabel?: string
   onImport: () => void
   onCancel: () => void
 }
@@ -37,6 +38,7 @@ function listOrDash(items: string[] | null | undefined) {
 export default function ProfilePreviewCard({
   profile,
   busy = false,
+  importLabel = 'Import All',
   onImport,
   onCancel,
 }: Props) {
@@ -102,7 +104,7 @@ export default function ProfilePreviewCard({
 
       <div className="import-url-actions">
         <button type="button" disabled={busy} onClick={onImport}>
-          {busy ? 'Importing…' : 'Import'}
+          {busy ? 'Importing…' : importLabel}
         </button>
         <button
           type="button"

@@ -95,7 +95,7 @@ https://...
 https://...
 https://...
 
-[ Preview ]   [ Import N URLs ]
+[ Preview ]   [ Import All ]
 
 Profile preview (after Preview)
   Picture
@@ -108,7 +108,7 @@ Profile preview (after Preview)
   Reviews
   Pictures
   ----------------------
-  [ Import ]  [ Cancel ]
+  [ Import All ]  [ Cancel ]
 
 ----------------------------
 

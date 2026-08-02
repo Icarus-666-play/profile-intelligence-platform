@@ -257,10 +257,10 @@ export default function ImportPage() {
             </button>
             <button type="submit" disabled={busy || selectedUrls.length === 0}>
               {busy
-                ? 'Working…'
+                ? 'Importing…'
                 : selectedUrls.length > 1
-                  ? `Import ${selectedUrls.length} URLs`
-                  : 'Import'}
+                  ? `Import All (${selectedUrls.length})`
+                  : 'Import All'}
             </button>
           </div>
         </form>
@@ -288,6 +288,11 @@ export default function ImportPage() {
           <ProfilePreviewCard
             profile={focusProfile}
             busy={busy}
+            importLabel={
+              selectedUrls.length > 1
+                ? `Import All (${selectedUrls.length})`
+                : 'Import All'
+            }
             onImport={() => {
               void runImport()
             }}
