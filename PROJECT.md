@@ -38,6 +38,7 @@ src/profile_intelligence/
     use_cases/
   infrastructure/  # ai, analysis, cache, database, importers, excel, media, search, scoring
   ui/              # Dashboard UI (Dashboard…About)
+  api/             # Local JSON REST (/api/…)
   core/            # config, logging, DI, exceptions
 config/ docs/ scripts/ tests/ plugins/
 ```

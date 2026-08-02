@@ -149,6 +149,11 @@ class ImporterRegistry:
         )
         return count
 
+    def clear(self) -> None:
+        """Remove all registered plugins."""
+        self._plugins.clear()
+        logger.debug("Cleared importer plugin registry")
+
     def discover(
         self,
         *,
@@ -174,6 +179,18 @@ class ImporterRegistry:
                     )
                     del self._plugins[name]
         return total
+
+    def reload(
+        self,
+        *,
+        plugins_dir: PathLike | None = None,
+        enabled: Iterable[str] | None = None,
+    ) -> int:
+        """Clear the registry and re-run discovery."""
+        self.clear()
+        count = self.discover(plugins_dir=plugins_dir, enabled=enabled)
+        logger.info("Reloaded %d importer plugin(s)", count)
+        return count
 
     def _load_from_package(self, package: ModuleType) -> int:
         count = 0

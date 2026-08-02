@@ -21,6 +21,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from profile_intelligence import __version__
+from profile_intelligence.api import ApiContext
 from profile_intelligence.application.use_cases.application import ApplicationService
 from profile_intelligence.application.use_cases.compare_service import CompareService
 from profile_intelligence.application.use_cases.daily_pipeline import DailyPipeline
@@ -32,6 +33,7 @@ from profile_intelligence.core.config import AppConfig
 from profile_intelligence.core.container import Container
 from profile_intelligence.core.exceptions import PipError
 from profile_intelligence.core.logging import get_logger
+from profile_intelligence.domain.interfaces.repositories import IProfileRepository
 from profile_intelligence.infrastructure.analysis import AnalysisService
 from profile_intelligence.infrastructure.dashboard import DashboardService
 from profile_intelligence.infrastructure.database.seed import DatabaseSeeder
@@ -184,9 +186,8 @@ def build_parser() -> argparse.ArgumentParser:
     ui_parser = subparsers.add_parser(
         "ui",
         help=(
-            "Open the local Dashboard UI "
-            "(Dashboard, Search, Import, Compare, Reports, "
-            "Settings, Plugins, Logs, About)"
+            "Open the local Dashboard UI and JSON API "
+            "(UI pages + /api/import|/profiles|/compare|/dashboard|/analytics|/plugins)"
         ),
     )
     ui_parser.add_argument(
@@ -635,11 +636,23 @@ def _cmd_ui(args: argparse.Namespace, container: Container) -> int:
         importers=container.resolve(ImporterRegistry),
         import_flow=container.resolve(ImportFlow),
     )
+    api_context = ApiContext(
+        config=container.resolve(AppConfig),
+        profiles=container.resolve(ProfileService),
+        repository=container.resolve(IProfileRepository),
+        imports=container.resolve(ImportService),
+        import_flow=container.resolve(ImportFlow),
+        compare=container.resolve(CompareService),
+        dashboard=container.resolve(DashboardService),
+        analysis=container.resolve(AnalysisService),
+        importers=container.resolve(ImporterRegistry),
+    )
     serve_ui(
         context,
         host=str(args.host),
         port=int(args.port),
         open_browser=not bool(args.no_browser),
+        api_context=api_context,
     )
     return 0
 

@@ -11,13 +11,14 @@ PIP is a **local-first desktop** application. Security posture assumes a trusted
 | Dashboard UI | Intended for loopback use by the same user |
 | AI / remote media | Optional egress; off or constrained by config |
 
-## Local UI binding
+## Local UI / API binding
 
 - Default bind: `127.0.0.1:8765`
-- **No authentication** on WSGI routes
+- **No authentication** on UI or `/api` JSON routes
 - Do **not** expose `--host 0.0.0.0` on untrusted networks
+- `POST /api/import/url` respects `media.allow_remote_download`
 
-If you bind beyond loopback, treat the UI as an open local admin console.
+If you bind beyond loopback, treat the UI/API as an open local admin console.
 
 ## Secrets & configuration
 
