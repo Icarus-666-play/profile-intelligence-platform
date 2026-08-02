@@ -22,6 +22,19 @@ logger.error("failure...")
 logger.exception("unexpected failure with traceback")
 ```
 
+## Log files
+
+When file logging is enabled, bootstrap writes rotating files under `logs/`:
+
+| File | Contents |
+|------|----------|
+| `logs/application.log` | General application activity |
+| `logs/import.log` | Importer + import-pipeline activity |
+| `logs/errors.log` | `ERROR` and above from all loggers |
+
+Import records are selected by logger name (`profile_intelligence.importers.*` and
+`profile_intelligence.services.import_service`). They also appear in `application.log`.
+
 ## Configuration
 
 Logging is configured from `config/logging.yaml` via `configure_logging()` during application bootstrap.
@@ -30,8 +43,14 @@ Logging is configured from `config/logging.yaml` via `configure_logging()` durin
 |-----|---------|
 | `level` | `DEBUG` / `INFO` / `WARNING` / `ERROR` / `CRITICAL` |
 | `console` | Emit to stderr |
-| `file` | Emit to rotating file under `logs/` |
-| `filename` | Log file name (default `pip.log`) |
+| `file` | Emit to rotating files under `logs/` |
+| `files.application` | Application log file name (default `application.log`) |
+| `files.import` | Import log file name (default `import.log`) |
+| `files.errors` | Errors log file name (default `errors.log`) |
+| `max_bytes` / `backup_count` | Rotation settings |
+| `format` / `date_format` | Formatter strings |
+
+Legacy `filename` (if present) maps to `files.application`.
 
 ## API
 

@@ -94,16 +94,29 @@ class DatabaseSection:
 
 @dataclass(frozen=True, slots=True)
 class LoggingSection:
-    """Logging configuration."""
+    """Logging configuration.
+
+    File outputs are written under ``logs/``:
+    - ``application.log`` — general application activity
+    - ``import.log`` — importer / import-pipeline activity
+    - ``errors.log`` — ERROR and above from all loggers
+    """
 
     level: str = "INFO"
     console: bool = True
     file: bool = True
-    filename: str = "pip.log"
+    application_filename: str = "application.log"
+    import_filename: str = "import.log"
+    errors_filename: str = "errors.log"
     max_bytes: int = 10_485_760
     backup_count: int = 5
     log_format: str = "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
     date_format: str = "%Y-%m-%d %H:%M:%S"
+
+    @property
+    def filename(self) -> str:
+        """Backward-compatible alias for :attr:`application_filename`."""
+        return self.application_filename
 
 
 @dataclass(frozen=True, slots=True)
@@ -274,6 +287,25 @@ def _normalize_logging_raw(raw: Mapping[str, Any]) -> dict[str, Any]:
     return dict(raw)
 
 
+def _resolve_log_filename(
+    logging_data: Mapping[str, Any],
+    *,
+    key: str,
+    default: str,
+    legacy_key: str | None = None,
+) -> str:
+    """Resolve a log filename from ``files.<key>`` or a legacy flat key."""
+    files_raw = logging_data.get("files")
+    if isinstance(files_raw, Mapping) and files_raw.get(key):
+        return str(files_raw[key])
+    if legacy_key is not None and logging_data.get(legacy_key):
+        return str(logging_data[legacy_key])
+    flat_key = f"{key}_filename"
+    if logging_data.get(flat_key):
+        return str(logging_data[flat_key])
+    return default
+
+
 def _normalize_scoring_raw(raw: Mapping[str, Any]) -> dict[str, Any]:
     """Accept flat scoring.yaml or nested ``scoring:`` mapping."""
     if "scoring" in raw and isinstance(raw.get("scoring"), Mapping):
@@ -371,7 +403,22 @@ def _build_config(
             level=str(logging_data.get("level", logging_defaults.level)).upper(),
             console=bool(logging_data.get("console", logging_defaults.console)),
             file=bool(logging_data.get("file", logging_defaults.file)),
-            filename=str(logging_data.get("filename", logging_defaults.filename)),
+            application_filename=_resolve_log_filename(
+                logging_data,
+                key="application",
+                legacy_key="filename",
+                default=logging_defaults.application_filename,
+            ),
+            import_filename=_resolve_log_filename(
+                logging_data,
+                key="import",
+                default=logging_defaults.import_filename,
+            ),
+            errors_filename=_resolve_log_filename(
+                logging_data,
+                key="errors",
+                default=logging_defaults.errors_filename,
+            ),
             max_bytes=int(logging_data.get("max_bytes", logging_defaults.max_bytes)),
             backup_count=int(
                 logging_data.get("backup_count", logging_defaults.backup_count)

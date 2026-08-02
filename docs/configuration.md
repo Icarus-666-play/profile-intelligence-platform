@@ -50,9 +50,14 @@ Scaffold settings for upcoming modules. AI remains disabled unless `ai.enabled: 
 
 Flat file (not nested under a `logging:` key):
 
-- `level`, `console`, `file`, `filename`
+- `level`, `console`, `file`
+- `files.application` → `logs/application.log`
+- `files.import` → `logs/import.log`
+- `files.errors` → `logs/errors.log`
 - `max_bytes`, `backup_count`
 - `format` (mapped to `log_format` in code), `date_format`
+
+Legacy `filename` maps to `files.application` when `files` is omitted.
 
 ## `scoring.yaml`
 

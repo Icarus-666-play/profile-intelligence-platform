@@ -58,7 +58,11 @@ def temp_root(tmp_path: Path) -> Path:
         "level": "DEBUG",
         "console": False,
         "file": True,
-        "filename": "pip-test.log",
+        "files": {
+            "application": "application.log",
+            "import": "import.log",
+            "errors": "errors.log",
+        },
         "max_bytes": 1_000_000,
         "backup_count": 1,
     }
