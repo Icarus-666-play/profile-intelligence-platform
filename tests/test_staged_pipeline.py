@@ -128,12 +128,12 @@ def test_processing_chain_parser_normalizer_validator(temp_root: Path) -> None:
         encoding="utf-8",
     )
     from profile_intelligence.infrastructure.database.repository import (
-        ProfileRepository,
+        SQLiteRepository,
     )
 
     chain = ProcessingChain(
         app.importers,
-        container.resolve(ProfileRepository),
+        container.resolve(SQLiteRepository),
         stages=["parser", "normalizer", "validator"],
     )
     processed = chain.run(RawDocument.from_path(path), source="csv")

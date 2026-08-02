@@ -8,7 +8,14 @@ from profile_intelligence.infrastructure.database.connection import (
     create_database,
 )
 from profile_intelligence.infrastructure.database.models import Profile
-from profile_intelligence.infrastructure.database.repository import ProfileRepository
+from profile_intelligence.infrastructure.database.repository import (
+    ProfileRepository,
+    SQLiteRepository,
+)
+
+
+def test_sqlite_repository_alias() -> None:
+    assert ProfileRepository is SQLiteRepository
 
 
 def test_create_and_connect(app_config: AppConfig) -> None:
@@ -22,14 +29,14 @@ def test_create_and_connect(app_config: AppConfig) -> None:
 def test_session_commit_and_rollback(database: Database) -> None:
     with database.session() as session:
         session.add(Profile(display_name="Alice", source="test"))
-    repo = ProfileRepository(database)
+    repo = SQLiteRepository(database)
     profiles = repo.list_all()
     assert len(profiles) == 1
     assert profiles[0].display_name == "Alice"
 
 
 def test_profile_repository_crud(database: Database) -> None:
-    repo = ProfileRepository(database)
+    repo = SQLiteRepository(database)
     created = repo.add(Profile(display_name="Bob", source="unit", score=10))
     assert created.id is not None
 

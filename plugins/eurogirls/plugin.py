@@ -14,7 +14,7 @@ Pipeline::
          ↓
     Validate
          ↓
-    Domain Profile → Repository → SQLite
+    Domain Profile → SQLiteRepository → SQLite
 """
 
 from __future__ import annotations

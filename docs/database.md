@@ -51,7 +51,15 @@ Availability
 
 `Repository[T]` defines `get_by_id`, `list_all`, `add`, and `delete`.
 
-`ProfileRepository.upsert_draft` upserts the parent row and **replaces** all child collections in the same session. Additional repositories should follow the same pattern and wrap persistence errors as `RepositoryError`.
+`SQLiteRepository` is the SQLite adapter for the Profile aggregate. Its `upsert_draft` upserts the parent row and **replaces** all child collections in the same session. (`ProfileRepository` remains a compatibility alias.)
+
+```
+Domain ProfileDraft
+ ↓
+SQLiteRepository
+ ↓
+SQLite
+```
 
 ## Package layout
 
@@ -60,7 +68,7 @@ src/profile_intelligence/infrastructure/database/
   connection.py              # engine + session management
   models.py                  # Base, Profile, MediaAsset
   models_profile_children.py # Rate / Service / Review / Photo / Availability
-  repository.py              # repository pattern
+  repository.py              # SQLiteRepository (+ DatabaseRepository base)
   migrate.py                 # migration framework + versions
   seed.py                    # demo data seeder
 ```
@@ -108,9 +116,9 @@ Creates child tables owned by `profiles.id` (CASCADE delete):
 `database/seed.py` upserts built-in demo profiles (source=`seed`):
 
 ```python
-from profile_intelligence.infrastructure.database import seed_database, ProfileRepository
+from profile_intelligence.infrastructure.database import seed_database, SQLiteRepository
 
-seed_database(ProfileRepository(db), only_if_empty=True)
+seed_database(SQLiteRepository(db), only_if_empty=True)
 ```
 
 ## CLI

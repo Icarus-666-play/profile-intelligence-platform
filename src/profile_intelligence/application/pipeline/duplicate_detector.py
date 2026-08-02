@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 
 from profile_intelligence.core.logging import get_logger
 from profile_intelligence.domain.entities.profile import ProfileDraft
-from profile_intelligence.infrastructure.database.repository import ProfileRepository
+from profile_intelligence.infrastructure.database.repository import SQLiteRepository
 
 logger = get_logger(__name__)
 
@@ -45,7 +45,7 @@ class DuplicateDetector:
 
     def __init__(
         self,
-        repository: ProfileRepository | None = None,
+        repository: SQLiteRepository | None = None,
         *,
         check_database: bool = True,
     ) -> None:

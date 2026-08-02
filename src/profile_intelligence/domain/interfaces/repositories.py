@@ -32,7 +32,10 @@ class Repository[T](ABC):
 
 
 class ProfileRepositoryPort(Protocol):
-    """Port for profile persistence used by application use cases."""
+    """Port for profile persistence used by application use cases.
+
+    Implemented by infrastructure ``SQLiteRepository``.
+    """
 
     def get_by_id(self, entity_id: int) -> object | None:
         """Fetch a profile by id."""

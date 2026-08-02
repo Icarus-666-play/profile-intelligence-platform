@@ -20,7 +20,7 @@ from profile_intelligence.infrastructure.database.models_profile_children import
     ProfileReview,
     ProfileService,
 )
-from profile_intelligence.infrastructure.database.repository import ProfileRepository
+from profile_intelligence.infrastructure.database.repository import SQLiteRepository
 
 
 def _full_draft() -> ProfileDraft:
@@ -91,7 +91,7 @@ def test_extractor_photo_fallback_from_main_and_gallery() -> None:
 
 
 def test_upsert_draft_persists_and_replaces_children(database: Database) -> None:
-    repo = ProfileRepository(database)
+    repo = SQLiteRepository(database)
     created, was_created = repo.upsert_draft(_full_draft())
     assert was_created is True
     assert created.id is not None
@@ -135,7 +135,7 @@ def test_upsert_draft_persists_and_replaces_children(database: Database) -> None
 
 
 def test_delete_profile_cascades_children(database: Database) -> None:
-    repo = ProfileRepository(database)
+    repo = SQLiteRepository(database)
     profile, _ = repo.upsert_draft(_full_draft())
     assert repo.delete(profile.id) is True
 

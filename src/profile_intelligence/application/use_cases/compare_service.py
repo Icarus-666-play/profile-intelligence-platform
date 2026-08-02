@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from profile_intelligence.core.exceptions import ValidationError
 from profile_intelligence.core.logging import get_logger
 from profile_intelligence.infrastructure.database.models import Profile
-from profile_intelligence.infrastructure.database.repository import ProfileRepository
+from profile_intelligence.infrastructure.database.repository import SQLiteRepository
 
 logger = get_logger(__name__)
 
@@ -61,7 +61,7 @@ class ProfileComparison:
 class CompareService:
     """Build structured comparisons between stored profiles."""
 
-    def __init__(self, repository: ProfileRepository) -> None:
+    def __init__(self, repository: SQLiteRepository) -> None:
         self._repository = repository
 
     def compare_ids(self, left_id: int, right_id: int) -> ProfileComparison:

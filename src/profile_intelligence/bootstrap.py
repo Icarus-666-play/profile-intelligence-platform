@@ -19,7 +19,7 @@ from profile_intelligence.infrastructure.database.connection import (
     Database,
     create_database,
 )
-from profile_intelligence.infrastructure.database.repository import ProfileRepository
+from profile_intelligence.infrastructure.database.repository import SQLiteRepository
 from profile_intelligence.infrastructure.database.seed import DatabaseSeeder
 from profile_intelligence.infrastructure.excel.exporter import ExcelExporter
 from profile_intelligence.infrastructure.importers.registry import ImporterRegistry
@@ -56,8 +56,8 @@ def build_container(
     container.register_instance(ImporterRegistry, importers, name="importers")
 
     container.register(
-        ProfileRepository,
-        lambda: ProfileRepository(container.resolve(Database)),
+        SQLiteRepository,
+        lambda: SQLiteRepository(container.resolve(Database)),
         name="profiles",
     )
     container.register(
@@ -108,7 +108,7 @@ def build_container(
         ImportPipeline,
         lambda: ImportPipeline(
             registry=container.resolve(ImporterRegistry),
-            repository=container.resolve(ProfileRepository),
+            repository=container.resolve(SQLiteRepository),
             stages=container.resolve(AppConfig).pipeline.stages,
             extractor=container.resolve(ProfileExtractor),
             scorer=container.resolve(CompletenessScorer),
@@ -119,7 +119,7 @@ def build_container(
         ImportService,
         lambda: ImportService(
             registry=container.resolve(ImporterRegistry),
-            repository=container.resolve(ProfileRepository),
+            repository=container.resolve(SQLiteRepository),
             extractor=container.resolve(ProfileExtractor),
             scorer=container.resolve(CompletenessScorer),
             pipeline=container.resolve(ImportPipeline),
@@ -129,7 +129,7 @@ def build_container(
     container.register(
         ProfileService,
         lambda: ProfileService(
-            repository=container.resolve(ProfileRepository),
+            repository=container.resolve(SQLiteRepository),
             search_service=container.resolve(ProfileSearchService),
             exporter=container.resolve(ExcelExporter),
             scorer=container.resolve(CompletenessScorer),
@@ -138,12 +138,12 @@ def build_container(
     )
     container.register(
         CompareService,
-        lambda: CompareService(container.resolve(ProfileRepository)),
+        lambda: CompareService(container.resolve(SQLiteRepository)),
         name="compare",
     )
     container.register(
         DashboardService,
-        lambda: DashboardService(container.resolve(ProfileRepository)),
+        lambda: DashboardService(container.resolve(SQLiteRepository)),
         name="dashboard",
     )
     container.register(
@@ -161,7 +161,7 @@ def build_container(
     container.register(
         DatabaseSeeder,
         lambda: DatabaseSeeder(
-            repository=container.resolve(ProfileRepository),
+            repository=container.resolve(SQLiteRepository),
             scorer=container.resolve(CompletenessScorer),
         ),
         name="seeder",

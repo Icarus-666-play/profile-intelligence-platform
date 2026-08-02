@@ -8,7 +8,7 @@ from pathlib import Path
 from profile_intelligence.core.logging import get_logger
 from profile_intelligence.core.types import PathLike
 from profile_intelligence.infrastructure.database.models import Profile
-from profile_intelligence.infrastructure.database.repository import ProfileRepository
+from profile_intelligence.infrastructure.database.repository import SQLiteRepository
 from profile_intelligence.infrastructure.excel.exporter import ExcelExporter
 from profile_intelligence.infrastructure.scoring.completeness import CompletenessScorer
 from profile_intelligence.infrastructure.search.service import ProfileSearchService
@@ -21,7 +21,7 @@ class ProfileService:
 
     def __init__(
         self,
-        repository: ProfileRepository,
+        repository: SQLiteRepository,
         search_service: ProfileSearchService,
         exporter: ExcelExporter,
         scorer: CompletenessScorer | None = None,

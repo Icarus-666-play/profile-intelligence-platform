@@ -40,7 +40,7 @@ from profile_intelligence.domain.value_objects.documents import (
     RawDocument,
 )
 from profile_intelligence.infrastructure.database.models import Profile
-from profile_intelligence.infrastructure.database.repository import ProfileRepository
+from profile_intelligence.infrastructure.database.repository import SQLiteRepository
 from profile_intelligence.infrastructure.importers.registry import ImporterRegistry
 from profile_intelligence.infrastructure.scoring.completeness import CompletenessScorer
 
@@ -104,7 +104,7 @@ class ProcessingChain:
     def __init__(
         self,
         registry: ImporterRegistry,
-        repository: ProfileRepository | None = None,
+        repository: SQLiteRepository | None = None,
         *,
         stages: Sequence[str] | None = None,
         parser: DocumentParser | None = None,
@@ -139,11 +139,11 @@ class ProcessingChain:
         if "repository" in self.stages and self.repository_stage is None:
             if repository is None:
                 raise ConfigurationError(
-                    "pipeline stage 'repository' requires a ProfileRepository"
+                    "pipeline stage 'repository' requires a SQLiteRepository"
                 )
             self.repository_stage = RepositoryStage(repository)
 
-    def set_repository(self, repository: ProfileRepository) -> None:
+    def set_repository(self, repository: SQLiteRepository) -> None:
         """Attach or replace the repository used by later stages."""
         self._repository = repository
         self.duplicate_detector = DuplicateDetector(repository)

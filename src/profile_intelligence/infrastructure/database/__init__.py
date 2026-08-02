@@ -28,6 +28,7 @@ from profile_intelligence.infrastructure.database.models_profile_children import
 from profile_intelligence.infrastructure.database.repository import (
     DatabaseRepository,
     ProfileRepository,
+    SQLiteRepository,
 )
 from profile_intelligence.infrastructure.database.seed import (
     DEFAULT_SEED_PROFILES,
@@ -53,6 +54,7 @@ __all__ = [
     "ProfileReview",
     "ProfileService",
     "Repository",
+    "SQLiteRepository",
     "SchemaMigration",
     "SeedResult",
     "create_database",

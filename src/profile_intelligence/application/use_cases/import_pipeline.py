@@ -55,7 +55,7 @@ from profile_intelligence.domain.value_objects.documents import (
 )
 from profile_intelligence.domain.value_objects.importing import ImportResult
 from profile_intelligence.infrastructure.database.models import Profile
-from profile_intelligence.infrastructure.database.repository import ProfileRepository
+from profile_intelligence.infrastructure.database.repository import SQLiteRepository
 from profile_intelligence.infrastructure.importers.registry import ImporterRegistry
 from profile_intelligence.infrastructure.scoring.completeness import CompletenessScorer
 
@@ -94,7 +94,7 @@ class ImportPipeline:
     def __init__(
         self,
         registry: ImporterRegistry,
-        repository: ProfileRepository,
+        repository: SQLiteRepository,
         *,
         stages: Sequence[str] | None = None,
         parser: DocumentParser | None = None,

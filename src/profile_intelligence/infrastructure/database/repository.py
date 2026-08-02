@@ -32,14 +32,19 @@ logger = get_logger(__name__)
 
 
 class DatabaseRepository[T](Repository[T]):
-    """SQLAlchemy-backed repository base."""
+    """SQLAlchemy-backed repository base for SQLite persistence."""
 
     def __init__(self, database: Database) -> None:
         self._database = database
 
 
-class ProfileRepository(DatabaseRepository[Profile]):
-    """Repository for :class:`Profile` persistence models."""
+class SQLiteRepository(DatabaseRepository[Profile]):
+    """SQLite repository for the Profile aggregate.
+
+    Persists ``Profile`` and child collections::
+
+        Profile → Rate → Service → Review → Photo → Availability
+    """
 
     def get_by_id(self, entity_id: int) -> Profile | None:
         try:
@@ -319,3 +324,7 @@ def _availability_to_model(
         status=slot.status,
         notes=slot.notes,
     )
+
+
+# Backward-compatible alias.
+ProfileRepository = SQLiteRepository

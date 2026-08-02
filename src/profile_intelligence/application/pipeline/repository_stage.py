@@ -9,7 +9,7 @@ from profile_intelligence.core.exceptions import RepositoryError
 from profile_intelligence.core.logging import get_logger
 from profile_intelligence.domain.entities.profile import ProfileDraft
 from profile_intelligence.infrastructure.database.models import Profile
-from profile_intelligence.infrastructure.database.repository import ProfileRepository
+from profile_intelligence.infrastructure.database.repository import SQLiteRepository
 
 logger = get_logger(__name__)
 
@@ -25,9 +25,9 @@ class RepositoryStageResult:
 
 
 class RepositoryStage:
-    """Persist scored profile drafts through :class:`ProfileRepository`."""
+    """Persist scored profile drafts through :class:`SQLiteRepository`."""
 
-    def __init__(self, repository: ProfileRepository) -> None:
+    def __init__(self, repository: SQLiteRepository) -> None:
         self._repository = repository
 
     def persist_many(
