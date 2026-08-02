@@ -75,13 +75,13 @@ app = create_fastapi_app(create_api_context())
 ```
 
 ```bash
-./start.sh
-# or:
-uvicorn profile_intelligence.api.main:app --reload
+make run          # ./start.sh
+make backend      # uvicorn profile_intelligence.api.main:app --reload
+make frontend     # cd frontend && npm run dev
+make build-ui     # cd frontend && npm run build
 ```
 
-Source for the SPA: `frontend/` (Vite + React). Rebuild with
-`cd frontend && npm install && npm run build`.
+Source for the SPA: `frontend/` (Vite + React).
 
 React entry + navigation:
 
