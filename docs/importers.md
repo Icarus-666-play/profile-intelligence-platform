@@ -1,16 +1,15 @@
 # Importer Plugin Framework
 
-Importers convert external files into raw row records. The import service then
-extracts, scores, and persists profiles:
+Importers convert external files into raw row records. Persistence goes through
+the staged pipeline:
 
 ```
-Importer
-   ↓
-Database
+File → RawDocument → Parser → Normalizer → Validator → Profile Entity → Repository → SQLite
 ```
 
-`ImportService.import_path()` runs that pipeline end-to-end
-(`run_importer()` → `write_to_database()`).
+`ImportService.import_path()` / `ImportPipeline.process()` run that flow
+end-to-end. Parser uses a `ProfileImporter` plugin; later stages live under
+`profile_intelligence.pipeline`.
 
 ## Built-in plugins (Milestone 1)
 

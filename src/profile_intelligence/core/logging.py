@@ -19,6 +19,7 @@ _CONFIGURED: bool = False
 _ROOT_LOGGER_NAME: Final[str] = "profile_intelligence"
 _IMPORT_LOGGER_PREFIXES: Final[tuple[str, ...]] = (
     "profile_intelligence.importers",
+    "profile_intelligence.pipeline",
     "profile_intelligence.services.import_service",
 )
 

@@ -9,12 +9,13 @@ src/profile_intelligence/
   core/          # config, config_manager, logging, DI, exceptions
   database/      # connection, models, repository, migrate, seed
   importers/     # plugin interface + registry + built-in plugins
-  extractors/    # field/normalization pipelines (scaffold)
+  pipeline/      # File → … → SQLite staged import pipeline
+  extractors/    # field mapping helpers used by Normalizer
   services/      # application/use-case orchestration
-  scoring/       # scoring engines (scaffold)
-  excel/         # Excel export (scaffold)
+  scoring/       # scoring engines
+  excel/         # Excel export
   dashboard/     # desktop UI layer (scaffold)
-  search/        # local search (scaffold)
+  search/        # local search
   ai/            # AI provider adapters (scaffold)
   bootstrap.py   # composition root
   main.py        # CLI / process launcher
@@ -58,26 +59,35 @@ main()
 ## Core data flow
 
 ```
-Importer
-   ↓
-Database
+File
+ ↓
+RawDocument
+ ↓
+Parser
+ ↓
+Normalizer
+ ↓
+Validator
+ ↓
+Profile Entity
+ ↓
+Repository
+ ↓
+SQLite
 ```
 
-`ImportService` is the bridge:
+Implemented by `ImportPipeline` (`pipeline/`), exposed via `ImportService`:
 
-```
-file.csv / .xlsx / plugin export
-        ↓
-ProfileImporter.import_file()     # Importer stage — raw row dicts
-        ↓
-ProfileExtractor + CompletenessScorer
-        ↓
-ProfileRepository.upsert_draft()  # Database stage — SQLite
-        ↓
-ProfileSearchService / ExcelExporter
-```
-
-Stages are also callable separately: `run_importer()` then `write_to_database()`.
+| Stage | Type | Role |
+|-------|------|------|
+| File | path | Source export on disk |
+| RawDocument | `RawDocument` | Resolved file + metadata |
+| Parser | `DocumentParser` | `ProfileImporter` → raw row records |
+| Normalizer | `ProfileNormalizer` | Alias map → `ProfileDraft` |
+| Validator | `ProfileValidator` | Required fields / format checks |
+| Profile Entity | `Profile` | ORM entity after scoring |
+| Repository | `ProfileRepository` | Upsert API |
+| SQLite | `Database` | Local persistence |
 
 ## Error model
 

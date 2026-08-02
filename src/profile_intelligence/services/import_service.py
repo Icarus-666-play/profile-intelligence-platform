@@ -1,28 +1,36 @@
-"""Importer → Database pipeline.
+"""Importer → Database facade over the staged import pipeline.
 
 ```
-ProfileImporter.import_file()
-        ↓  raw row records
-ProfileExtractor + CompletenessScorer
-        ↓  ProfileDraft
-ProfileRepository.upsert_draft()
-        ↓
-    SQLite Database
+File
+ ↓
+RawDocument
+ ↓
+Parser
+ ↓
+Normalizer
+ ↓
+Validator
+ ↓
+Profile Entity
+ ↓
+Repository
+ ↓
+SQLite
 ```
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from pathlib import Path
 
-from profile_intelligence.core.exceptions import ImporterError
 from profile_intelligence.core.logging import get_logger
 from profile_intelligence.core.types import PathLike
 from profile_intelligence.database.repository import ProfileRepository
 from profile_intelligence.extractors.profile import ProfileExtractor
 from profile_intelligence.importers.base import ImporterPlugin, ImportResult
 from profile_intelligence.importers.registry import ImporterRegistry
+from profile_intelligence.pipeline import ImportPipeline, RawDocument
+from profile_intelligence.pipeline.documents import ParsedDocument
 from profile_intelligence.scoring.completeness import CompletenessScorer
 
 logger = get_logger(__name__)
@@ -54,13 +62,7 @@ class ImportSummary:
 
 
 class ImportService:
-    """Orchestrates the Importer → Database pipeline.
-
-    1. Resolve a ``ProfileImporter`` / ``ImporterPlugin``
-    2. Parse the file into raw records
-    3. Extract / score profile drafts
-    4. Upsert into SQLite via ``ProfileRepository``
-    """
+    """Facade for the File → … → SQLite import pipeline."""
 
     def __init__(
         self,
@@ -68,11 +70,19 @@ class ImportService:
         repository: ProfileRepository,
         extractor: ProfileExtractor | None = None,
         scorer: CompletenessScorer | None = None,
+        pipeline: ImportPipeline | None = None,
     ) -> None:
-        self._registry = registry
-        self._repository = repository
-        self._extractor = extractor or ProfileExtractor()
-        self._scorer = scorer or CompletenessScorer()
+        self._pipeline = pipeline or ImportPipeline(
+            registry,
+            repository,
+            extractor=extractor,
+            scorer=scorer,
+        )
+
+    @property
+    def pipeline(self) -> ImportPipeline:
+        """Underlying staged pipeline."""
+        return self._pipeline
 
     def import_path(
         self,
@@ -81,16 +91,29 @@ class ImportService:
         source: str | None = None,
         plugin_name: str | None = None,
     ) -> ImportSummary:
-        """Run Importer → Database for a single file path."""
-        resolved = Path(path).expanduser().resolve()
-        plugin = self.resolve_importer(resolved, plugin_name=plugin_name)
-        parse_result = self.run_importer(plugin, resolved)
-        return self.write_to_database(
-            parse_result,
-            path=resolved,
-            plugin_name=plugin.name,
-            source=source or plugin.name,
+        """Run File → RawDocument → … → SQLite for a single path."""
+        result = self._pipeline.process(
+            path,
+            source=source,
+            plugin_name=plugin_name,
         )
+        summary = ImportSummary(
+            path=result.path,
+            plugin=result.plugin,
+            records_read=result.records_read,
+            created=result.created,
+            updated=result.updated,
+            skipped=result.skipped,
+            errors=result.errors,
+        )
+        logger.info(
+            "Import complete: created=%d updated=%d skipped=%d errors=%d",
+            summary.created,
+            summary.updated,
+            summary.skipped,
+            len(summary.errors),
+        )
+        return summary
 
     def resolve_importer(
         self,
@@ -98,13 +121,9 @@ class ImportService:
         *,
         plugin_name: str | None = None,
     ) -> ImporterPlugin:
-        """Resolve the importer plugin for *path* (or an explicit plugin name)."""
-        if plugin_name:
-            return self._registry.get(plugin_name)
-        found = self._registry.find_handler(path)
-        if found is None:
-            raise ImporterError(f"No importer plugin can handle file: {path}")
-        return found
+        """Resolve the importer plugin for *path*."""
+        document = RawDocument.from_path(path, plugin_name=plugin_name)
+        return self._pipeline.parser.resolve_plugin(document)
 
     def run_importer(
         self,
@@ -112,19 +131,17 @@ class ImportService:
         path: PathLike,
         **options: object,
     ) -> ImportResult:
-        """Importer stage: parse *path* into an :class:`ImportResult`."""
-        resolved = Path(path).expanduser().resolve()
-        logger.info("Importer stage: %s via '%s'", resolved, plugin.name)
-        parse_result = plugin.import_file(resolved, **options)
-        if not parse_result.success:
-            message = "; ".join(parse_result.errors) or "Import failed"
-            raise ImporterError(message)
-        logger.debug(
-            "Importer stage complete: records_read=%d skipped=%d",
-            parse_result.records_read,
-            parse_result.records_skipped,
+        """Parser stage helper: File/RawDocument → ImportResult."""
+        document = RawDocument.from_path(path)
+        parsed = self._pipeline.parser.parse(
+            document, plugin=plugin, **options
         )
-        return parse_result
+        return ImportResult.from_records(
+            parsed.records,
+            skipped=parsed.records_skipped,
+            errors=parsed.errors,
+            metadata=dict(parsed.metadata),
+        )
 
     def write_to_database(
         self,
@@ -134,54 +151,28 @@ class ImportService:
         plugin_name: str,
         source: str,
     ) -> ImportSummary:
-        """Database stage: extract, score, and upsert parsed records."""
-        resolved = Path(path).expanduser().resolve()
-        logger.info(
-            "Database stage: persisting %d record(s) from '%s' (source=%s)",
-            len(parse_result.records),
-            plugin_name,
-            source,
+        """Normalizer → Validator → Profile Entity → Repository → SQLite."""
+        document = RawDocument.reference(
+            path,
+            source=source,
+            plugin_name=plugin_name,
         )
-
-        drafts, extract_errors = self._extractor.extract_many(
-            list(parse_result.records),
-            source_override=source,
-        )
-
-        created = 0
-        updated = 0
-        persist_errors: list[str] = []
-        for draft in drafts:
-            draft.score = self._scorer.score(draft)
-            try:
-                _, was_created = self._repository.upsert_draft(draft)
-            except Exception as exc:
-                persist_errors.append(str(exc))
-                logger.exception(
-                    "Database stage failed for draft %r",
-                    draft.display_name,
-                )
-                continue
-            if was_created:
-                created += 1
-            else:
-                updated += 1
-
-        errors = tuple(extract_errors + persist_errors + list(parse_result.errors))
-        summary = ImportSummary(
-            path=str(resolved),
-            plugin=plugin_name,
+        parsed = ParsedDocument(
+            document=document,
+            plugin_name=plugin_name,
+            records=tuple(dict(record) for record in parse_result.records),
             records_read=parse_result.records_read,
-            created=created,
-            updated=updated,
-            skipped=parse_result.records_skipped + len(extract_errors),
-            errors=errors,
+            records_skipped=parse_result.records_skipped,
+            errors=tuple(parse_result.errors),
+            metadata=dict(parse_result.metadata),
         )
-        logger.info(
-            "Importer → Database complete: created=%d updated=%d skipped=%d errors=%d",
-            summary.created,
-            summary.updated,
-            summary.skipped,
-            len(summary.errors),
+        result = self._pipeline.persist_parsed(parsed, source=source)
+        return ImportSummary(
+            path=result.path,
+            plugin=result.plugin,
+            records_read=result.records_read,
+            created=result.created,
+            updated=result.updated,
+            skipped=result.skipped,
+            errors=result.errors,
         )
-        return summary

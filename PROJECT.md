@@ -32,7 +32,7 @@ Production-quality, local-first desktop application for profile analysis.
 
 ```
 src/profile_intelligence/
-  core/ database/ importers/ extractors/ services/
+  core/ database/ importers/ pipeline/ extractors/ services/
   scoring/ excel/ dashboard/ search/ ai/
 config/ docs/ scripts/ tests/ plugins/
 ```
@@ -50,12 +50,10 @@ See [docs/milestones.md](docs/milestones.md).
 
 ## Status
 
-Milestones 0 and 1 are complete. Core flow:
+Milestones 0 and 1 are complete. Core import flow:
 
 ```
-Importer
-   ↓
-Database
+File → RawDocument → Parser → Normalizer → Validator → Profile Entity → Repository → SQLite
 ```
 
-The local import → extract → persist → search → score → Excel export loop is operational via CLI.
+The local import → search → score → Excel export loop is operational via CLI.

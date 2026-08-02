@@ -13,6 +13,7 @@ from profile_intelligence.database.seed import DatabaseSeeder
 from profile_intelligence.excel.exporter import ExcelExporter
 from profile_intelligence.extractors.profile import ProfileExtractor
 from profile_intelligence.importers.registry import ImporterRegistry
+from profile_intelligence.pipeline import ImportPipeline
 from profile_intelligence.scoring.completeness import CompletenessScorer
 from profile_intelligence.search.service import ProfileSearchService
 from profile_intelligence.services.application import ApplicationService
@@ -72,12 +73,23 @@ def build_container(
         name="excel",
     )
     container.register(
+        ImportPipeline,
+        lambda: ImportPipeline(
+            registry=container.resolve(ImporterRegistry),
+            repository=container.resolve(ProfileRepository),
+            extractor=container.resolve(ProfileExtractor),
+            scorer=container.resolve(CompletenessScorer),
+        ),
+        name="pipeline",
+    )
+    container.register(
         ImportService,
         lambda: ImportService(
             registry=container.resolve(ImporterRegistry),
             repository=container.resolve(ProfileRepository),
             extractor=container.resolve(ProfileExtractor),
             scorer=container.resolve(CompletenessScorer),
+            pipeline=container.resolve(ImportPipeline),
         ),
         name="import",
     )
