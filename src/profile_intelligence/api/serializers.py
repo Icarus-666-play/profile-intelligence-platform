@@ -163,6 +163,15 @@ def preview_result_to_dict(result: PreviewResult) -> dict[str, Any]:
                 "score": row.score,
                 "status": row.status,
                 "messages": list(row.messages),
+                "picture": row.picture,
+                "age": row.age,
+                "nationality": row.nationality,
+                "languages": list(row.languages),
+                "services": list(row.services),
+                "rates": list(row.rates),
+                "reviews": list(row.reviews),
+                "pictures": list(row.pictures),
+                "location": row.location,
             }
             for row in result.rows
         ],

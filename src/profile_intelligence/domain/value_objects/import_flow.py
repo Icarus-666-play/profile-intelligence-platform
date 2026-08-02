@@ -52,6 +52,16 @@ class PreviewRow:
     score: int | None = None
     status: str = "ok"  # ok | update | duplicate | invalid
     messages: tuple[str, ...] = field(default_factory=tuple)
+    # Detail card fields (Import preview)
+    picture: str | None = None
+    age: str | None = None
+    nationality: str | None = None
+    languages: tuple[str, ...] = field(default_factory=tuple)
+    services: tuple[str, ...] = field(default_factory=tuple)
+    rates: tuple[str, ...] = field(default_factory=tuple)
+    reviews: tuple[str, ...] = field(default_factory=tuple)
+    pictures: tuple[str, ...] = field(default_factory=tuple)
+    location: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

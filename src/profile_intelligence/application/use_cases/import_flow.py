@@ -7,8 +7,10 @@ This is the staged control surface for CLI/UI. Internal transform stages remain:
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
+from typing import Any
 
 from profile_intelligence.application.pipeline.chain import ProcessingResult
 from profile_intelligence.application.use_cases.import_pipeline import ImportPipeline
@@ -19,6 +21,7 @@ from profile_intelligence.application.use_cases.import_service import (
 from profile_intelligence.core.exceptions import ImporterError, ValidationError
 from profile_intelligence.core.logging import get_logger
 from profile_intelligence.core.types import PathLike
+from profile_intelligence.domain.entities.profile import ProfileDraft
 from profile_intelligence.domain.value_objects.documents import RawDocument
 from profile_intelligence.domain.value_objects.import_flow import (
     IMPORT_FLOW_STAGES,
@@ -326,13 +329,9 @@ def _preview_from_processing(processed: ProcessingResult) -> PreviewResult:
         if match is not None:
             messages = (match.reason,)
         rows.append(
-            PreviewRow(
+            _preview_row_from_draft(
+                draft,
                 index=index,
-                display_name=draft.display_name,
-                email=draft.email,
-                organization=draft.organization,
-                source=draft.source,
-                score=draft.score,
                 status=status,
                 messages=messages,
             )
@@ -342,13 +341,9 @@ def _preview_from_processing(processed: ProcessingResult) -> PreviewResult:
     for match in processed.duplicates:
         draft = match.draft
         rows.append(
-            PreviewRow(
+            _preview_row_from_draft(
+                draft,
                 index=index,
-                display_name=draft.display_name,
-                email=draft.email,
-                organization=draft.organization,
-                source=draft.source,
-                score=draft.score,
                 status="duplicate",
                 messages=(match.reason,),
             )
@@ -381,6 +376,168 @@ def _preview_from_processing(processed: ProcessingResult) -> PreviewResult:
         stages_run=processed.stages_run,
         errors=processed.errors,
     )
+
+
+def _preview_row_from_draft(
+    draft: ProfileDraft,
+    *,
+    index: int,
+    status: str,
+    messages: tuple[str, ...] = (),
+) -> PreviewRow:
+    raw = _raw_mapping(draft.raw_json)
+    languages = _as_string_list(raw.get("languages"))
+    if not languages and draft.tags:
+        # Best-effort: nationality/languages often land in tags for site plugins.
+        languages = ()
+    services = tuple(
+        service.name for service in draft.services if service.name
+    ) or tuple(_as_string_list(raw.get("services")))
+    rates = tuple(_format_rate(rate) for rate in draft.rates) or tuple(
+        _format_rate_mapping(item) for item in _as_mapping_list(raw.get("rates"))
+    )
+    reviews = tuple(_format_review(review) for review in draft.reviews) or tuple(
+        _format_review_mapping(item)
+        for item in _as_mapping_list(raw.get("reviews"))
+    )
+    picture_urls = tuple(
+        photo.original_url for photo in draft.photos if photo.original_url
+    )
+    if not picture_urls:
+        picture_urls = tuple(
+            url
+            for url in (
+                *(_photo_url(raw.get("main_image")),),
+                *(_photo_url(item) for item in _as_mapping_list(raw.get("gallery"))),
+                *(_photo_url(item) for item in _as_mapping_list(raw.get("photos"))),
+            )
+            if url
+        )
+    main = next(
+        (photo.original_url for photo in draft.photos if photo.role == "main"),
+        None,
+    )
+    if main is None and picture_urls:
+        main = picture_urls[0]
+
+    age = _as_optional_text(raw.get("age"))
+    nationality = _as_optional_text(raw.get("nationality"))
+    return PreviewRow(
+        index=index,
+        display_name=draft.display_name,
+        email=draft.email,
+        organization=draft.organization,
+        source=draft.source,
+        score=draft.score,
+        status=status,
+        messages=messages,
+        picture=main,
+        age=age,
+        nationality=nationality,
+        languages=languages,
+        services=services,
+        rates=tuple(item for item in rates if item),
+        reviews=tuple(item for item in reviews if item),
+        pictures=picture_urls,
+        location=draft.location,
+    )
+
+
+def _raw_mapping(raw_json: str | None) -> dict[str, Any]:
+    if not raw_json:
+        return {}
+    try:
+        payload = json.loads(raw_json)
+    except json.JSONDecodeError:
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def _as_optional_text(value: object) -> str | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
+
+
+def _as_string_list(value: object) -> tuple[str, ...]:
+    if value is None:
+        return ()
+    if isinstance(value, str):
+        parts = [part.strip() for part in re.split(r"[,/;|]", value) if part.strip()]
+        return tuple(parts)
+    if isinstance(value, (list, tuple)):
+        items: list[str] = []
+        for item in value:
+            if isinstance(item, dict):
+                name = item.get("name") or item.get("service")
+                if name:
+                    items.append(str(name).strip())
+            else:
+                text = str(item).strip()
+                if text:
+                    items.append(text)
+        return tuple(items)
+    return ()
+
+
+def _as_mapping_list(value: object) -> list[dict[str, Any]]:
+    if not isinstance(value, list):
+        return []
+    return [item for item in value if isinstance(item, dict)]
+
+
+def _photo_url(value: object) -> str | None:
+    if isinstance(value, str):
+        return value.strip() or None
+    if isinstance(value, dict):
+        return _as_optional_text(
+            value.get("original_url") or value.get("url") or value.get("src")
+        )
+    return None
+
+
+def _format_rate(rate: object) -> str:
+    duration = getattr(rate, "duration", "") or ""
+    price = getattr(rate, "price", "") or ""
+    currency = getattr(rate, "currency", "") or ""
+    bits = [str(duration).strip(), str(price).strip()]
+    if currency:
+        bits.append(str(currency).strip())
+    text = " ".join(bit for bit in bits if bit)
+    return text
+
+
+def _format_rate_mapping(item: dict[str, Any]) -> str:
+    duration = str(item.get("duration") or "").strip()
+    price = str(item.get("price") or "").strip()
+    currency = str(item.get("currency") or "").strip()
+    return " ".join(bit for bit in (duration, price, currency) if bit)
+
+
+def _format_review(review: object) -> str:
+    author = getattr(review, "author", None)
+    rating = getattr(review, "rating", None)
+    text = getattr(review, "text", None)
+    parts = [
+        str(part).strip()
+        for part in (rating, author, text)
+        if part not in (None, "")
+    ]
+    return " — ".join(parts)
+
+
+def _format_review_mapping(item: dict[str, Any]) -> str:
+    parts = [
+        str(part).strip()
+        for part in (
+            item.get("rating"),
+            item.get("author"),
+            item.get("text") or item.get("body"),
+        )
+        if part not in (None, "")
+    ]
+    return " — ".join(parts)
 
 
 def _dedupe_issues(issues: tuple[ValidationIssue, ...]) -> tuple[ValidationIssue, ...]:

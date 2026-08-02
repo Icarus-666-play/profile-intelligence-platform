@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import {
   api,
   type ImportActivity,
   type ImportPreview,
   type ImportSummary,
 } from '../api'
+import ProfilePreviewCard from '../components/ProfilePreviewCard'
 
 type PanelKey = 'recent' | 'queue' | 'progress' | 'errors' | 'completed'
 
@@ -91,6 +92,19 @@ export default function ImportPage() {
     }
   }
 
+  function cancelPreview() {
+    setPreview(null)
+    setError(null)
+  }
+
+  const focusProfile = useMemo(() => {
+    if (!preview?.rows?.length) return null
+    return (
+      preview.rows.find((row) => row.status === 'ok' || row.status === 'update') ||
+      preview.rows[0]
+    )
+  }, [preview])
+
   return (
     <section>
       <h1 className="page-title">Import</h1>
@@ -155,43 +169,57 @@ export default function ImportPage() {
 
       {error && <p className="status error">{error}</p>}
 
-      {preview && (
-        <div className="panel">
-          <h2>Preview</h2>
+      {preview && focusProfile && (
+        <div className="panel profile-preview-panel">
           <p className="muted">
             {preview.plugin} · {preview.records_read} read ·{' '}
             {preview.accepted_count} accepted · {preview.rejected_count} rejected
-            {preview.downloaded_path
-              ? ` · ${preview.downloaded_path}`
-              : ''}
           </p>
-          <table className="table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Name</th>
-                <th>Status</th>
-                <th>Score</th>
-              </tr>
-            </thead>
-            <tbody>
-              {preview.rows.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="muted">
-                    No preview rows.
-                  </td>
-                </tr>
-              )}
-              {preview.rows.slice(0, 20).map((row) => (
-                <tr key={row.index}>
-                  <td>{row.index}</td>
-                  <td>{row.display_name || '—'}</td>
-                  <td>{row.status}</td>
-                  <td>{row.score ?? '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <ProfilePreviewCard
+            profile={focusProfile}
+            busy={busy}
+            onImport={() => {
+              void runImport()
+            }}
+            onCancel={cancelPreview}
+          />
+          {preview.rows.length > 1 && (
+            <details className="preview-more">
+              <summary>{preview.rows.length - 1} more row(s)</summary>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Score</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {preview.rows.slice(1, 20).map((row) => (
+                    <tr key={row.index}>
+                      <td>{row.index}</td>
+                      <td>{row.display_name || '—'}</td>
+                      <td>{row.status}</td>
+                      <td>{row.score ?? '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </details>
+          )}
+        </div>
+      )}
+
+      {preview && !focusProfile && (
+        <div className="panel">
+          <h2>Preview</h2>
+          <p className="muted">No profile rows to show.</p>
+          <div className="import-url-actions">
+            <button type="button" className="secondary" onClick={cancelPreview}>
+              Cancel
+            </button>
+          </div>
         </div>
       )}
 

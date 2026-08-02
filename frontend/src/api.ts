@@ -115,18 +115,29 @@ export type ImportPreview = {
   ok: boolean
   errors: string[]
   stages_run: string[]
-  rows: {
-    index: number
-    display_name: string
-    email: string | null
-    organization: string | null
-    source: string | null
-    score: number | null
-    status: string
-    messages: string[]
-  }[]
+  rows: ImportPreviewRow[]
   url?: string
   downloaded_path?: string
+}
+
+export type ImportPreviewRow = {
+  index: number
+  display_name: string
+  email: string | null
+  organization: string | null
+  source: string | null
+  score: number | null
+  status: string
+  messages: string[]
+  picture: string | null
+  age: string | null
+  nationality: string | null
+  languages: string[]
+  services: string[]
+  rates: string[]
+  reviews: string[]
+  pictures: string[]
+  location: string | null
 }
 
 export type ImportActivity = {

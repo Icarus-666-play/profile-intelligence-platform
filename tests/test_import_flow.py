@@ -16,6 +16,66 @@ def test_import_flow_stages_constant() -> None:
     assert ImportFlow.stages == IMPORT_FLOW_STAGES
 
 
+def test_preview_row_includes_detail_fields(temp_root: Path) -> None:
+    container = build_container(root_dir=temp_root)
+    app = container.resolve(ApplicationService)
+    app.start()
+    try:
+        csv_path = temp_root / "rich.csv"
+        csv_path.write_text(
+            "name,email,age,nationality,languages,rates,services,reviews,photos\n"
+            'Sofia,sofia@example.com,28,Italian,"English, Italian",'
+            '"[{""duration"":""1 hour"",""price"":""300"",""currency"":""EUR""}]",'
+            '"[{""name"":""GFE""}]",'
+            '"[{""author"":""A"",""rating"":""4.8"",""text"":""Nice""}]",'
+            '"[{""original_url"":""https://example.com/sofia.jpg"",""role"":""main""}]"\n',
+            encoding="utf-8",
+        )
+        # CSV importer may not parse nested JSON columns — seed via raw pipeline path.
+        from profile_intelligence.application.use_cases.import_flow import (
+            _preview_row_from_draft,
+        )
+        from profile_intelligence.domain.entities.profile import ProfileDraft
+        from profile_intelligence.domain.value_objects.profile_children import (
+            Photo,
+            Rate,
+            Review,
+            Service,
+        )
+
+        draft = ProfileDraft(
+            display_name="Sofia",
+            location="Amsterdam, Netherlands",
+            source="eurogirls",
+            raw_json=(
+                '{"age":"28","nationality":"Italian",'
+                '"languages":"English, Italian"}'
+            ),
+            rates=(Rate(duration="1 hour", price="300", currency="EUR"),),
+            services=(Service(name="GFE"),),
+            reviews=(Review(author="A", rating="4.8", text="Nice"),),
+            photos=(
+                Photo(
+                    original_url="https://example.com/sofia.jpg",
+                    role="main",
+                ),
+            ),
+            score=80,
+        )
+        row = _preview_row_from_draft(draft, index=1, status="ok")
+        assert row.display_name == "Sofia"
+        assert row.age == "28"
+        assert row.nationality == "Italian"
+        assert "English" in row.languages
+        assert row.services == ("GFE",)
+        assert any("300" in item for item in row.rates)
+        assert any("4.8" in item for item in row.reviews)
+        assert row.picture == "https://example.com/sofia.jpg"
+        assert row.pictures == ("https://example.com/sofia.jpg",)
+    finally:
+        app.shutdown()
+
+
 def test_input_preview_validate_import(temp_root: Path) -> None:
     container = build_container(root_dir=temp_root)
     app = container.resolve(ApplicationService)

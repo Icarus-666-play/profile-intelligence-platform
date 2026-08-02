@@ -85,6 +85,19 @@ https://
 
 [ Preview ]   [ Import ]
 
+Profile preview (after Preview)
+  Picture
+  Name
+  Age
+  Nationality
+  Languages
+  Services
+  Rates
+  Reviews
+  Pictures
+  ----------------------
+  [ Import ]  [ Cancel ]
+
 ----------------------------
 
 Recent URLs | Import Queue | Progress | Errors | Completed
