@@ -35,16 +35,28 @@ class _LocalDownloader:
         return DownloadArtifact(path=self._path, source=str(source))
 
 
+class _MapDownloader:
+    def __init__(self, mapping: dict[str, Path]) -> None:
+        self._mapping = mapping
+
+    def download(self, source: str | Path) -> DownloadArtifact:
+        key = str(source)
+        return DownloadArtifact(path=self._mapping[key], source=key)
+
+
 def _ctx(
     tmp_path: Path,
     *,
     csv_path: Path | None = None,
+    url_map: dict[str, Path] | None = None,
 ) -> tuple[ApiContext, ApplicationService]:
     container = build_container(root_dir=tmp_path)
     app = container.resolve(ApplicationService)
     app.start()
-    downloader: DocumentDownloader | _LocalDownloader | None
-    if csv_path is not None:
+    downloader: DocumentDownloader | _LocalDownloader | _MapDownloader | None
+    if url_map is not None:
+        downloader = _MapDownloader(url_map)
+    elif csv_path is not None:
         downloader = _LocalDownloader(csv_path)
     else:
         downloader = container.resolve(DocumentDownloader)
@@ -164,5 +176,54 @@ def test_import_url_preview_and_import_activity_api(temp_root: Path) -> None:
             item["url"] == "https://example.com/people.csv"
             for item in payload["completed"]
         )
+    finally:
+        app_svc.shutdown()
+
+
+def test_import_multiple_urls_batch(temp_root: Path) -> None:
+    first = temp_root / "one.csv"
+    second = temp_root / "two.csv"
+    first.write_text("name,email\nAda,ada@example.com\n", encoding="utf-8")
+    second.write_text("name,email\nGrace,grace@example.com\n", encoding="utf-8")
+    mapping = {
+        "https://example.com/one.csv": first,
+        "https://example.com/two.csv": second,
+    }
+    ctx, app_svc = _ctx(temp_root, url_map=mapping)
+    try:
+        client = TestClient(create_fastapi_app(ctx, serve_spa=False))
+        preview = client.post(
+            "/api/import/url/preview",
+            json={
+                "urls": [
+                    "https://example.com/one.csv",
+                    "https://example.com/two.csv",
+                    "https://...",
+                ],
+                "plugin": "csv",
+            },
+        )
+        assert preview.status_code == 200
+        body = preview.json()
+        assert body["count"] == 2
+        assert len(body["previews"]) == 2
+        assert body["ok"] is True
+
+        imported = client.post(
+            "/api/import/url",
+            json={
+                "url": (
+                    "https://example.com/one.csv\n"
+                    "https://example.com/two.csv\n"
+                    "https://"
+                ),
+                "plugin": "csv",
+            },
+        )
+        assert imported.status_code == 200
+        imported_body = imported.json()
+        assert imported_body["count"] == 2
+        assert len(imported_body["imports"]) == 2
+        assert sum(item["created"] for item in imported_body["imports"]) >= 2
     finally:
         app_svc.shutdown()

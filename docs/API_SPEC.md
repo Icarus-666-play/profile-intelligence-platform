@@ -58,20 +58,24 @@ Run the URL import pipeline through Import:
 ```json
 {
   "url": "https://example.com/profiles.csv",
+  "urls": ["https://example.com/a.csv", "https://example.com/b.csv"],
   "plugin": "csv",
   "source": "site-a"
 }
 ```
 
+`url` may be multiline (one URL per line). `urls` is an explicit list. Placeholders like `https://...` are ignored.
+
 Requires `media.allow_remote_download: true`.  
-Response: import summary (+ `url`, `snapshot`, `pipeline`, `stages_run`, `stage`).  
-Records Recent URLs / Completed (or Errors) via import activity.
+Single URL response: import summary (+ `url`, `snapshot`, `pipeline`, `stages_run`, `stage`).  
+Multiple URLs: `{ count, imports[], errors[], urls[], pipeline, ok }`.
 
 ### `POST /api/import/url/preview`
 
 Same pipeline through Preview (no repository write).
 
-Response: preview rows + counts (+ `url`, `downloaded_path`, `snapshot`, `pipeline`, `stages_run`).
+Single URL: preview rows + counts (+ `url`, `downloaded_path`, `snapshot`, `pipeline`, `stages_run`).  
+Multiple URLs: `{ count, previews[], errors[], urls[], pipeline, ok }` plus first preview fields for the card.
 
 ### `GET /api/import/activity`
 

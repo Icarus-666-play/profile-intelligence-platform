@@ -89,11 +89,13 @@ URL → Downloader → Snapshot → Parser → Extractor
   → Normalizer → Validator → Preview → Import
   …pipeline stepper…
 
-URL
-_________________________________
-https://
+URLs (one per line)
+https://...
+https://...
+https://...
+https://...
 
-[ Preview ]   [ Import ]
+[ Preview ]   [ Import N URLs ]
 
 Profile preview (after Preview)
   Picture

@@ -83,179 +83,77 @@ def dispatch(
 
 
 def import_url(ctx: ApiContext, body: dict[str, Any]) -> dict[str, Any]:
-    """POST /api/import/url — URL → … → Import pipeline."""
-    from profile_intelligence.domain.value_objects.url_import import (
-        URL_IMPORT_STAGES,
-        UrlSnapshot,
-        stage_percent,
-        stages_through,
-    )
+    """POST /api/import/url — one or more URLs through Import."""
+    from profile_intelligence.domain.value_objects.url_import import URL_IMPORT_STAGES
 
-    url, plugin, source = _url_import_args(ctx, body)
-    activity = ctx.import_activity
-    _url_progress(
-        activity,
-        url=url,
-        stage="url",
-        message="Accepted URL",
-        snapshot=None,
-    )
-    try:
-        _url_progress(
-            activity,
-            url=url,
-            stage="downloader",
-            message="Downloading…",
-            snapshot=None,
-        )
-        artifact = _download_url(ctx, url)
-        snapshot = UrlSnapshot.from_artifact(artifact)
-        _url_progress(
-            activity,
-            url=url,
-            stage="snapshot",
-            message=f"Snapshot ready: {snapshot.path.name}",
-            snapshot=snapshot.to_mapping(),
-        )
-        for stage, message in (
-            ("parser", "Parsing snapshot…"),
-            ("extractor", "Extracting profiles…"),
-            ("normalizer", "Normalizing records…"),
-            ("validator", "Validating rows…"),
-        ):
-            _url_progress(
-                activity,
-                url=url,
-                stage=stage,
-                message=message,
-                snapshot=snapshot.to_mapping(),
+    urls, plugin, source = _url_import_list(ctx, body)
+    results: list[dict[str, Any]] = []
+    errors: list[str] = []
+    for index, url in enumerate(urls, start=1):
+        try:
+            results.append(
+                _import_one_url(
+                    ctx,
+                    url=url,
+                    plugin=plugin,
+                    source=source,
+                    batch_label=f"{index}/{len(urls)}",
+                )
             )
-        _url_progress(
-            activity,
-            url=url,
-            stage="import",
-            message="Importing into SQLite…",
-            snapshot=snapshot.to_mapping(),
-        )
-        summary = ctx.import_flow.run_import(
-            artifact.path, source=source, plugin_name=plugin
-        )
-    except (OSError, PipError, ValueError, ApiError) as exc:
-        if activity is not None:
-            activity.record_error(url=url, message=str(exc))
-        if isinstance(exc, ApiError):
-            raise
-        raise ApiError(str(exc), status=400) from exc
-
-    payload = import_summary_to_dict(summary)
-    payload["url"] = url
-    payload["downloaded_path"] = str(artifact.path)
-    payload["snapshot"] = snapshot.to_mapping()
-    payload["pipeline"] = list(URL_IMPORT_STAGES)
-    payload["stages_run"] = list(stages_through("import"))
-    payload["stage"] = "import"
-    payload["percent"] = stage_percent("import")
-    if activity is not None:
-        activity.record_completed(
-            url=url,
-            path=str(artifact.path),
-            plugin=summary.plugin,
-            created=summary.created,
-            updated=summary.updated,
-            success=summary.success,
-            message=(
-                None
-                if summary.success
-                else (summary.errors[0] if summary.errors else "import failed")
-            ),
-        )
-    return payload
+        except ApiError as exc:
+            errors.append(f"{url}: {exc.message}")
+            if ctx.import_activity is not None:
+                ctx.import_activity.record_error(url=url, message=exc.message)
+    if len(urls) == 1:
+        if results:
+            return results[0]
+        raise ApiError(errors[0] if errors else "Import failed", status=400)
+    return {
+        "count": len(results),
+        "imports": results,
+        "errors": errors,
+        "urls": list(urls),
+        "pipeline": list(URL_IMPORT_STAGES),
+        "ok": bool(results) and not errors,
+    }
 
 
 def import_url_preview(ctx: ApiContext, body: dict[str, Any]) -> dict[str, Any]:
-    """POST /api/import/url/preview — URL → … → Preview pipeline."""
-    from profile_intelligence.domain.value_objects.url_import import (
-        URL_IMPORT_STAGES,
-        UrlSnapshot,
-        stage_percent,
-        stages_through,
-    )
+    """POST /api/import/url/preview — one or more URLs through Preview."""
+    from profile_intelligence.domain.value_objects.url_import import URL_IMPORT_STAGES
 
-    url, plugin, source = _url_import_args(ctx, body)
-    activity = ctx.import_activity
-    _url_progress(
-        activity,
-        url=url,
-        stage="url",
-        message="Accepted URL",
-        snapshot=None,
-    )
-    try:
-        _url_progress(
-            activity,
-            url=url,
-            stage="downloader",
-            message="Downloading…",
-            snapshot=None,
-        )
-        artifact = _download_url(ctx, url)
-        snapshot = UrlSnapshot.from_artifact(artifact)
-        _url_progress(
-            activity,
-            url=url,
-            stage="snapshot",
-            message=f"Snapshot ready: {snapshot.path.name}",
-            snapshot=snapshot.to_mapping(),
-        )
-        for stage, message in (
-            ("parser", "Parsing snapshot…"),
-            ("extractor", "Extracting profiles…"),
-            ("normalizer", "Normalizing records…"),
-            ("validator", "Validating rows…"),
-        ):
-            _url_progress(
-                activity,
-                url=url,
-                stage=stage,
-                message=message,
-                snapshot=snapshot.to_mapping(),
+    urls, plugin, source = _url_import_list(ctx, body)
+    results: list[dict[str, Any]] = []
+    errors: list[str] = []
+    for index, url in enumerate(urls, start=1):
+        try:
+            results.append(
+                _preview_one_url(
+                    ctx,
+                    url=url,
+                    plugin=plugin,
+                    source=source,
+                    batch_label=f"{index}/{len(urls)}",
+                )
             )
-        _url_progress(
-            activity,
-            url=url,
-            stage="preview",
-            message="Building preview…",
-            snapshot=snapshot.to_mapping(),
-        )
-        preview = ctx.import_flow.preview(
-            artifact.path, source=source, plugin_name=plugin
-        )
-    except (OSError, PipError, ValueError, ApiError) as exc:
-        if activity is not None:
-            activity.record_error(url=url, message=str(exc))
-        if isinstance(exc, ApiError):
-            raise
-        raise ApiError(str(exc), status=400) from exc
-
-    if activity is not None:
-        # Keep the completed Preview stage visible briefly for the Progress panel.
-        _url_progress(
-            activity,
-            url=url,
-            stage="preview",
-            message="Preview ready",
-            snapshot=snapshot.to_mapping(),
-            percent_override=stage_percent("preview"),
-        )
-    payload = preview_result_to_dict(preview)
-    payload["url"] = url
-    payload["downloaded_path"] = str(artifact.path)
-    payload["snapshot"] = snapshot.to_mapping()
-    payload["pipeline"] = list(URL_IMPORT_STAGES)
-    payload["stages_run"] = list(stages_through("preview"))
-    payload["stage"] = "preview"
-    payload["percent"] = stage_percent("preview")
-    return payload
+        except ApiError as exc:
+            errors.append(f"{url}: {exc.message}")
+            if ctx.import_activity is not None:
+                ctx.import_activity.record_error(url=url, message=exc.message)
+    if len(urls) == 1:
+        if results:
+            return results[0]
+        raise ApiError(errors[0] if errors else "Preview failed", status=400)
+    first = results[0] if results else {}
+    return {
+        **first,
+        "count": len(results),
+        "previews": results,
+        "errors": errors,
+        "urls": list(urls),
+        "pipeline": list(URL_IMPORT_STAGES),
+        "ok": bool(results) and not errors,
+    }
 
 
 def import_activity(ctx: ApiContext) -> dict[str, Any]:
@@ -321,21 +219,238 @@ def _url_progress(
     )
 
 
-def _url_import_args(
+def _url_import_list(
     ctx: ApiContext, body: dict[str, Any]
-) -> tuple[str, str | None, str | None]:
-    url = str(body.get("url") or "").strip()
-    if not url:
-        raise ApiError("Field 'url' is required", status=400)
-    parsed = urlparse(url)
-    if parsed.scheme not in {"http", "https"}:
-        raise ApiError("url must be http or https", status=400)
+) -> tuple[list[str], str | None, str | None]:
+    """Parse one or more URLs from ``url`` / ``urls`` fields."""
     if not ctx.config.media.allow_remote_download:
         raise ApiError(
             "Remote download disabled (media.allow_remote_download=false)",
             status=400,
         )
-    return url, _optional_str(body, "plugin"), _optional_str(body, "source")
+    collected: list[str] = []
+    raw_urls = body.get("urls")
+    if isinstance(raw_urls, list):
+        collected.extend(str(item).strip() for item in raw_urls if str(item).strip())
+    raw_url = body.get("url")
+    if raw_url is not None:
+        text = str(raw_url).replace("\r\n", "\n").replace("\r", "\n")
+        collected.extend(
+            line.strip() for line in text.split("\n") if line.strip()
+        )
+    # Deduplicate while preserving order; drop placeholders.
+    urls: list[str] = []
+    seen: set[str] = set()
+    for item in collected:
+        if item in seen:
+            continue
+        if _is_placeholder_url(item):
+            continue
+        parsed = urlparse(item)
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+            raise ApiError(f"url must be http or https: {item}", status=400)
+        seen.add(item)
+        urls.append(item)
+    if not urls:
+        raise ApiError(
+            "Provide at least one URL via 'url' or 'urls' (one per line)",
+            status=400,
+        )
+    return urls, _optional_str(body, "plugin"), _optional_str(body, "source")
+
+
+def _is_placeholder_url(url: str) -> bool:
+    cleaned = url.strip().lower()
+    if cleaned in {"https://", "http://", "https://...", "http://..."}:
+        return True
+    return cleaned.endswith("://...") or cleaned.endswith("://…")
+
+
+def _import_one_url(
+    ctx: ApiContext,
+    *,
+    url: str,
+    plugin: str | None,
+    source: str | None,
+    batch_label: str | None = None,
+) -> dict[str, Any]:
+    from profile_intelligence.domain.value_objects.url_import import (
+        URL_IMPORT_STAGES,
+        UrlSnapshot,
+        stage_percent,
+        stages_through,
+    )
+
+    activity = ctx.import_activity
+    prefix = f"[{batch_label}] " if batch_label else ""
+    _url_progress(
+        activity,
+        url=url,
+        stage="url",
+        message=f"{prefix}Accepted URL",
+        snapshot=None,
+    )
+    try:
+        _url_progress(
+            activity,
+            url=url,
+            stage="downloader",
+            message=f"{prefix}Downloading…",
+            snapshot=None,
+        )
+        artifact = _download_url(ctx, url)
+        snapshot = UrlSnapshot.from_artifact(artifact)
+        _url_progress(
+            activity,
+            url=url,
+            stage="snapshot",
+            message=f"{prefix}Snapshot ready: {snapshot.path.name}",
+            snapshot=snapshot.to_mapping(),
+        )
+        for stage, message in (
+            ("parser", "Parsing snapshot…"),
+            ("extractor", "Extracting profiles…"),
+            ("normalizer", "Normalizing records…"),
+            ("validator", "Validating rows…"),
+        ):
+            _url_progress(
+                activity,
+                url=url,
+                stage=stage,
+                message=f"{prefix}{message}",
+                snapshot=snapshot.to_mapping(),
+            )
+        _url_progress(
+            activity,
+            url=url,
+            stage="import",
+            message=f"{prefix}Importing into SQLite…",
+            snapshot=snapshot.to_mapping(),
+        )
+        summary = ctx.import_flow.run_import(
+            artifact.path, source=source, plugin_name=plugin
+        )
+    except (OSError, PipError, ValueError, ApiError) as exc:
+        if activity is not None:
+            activity.record_error(url=url, message=str(exc))
+        if isinstance(exc, ApiError):
+            raise
+        raise ApiError(str(exc), status=400) from exc
+
+    payload = import_summary_to_dict(summary)
+    payload["url"] = url
+    payload["downloaded_path"] = str(artifact.path)
+    payload["snapshot"] = snapshot.to_mapping()
+    payload["pipeline"] = list(URL_IMPORT_STAGES)
+    payload["stages_run"] = list(stages_through("import"))
+    payload["stage"] = "import"
+    payload["percent"] = stage_percent("import")
+    if activity is not None:
+        activity.record_completed(
+            url=url,
+            path=str(artifact.path),
+            plugin=summary.plugin,
+            created=summary.created,
+            updated=summary.updated,
+            success=summary.success,
+            message=(
+                None
+                if summary.success
+                else (summary.errors[0] if summary.errors else "import failed")
+            ),
+        )
+    return payload
+
+
+def _preview_one_url(
+    ctx: ApiContext,
+    *,
+    url: str,
+    plugin: str | None,
+    source: str | None,
+    batch_label: str | None = None,
+) -> dict[str, Any]:
+    from profile_intelligence.domain.value_objects.url_import import (
+        URL_IMPORT_STAGES,
+        UrlSnapshot,
+        stage_percent,
+        stages_through,
+    )
+
+    activity = ctx.import_activity
+    prefix = f"[{batch_label}] " if batch_label else ""
+    _url_progress(
+        activity,
+        url=url,
+        stage="url",
+        message=f"{prefix}Accepted URL",
+        snapshot=None,
+    )
+    try:
+        _url_progress(
+            activity,
+            url=url,
+            stage="downloader",
+            message=f"{prefix}Downloading…",
+            snapshot=None,
+        )
+        artifact = _download_url(ctx, url)
+        snapshot = UrlSnapshot.from_artifact(artifact)
+        _url_progress(
+            activity,
+            url=url,
+            stage="snapshot",
+            message=f"{prefix}Snapshot ready: {snapshot.path.name}",
+            snapshot=snapshot.to_mapping(),
+        )
+        for stage, message in (
+            ("parser", "Parsing snapshot…"),
+            ("extractor", "Extracting profiles…"),
+            ("normalizer", "Normalizing records…"),
+            ("validator", "Validating rows…"),
+        ):
+            _url_progress(
+                activity,
+                url=url,
+                stage=stage,
+                message=f"{prefix}{message}",
+                snapshot=snapshot.to_mapping(),
+            )
+        _url_progress(
+            activity,
+            url=url,
+            stage="preview",
+            message=f"{prefix}Building preview…",
+            snapshot=snapshot.to_mapping(),
+        )
+        preview = ctx.import_flow.preview(
+            artifact.path, source=source, plugin_name=plugin
+        )
+    except (OSError, PipError, ValueError, ApiError) as exc:
+        if activity is not None:
+            activity.record_error(url=url, message=str(exc))
+        if isinstance(exc, ApiError):
+            raise
+        raise ApiError(str(exc), status=400) from exc
+
+    if activity is not None:
+        _url_progress(
+            activity,
+            url=url,
+            stage="preview",
+            message=f"{prefix}Preview ready",
+            snapshot=snapshot.to_mapping(),
+            percent_override=stage_percent("preview"),
+        )
+    payload = preview_result_to_dict(preview)
+    payload["url"] = url
+    payload["downloaded_path"] = str(artifact.path)
+    payload["snapshot"] = snapshot.to_mapping()
+    payload["pipeline"] = list(URL_IMPORT_STAGES)
+    payload["stages_run"] = list(stages_through("preview"))
+    payload["stage"] = "preview"
+    payload["percent"] = stage_percent("preview")
+    return payload
 
 
 def _download_url(ctx: ApiContext, url: str) -> DownloadArtifact:

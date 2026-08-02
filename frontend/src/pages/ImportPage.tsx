@@ -10,6 +10,7 @@ import UrlImportPipeline, {
   DEFAULT_LABELS,
   DEFAULT_PIPELINE,
 } from '../components/UrlImportPipeline'
+import { URL_LIST_PLACEHOLDER, parseUrlList } from '../urlList'
 
 type PanelKey = 'recent' | 'queue' | 'progress' | 'errors' | 'completed'
 
@@ -22,17 +23,22 @@ const PANELS: { key: PanelKey; label: string }[] = [
 ]
 
 export default function ImportPage() {
-  const [url, setUrl] = useState('https://')
+  const [urlsText, setUrlsText] = useState(URL_LIST_PLACEHOLDER)
   const [plugin, setPlugin] = useState('')
   const [source, setSource] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [preview, setPreview] = useState<ImportPreview | null>(null)
+  const [previewBatch, setPreviewBatch] = useState<ImportPreview[]>([])
   const [lastImport, setLastImport] = useState<ImportSummary | null>(null)
+  const [importBatch, setImportBatch] = useState<ImportSummary[]>([])
+  const [batchErrors, setBatchErrors] = useState<string[]>([])
   const [activity, setActivity] = useState<ImportActivity | null>(null)
   const [panel, setPanel] = useState<PanelKey>('recent')
   const [activeStage, setActiveStage] = useState<string | null>(null)
   const [stagesRun, setStagesRun] = useState<string[]>([])
+
+  const selectedUrls = useMemo(() => parseUrlList(urlsText), [urlsText])
 
   const refreshActivity = useCallback(async () => {
     try {
@@ -59,24 +65,39 @@ export default function ImportPage() {
 
   async function runPreview(event?: FormEvent) {
     event?.preventDefault()
+    const urls = parseUrlList(urlsText)
+    if (!urls.length) {
+      setError('Enter at least one URL (one per line).')
+      return
+    }
     setBusy(true)
     setError(null)
     setLastImport(null)
+    setImportBatch([])
+    setBatchErrors([])
     setActiveStage('url')
     setStagesRun(['url'])
     setPanel('progress')
     try {
       const result = await api.previewUrl({
-        url: url.trim(),
+        urls,
         plugin: plugin.trim() || undefined,
         source: source.trim() || undefined,
       })
-      setPreview(result)
+      const batch = result.previews?.length ? result.previews : [result]
+      setPreviewBatch(batch)
+      setPreview(batch[0] ?? result)
+      setBatchErrors(result.errors ?? [])
       setActiveStage(result.stage || 'preview')
-      setStagesRun(result.stages_run?.length ? result.stages_run : [...DEFAULT_PIPELINE].slice(0, 8))
+      setStagesRun(
+        result.stages_run?.length
+          ? result.stages_run
+          : [...DEFAULT_PIPELINE].slice(0, 8),
+      )
       await refreshActivity()
     } catch (err) {
       setPreview(null)
+      setPreviewBatch([])
       setError(err instanceof Error ? err.message : String(err))
       setPanel('errors')
       await refreshActivity()
@@ -87,6 +108,11 @@ export default function ImportPage() {
 
   async function runImport(event?: FormEvent) {
     event?.preventDefault()
+    const urls = parseUrlList(urlsText)
+    if (!urls.length) {
+      setError('Enter at least one URL (one per line).')
+      return
+    }
     setBusy(true)
     setError(null)
     setActiveStage('url')
@@ -94,14 +120,20 @@ export default function ImportPage() {
     setPanel('progress')
     try {
       const result = await api.importUrl({
-        url: url.trim(),
+        urls,
         plugin: plugin.trim() || undefined,
         source: source.trim() || undefined,
       })
-      setLastImport(result)
+      const batch = result.imports?.length ? result.imports : [result]
+      setImportBatch(batch)
+      setLastImport(batch[batch.length - 1] ?? result)
+      setBatchErrors(result.errors ?? [])
       setPreview(null)
+      setPreviewBatch([])
       setActiveStage(result.stage || 'import')
-      setStagesRun(result.stages_run?.length ? result.stages_run : [...DEFAULT_PIPELINE])
+      setStagesRun(
+        result.stages_run?.length ? result.stages_run : [...DEFAULT_PIPELINE],
+      )
       setPanel('completed')
       await refreshActivity()
     } catch (err) {
@@ -115,7 +147,22 @@ export default function ImportPage() {
 
   function cancelPreview() {
     setPreview(null)
+    setPreviewBatch([])
     setError(null)
+  }
+
+  function useRecentUrl(next: string) {
+    const existing = parseUrlList(urlsText)
+    if (existing.includes(next)) {
+      setUrlsText(existing.join('\n'))
+      return
+    }
+    const lines = urlsText
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line && line !== 'https://...' && line !== 'http://...')
+    const merged = [...existing, next]
+    setUrlsText(merged.length ? merged.join('\n') : [...lines, next].join('\n'))
   }
 
   const focusProfile = useMemo(() => {
@@ -154,7 +201,8 @@ export default function ImportPage() {
       </div>
 
       <div className="panel import-url-panel">
-        <h2>URL</h2>
+        <h2>URLs</h2>
+        <p className="muted">One URL per line.</p>
         <form
           className="import-url-form"
           onSubmit={(event) => {
@@ -162,16 +210,22 @@ export default function ImportPage() {
           }}
         >
           <label className="import-url-label">
-            URL
-            <input
-              className="import-url-input"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://"
-              inputMode="url"
+            URLs
+            <textarea
+              className="import-url-input import-url-list"
+              value={urlsText}
+              onChange={(e) => setUrlsText(e.target.value)}
+              placeholder={URL_LIST_PLACEHOLDER}
+              rows={5}
+              spellCheck={false}
               required
             />
           </label>
+          <p className="muted">
+            {selectedUrls.length
+              ? `${selectedUrls.length} URL${selectedUrls.length === 1 ? '' : 's'} ready`
+              : 'Add real https:// links to continue'}
+          </p>
           <div className="form-row import-url-options">
             <label>
               Plugin
@@ -194,27 +248,42 @@ export default function ImportPage() {
             <button
               type="button"
               className="secondary"
-              disabled={busy}
+              disabled={busy || selectedUrls.length === 0}
               onClick={() => {
                 void runPreview()
               }}
             >
               {busy ? 'Working…' : 'Preview'}
             </button>
-            <button type="submit" disabled={busy}>
-              {busy ? 'Working…' : 'Import'}
+            <button type="submit" disabled={busy || selectedUrls.length === 0}>
+              {busy
+                ? 'Working…'
+                : selectedUrls.length > 1
+                  ? `Import ${selectedUrls.length} URLs`
+                  : 'Import'}
             </button>
           </div>
         </form>
       </div>
 
       {error && <p className="status error">{error}</p>}
+      {batchErrors.length > 0 && (
+        <div className="status error">
+          {batchErrors.map((item) => (
+            <p key={item}>{item}</p>
+          ))}
+        </div>
+      )}
 
       {preview && focusProfile && (
         <div className="panel profile-preview-panel">
           <p className="muted">
+            {preview.url ? `${preview.url} · ` : ''}
             {preview.plugin} · {preview.records_read} read ·{' '}
             {preview.accepted_count} accepted · {preview.rejected_count} rejected
+            {previewBatch.length > 1
+              ? ` · ${previewBatch.length} URL previews`
+              : ''}
           </p>
           <ProfilePreviewCard
             profile={focusProfile}
@@ -267,11 +336,71 @@ export default function ImportPage() {
       {lastImport && (
         <div className="panel">
           <h2>Last import</h2>
-          <p>
-            {lastImport.success ? 'Success' : 'Finished with issues'} · created{' '}
-            {lastImport.created} · updated {lastImport.updated} · skipped{' '}
-            {lastImport.skipped}
-          </p>
+          {importBatch.length > 1 ? (
+            <>
+              <p className="muted">{importBatch.length} URLs processed</p>
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>URL</th>
+                    <th>Result</th>
+                    <th>Created</th>
+                    <th>Updated</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {importBatch.map((item) => (
+                    <tr key={item.url || item.path}>
+                      <td className="url-cell">{item.url || item.path}</td>
+                      <td>{item.success ? 'ok' : 'issues'}</td>
+                      <td>{item.created}</td>
+                      <td>{item.updated}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
+          ) : (
+            <p>
+              {lastImport.success ? 'Success' : 'Finished with issues'} · created{' '}
+              {lastImport.created} · updated {lastImport.updated} · skipped{' '}
+              {lastImport.skipped}
+            </p>
+          )}
+        </div>
+      )}
+
+      {previewBatch.length > 1 && (
+        <div className="panel">
+          <h2>URL previews</h2>
+          <table className="table">
+            <thead>
+              <tr>
+                <th>URL</th>
+                <th>Plugin</th>
+                <th>Accepted</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {previewBatch.map((item) => (
+                <tr key={item.url || item.path}>
+                  <td className="url-cell">{item.url || item.path}</td>
+                  <td>{item.plugin}</td>
+                  <td>{item.accepted_count}</td>
+                  <td>
+                    <button
+                      type="button"
+                      className="secondary"
+                      onClick={() => setPreview(item)}
+                    >
+                      Show
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
@@ -321,7 +450,7 @@ export default function ImportPage() {
                         <button
                           type="button"
                           className="secondary"
-                          onClick={() => setUrl(item.url)}
+                          onClick={() => useRecentUrl(item.url)}
                         >
                           Use
                         </button>

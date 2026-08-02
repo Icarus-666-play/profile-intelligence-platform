@@ -369,13 +369,34 @@ export const api = {
       '/api/import/files',
       { method: 'POST', body: JSON.stringify(body) },
     ),
-  importUrl: (body: { url: string; plugin?: string; source?: string }) =>
-    request<ImportSummary>('/api/import/url', {
+  importUrl: (body: {
+    url?: string
+    urls?: string[]
+    plugin?: string
+    source?: string
+  }) =>
+    request<ImportSummary & {
+      count?: number
+      imports?: ImportSummary[]
+      errors?: string[]
+      urls?: string[]
+      ok?: boolean
+    }>('/api/import/url', {
       method: 'POST',
       body: JSON.stringify(body),
     }),
-  previewUrl: (body: { url: string; plugin?: string; source?: string }) =>
-    request<ImportPreview>('/api/import/url/preview', {
+  previewUrl: (body: {
+    url?: string
+    urls?: string[]
+    plugin?: string
+    source?: string
+  }) =>
+    request<ImportPreview & {
+      count?: number
+      previews?: ImportPreview[]
+      errors?: string[]
+      urls?: string[]
+    }>('/api/import/url/preview', {
       method: 'POST',
       body: JSON.stringify(body),
     }),
