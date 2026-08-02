@@ -21,9 +21,33 @@ export type DashboardSnapshot = {
   total_profiles: number
   scored_profiles: number
   average_score: number | null
+  imported_today: number
+  countries: number
+  average_price: number | null
+  average_price_currency: string
+  average_rating: number | null
   by_source: { source: string; count: number }[]
   top_profiles: Profile[]
   incomplete_profiles: Profile[]
+  newest_profiles: Profile[]
+  latest_imports: {
+    path: string
+    name: string
+    imported_at: string | null
+    file_size: number
+  }[]
+  duplicates: {
+    left_id: number
+    right_id: number
+    left_name: string
+    right_name: string
+    score: number
+  }[]
+  import_queue: {
+    path: string
+    name: string
+    file_size: number
+  }[]
 }
 
 export type PluginInfo = {

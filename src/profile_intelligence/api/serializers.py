@@ -49,6 +49,11 @@ def dashboard_to_dict(snapshot: DashboardSnapshot) -> dict[str, Any]:
         "total_profiles": snapshot.total_profiles,
         "scored_profiles": snapshot.scored_profiles,
         "average_score": snapshot.average_score,
+        "imported_today": snapshot.imported_today,
+        "countries": snapshot.countries,
+        "average_price": snapshot.average_price,
+        "average_price_currency": snapshot.average_price_currency,
+        "average_rating": snapshot.average_rating,
         "by_source": [
             {"source": source, "count": count}
             for source, count in snapshot.by_source
@@ -56,6 +61,36 @@ def dashboard_to_dict(snapshot: DashboardSnapshot) -> dict[str, Any]:
         "top_profiles": [profile_to_dict(row) for row in snapshot.top_profiles],
         "incomplete_profiles": [
             profile_to_dict(row) for row in snapshot.incomplete_profiles
+        ],
+        "newest_profiles": [
+            profile_to_dict(row) for row in snapshot.newest_profiles
+        ],
+        "latest_imports": [
+            {
+                "path": item.path,
+                "name": item.name,
+                "imported_at": item.imported_at,
+                "file_size": item.file_size,
+            }
+            for item in snapshot.latest_imports
+        ],
+        "duplicates": [
+            {
+                "left_id": item.left_id,
+                "right_id": item.right_id,
+                "left_name": item.left_name,
+                "right_name": item.right_name,
+                "score": item.score,
+            }
+            for item in snapshot.duplicates
+        ],
+        "import_queue": [
+            {
+                "path": item.path,
+                "name": item.name,
+                "file_size": item.file_size,
+            }
+            for item in snapshot.import_queue
         ],
     }
 

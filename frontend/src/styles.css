@@ -190,6 +190,39 @@ a {
   margin-bottom: 1.75rem;
 }
 
+.metric-row-5 {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.dash-panels {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.dash-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.dash-tab {
+  border: 1px solid var(--line);
+  background: rgba(247, 249, 252, 0.72);
+  color: var(--ink-soft);
+  padding: 0.55rem 0.9rem;
+}
+
+.dash-tab.active {
+  border-color: var(--teal);
+  color: var(--teal-deep);
+  background: rgba(13, 110, 106, 0.12);
+  font-weight: 600;
+}
+
+.dash-panel-body {
+  animation: page-in 320ms ease-out both;
+}
+
 .metric {
   padding: 1.1rem 1.2rem;
   border: 1px solid var(--line);
@@ -489,8 +522,14 @@ button.secondary,
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .metric-row {
+  .metric-row,
+  .metric-row-5 {
     grid-template-columns: 1fr;
+  }
+
+  .dash-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
   }
 
   .main {

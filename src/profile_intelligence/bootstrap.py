@@ -276,7 +276,13 @@ def build_container(
     )
     container.register(
         DashboardService,
-        lambda: DashboardService(container.resolve(IProfileRepository)),
+        lambda: DashboardService(
+            container.resolve(IProfileRepository),
+            database=container.resolve(Database),
+            analysis=container.resolve(AnalysisService),
+            import_ledger=container.resolve(ImportFileLedger),
+            config=container.resolve(AppConfig),
+        ),
         name="dashboard",
     )
     container.register(

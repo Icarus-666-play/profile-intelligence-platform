@@ -114,3 +114,33 @@ class ImportFileLedger:
                 f"Failed to mark import file in ledger: {resolved}",
                 cause=exc,
             ) from exc
+
+    def list_recent(self, *, limit: int = 10) -> tuple[LedgerEntry, ...]:
+        """Return the most recently imported ledger rows."""
+        try:
+            with self._database.session() as session:
+                rows = session.execute(
+                    text(
+                        """
+                        SELECT path, content_hash, file_size, imported_at
+                        FROM import_file_ledger
+                        ORDER BY imported_at DESC, id DESC
+                        LIMIT :limit
+                        """
+                    ),
+                    {"limit": max(1, int(limit))},
+                ).all()
+        except Exception as exc:
+            raise RepositoryError(
+                "Failed to list recent import ledger rows",
+                cause=exc,
+            ) from exc
+        return tuple(
+            LedgerEntry(
+                path=str(row[0]),
+                content_hash=str(row[1]),
+                file_size=int(row[2] or 0),
+                imported_at=str(row[3]) if row[3] is not None else None,
+            )
+            for row in rows
+        )

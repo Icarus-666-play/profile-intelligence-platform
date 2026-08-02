@@ -48,26 +48,19 @@ Navigation source of truth: `ui/navigation.py`.
 
 ## Pages
 
-### Dashboard `/`
+### Dashboard `/dashboard`
 
 ```
-Profile Intelligence Platform          ← brand-level title
 Dashboard — local overview…
 
-PROFILES     SCORED     AVG CONFIDENCE
-   N           N            NN.N
+Profiles   Imported Today   Countries   Average Price   Average Rating
+  N              N              N            €NNN            N.NN
 
-By source
-  source-a · n   source-b · n
-
-Top confidence
-  #id  Name   source · confidence=NN
-
-Needs attention
-  #id  Name   source · confidence=NN
+[ Latest Imports | Newest Profiles | Duplicates | Import Queue ]
+  …table for active panel…
 ```
 
-Data: `DashboardService.snapshot()`.
+Data: `DashboardService.snapshot()` (+ rates/reviews/ledger/inbox).
 
 ### Search `/search`
 
