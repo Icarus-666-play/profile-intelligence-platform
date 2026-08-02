@@ -72,7 +72,7 @@ All platform errors inherit from `PipError`. Domain-specific subclasses (`Config
 
 ## Extension points
 
-1. **Importers** — subclass `ImporterPlugin`, place under `importers/plugins/` or external `plugins/`
+1. **Importers** — subclass `ImporterPlugin`, place under `importers/plugins/` or external `plugins/<name>/` (e.g. `eurogirls`, `eros`, `custom`)
 2. **Migrations** — add `Migration` subclasses in `database/migrations/versions/` and register in `ALL_MIGRATIONS`
 3. **Services** — register additional factories on `Container` in `bootstrap.py`
 4. **AI** — enable via `ai.enabled` and implement adapters under `ai/`

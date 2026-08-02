@@ -84,6 +84,46 @@ class ExternalImporter(ImporterPlugin):
     assert registry.get("external_demo").description == "Loaded from directory"
 
 
+def test_discover_plugin_packages(tmp_path: Path) -> None:
+    package_dir = tmp_path / "sitepack"
+    package_dir.mkdir()
+    (package_dir / "__init__.py").write_text(
+        "from sitepack.importer import SitePackImporter\n",
+        encoding="utf-8",
+    )
+    (package_dir / "importer.py").write_text(
+        """
+from typing import ClassVar
+from profile_intelligence.importers.base import ImportResult, ImporterPlugin
+
+class SitePackImporter(ImporterPlugin):
+    name: ClassVar[str] = "sitepack"
+    description: ClassVar[str] = "Package plugin"
+    supported_extensions: ClassVar[tuple[str, ...]] = (".json",)
+
+    def can_handle(self, path):
+        return self.matches_extension(path)
+
+    def import_file(self, path, **options: object) -> ImportResult:
+        return ImportResult(success=True)
+""",
+        encoding="utf-8",
+    )
+    registry = ImporterRegistry()
+    count = registry.discover_directory(tmp_path)
+    assert count == 1
+    assert registry.get("sitepack").description == "Package plugin"
+
+
+def test_repo_plugin_packages_discoverable() -> None:
+    repo_plugins = Path(__file__).resolve().parents[1] / "plugins"
+    registry = ImporterRegistry()
+    count = registry.discover_directory(repo_plugins)
+    assert count >= 3
+    names = {plugin.name for plugin in registry.list_plugins()}
+    assert {"eurogirls", "eros", "custom"}.issubset(names)
+
+
 def test_import_result_failure() -> None:
     result = ImportResult.failure("nope", records_read=3)
     assert result.success is False

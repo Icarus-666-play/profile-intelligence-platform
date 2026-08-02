@@ -50,8 +50,21 @@ class MyImporter(ImporterPlugin):
 `ImporterRegistry.discover()`:
 
 1. Loads built-in modules under `profile_intelligence.importers.plugins`
-2. Optionally loads `*.py` modules from the configured `plugins/` directory
-3. Filters by `importers.enabled` when that list is non-empty
+2. Loads top-level `*.py` modules from the configured `plugins/` directory
+3. Loads each `plugins/<name>/` package (for example `eurogirls/`, `eros/`, `custom/`)
+4. Filters by `importers.enabled` when that list is non-empty
+
+## External plugin packages
+
+Shipped scaffolds under `plugins/`:
+
+| Package | Plugin name | Status |
+|---------|-------------|--------|
+| `plugins/eurogirls/` | `eurogirls` | Scaffold — claims `eurogirls_*` export filenames |
+| `plugins/eros/` | `eros` | Scaffold — claims `eros_*` export filenames |
+| `plugins/custom/` | `custom` | Working template for `*.custom.json` arrays |
+
+See [`plugins/README.md`](../plugins/README.md) for the package layout.
 
 ## CLI
 
@@ -59,4 +72,5 @@ class MyImporter(ImporterPlugin):
 python -m profile_intelligence importers
 python -m profile_intelligence import path/to/file.csv
 python -m profile_intelligence import path/to/file.xlsx --source crm
+python -m profile_intelligence import path/to/profiles.custom.json --plugin custom
 ```

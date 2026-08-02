@@ -75,7 +75,13 @@ class ImporterRegistry:
         return self._load_from_package(package)
 
     def discover_directory(self, directory: PathLike) -> int:
-        """Load plugin modules from an external directory."""
+        """Load plugin modules and packages from an external directory.
+
+        Supports:
+        - top-level ``*.py`` modules under *directory*
+        - subpackages such as ``plugins/eurogirls/``, ``plugins/eros/``,
+          ``plugins/custom/`` (each with ``__init__.py``)
+        """
         path = Path(directory)
         if not path.exists():
             logger.debug("Plugins directory does not exist yet: %s", path)
@@ -96,10 +102,48 @@ class ImporterRegistry:
                     continue
                 module = self._import_module_from_file(module_path)
                 count += self._register_plugins_from_module(module)
+
+            for child in sorted(path.iterdir()):
+                if not child.is_dir():
+                    continue
+                if child.name.startswith(("_", ".")):
+                    continue
+                count += self._discover_plugin_package(child)
         finally:
             if sys_path_added and path_str in sys.path:
                 sys.path.remove(path_str)
 
+        return count
+
+    def _discover_plugin_package(self, package_dir: Path) -> int:
+        """Import a plugin package directory and register plugin classes."""
+        init_file = package_dir / "__init__.py"
+        if not init_file.exists():
+            # Loose modules inside a folder (no package): load *.py files.
+            count = 0
+            for module_path in sorted(package_dir.glob("*.py")):
+                if module_path.name.startswith("_"):
+                    continue
+                module = self._import_module_from_file(module_path)
+                count += self._register_plugins_from_module(module)
+            return count
+
+        package_name = package_dir.name
+        try:
+            package = importlib.import_module(package_name)
+        except Exception as exc:
+            raise PluginError(
+                f"Failed importing plugin package: {package_dir}",
+                cause=exc,
+            ) from exc
+
+        count = self._register_plugins_from_module(package)
+        count += self._load_from_package(package)
+        logger.debug(
+            "Discovered %d plugin(s) from package %s",
+            count,
+            package_name,
+        )
         return count
 
     def discover(
