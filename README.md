@@ -41,7 +41,16 @@ pip-app list
 pip-app search melinda
 
 ./start.sh
-# uvicorn profile_intelligence.api.main:app --reload
+# or: make run
+```
+
+Developer targets (`Makefile`):
+
+```bash
+make backend    # uvicorn profile_intelligence.api.main:app --reload
+make frontend   # cd frontend && npm run dev
+make build-ui   # cd frontend && npm run build
+make run        # ./start.sh
 ```
 
 See [docs/getting-started.md](docs/getting-started.md) and [docs/milestones.md](docs/milestones.md).

@@ -92,6 +92,8 @@ pip-app export
 pip-app dashboard
 ./start.sh
 # or:
+make run
+# or:
 pip-app ui
 # or:
 uvicorn profile_intelligence.api.main:app --reload
@@ -106,7 +108,10 @@ uvicorn profile_intelligence.api.main:app --reload
 | `compare <id_a> <id_b>` | Side-by-side profile diff |
 | `export` | Write Excel report under `exports/` |
 | `dashboard` | Console dashboard summary |
-| `./start.sh` | Local FastAPI + React UI (`uvicorn …main:app --reload`) |
+| `./start.sh` / `make run` | Local FastAPI + React UI (`uvicorn …main:app --reload`) |
+| `make backend` | API only via uvicorn `--reload` |
+| `make frontend` | Vite React dev server |
+| `make build-ui` | Build SPA into `web/dist` |
 | `ui` | Same stack via `pip-app ui` |
 | `uvicorn …main:app` | Same FastAPI + React stack with `--reload` |
 
