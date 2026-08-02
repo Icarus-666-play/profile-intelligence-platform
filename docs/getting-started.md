@@ -70,12 +70,23 @@ Environment overrides:
 
 ## Primary CLI (`pip-app`)
 
-After `pip install -e .`:
+After install:
 
 ```bash
+pip install -e .
+
 pip-app migrate
+pip-app import profile.webarchive
+pip-app list
+pip-app search melinda
+```
+
+Sample Safari archive: [`samples/profile.webarchive`](../samples/profile.webarchive).
+
+Also supported:
+
+```bash
 pip-app import samples/profiles.csv
-pip-app search Lovelace
 pip-app compare 1 2
 pip-app export
 pip-app dashboard
@@ -84,14 +95,14 @@ pip-app dashboard
 | Command | Purpose |
 |---------|---------|
 | `migrate` | Apply SQLite migrations |
-| `import <path>` | File → … → SQLite pipeline |
+| `import <path>` | File → … → SQLite (`.csv`, `.xlsx`, `.webarchive`, …) |
+| `list` | List stored profiles |
 | `search <query>` | Local profile search |
 | `compare <id_a> <id_b>` | Side-by-side profile diff |
-| `compare --sources A B` | Compare two source labels |
 | `export` | Write Excel report under `exports/` |
 | `dashboard` | Console dashboard summary |
 
-Additional utilities: `seed`, `list`, `score`, `importers`.
+Additional utilities: `seed`, `score`, `importers`.
 
 Equivalent module form: `python -m profile_intelligence <command> …`.
 

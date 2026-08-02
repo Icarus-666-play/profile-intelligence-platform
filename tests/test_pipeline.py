@@ -93,5 +93,5 @@ def test_builtin_importers_discovered(temp_root: Path) -> None:
     app = container.resolve(ApplicationService)
     app.start()
     names = {plugin.name for plugin in app.importers.list_plugins()}
-    assert names == {"csv", "excel"}
+    assert names == {"csv", "excel", "webarchive"}
     app.shutdown()

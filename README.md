@@ -12,14 +12,14 @@ Local-first desktop application for profile analysis, scoring, Excel reporting, 
 - Typed exception hierarchy and quality tooling
 
 ### Milestone 1 — Core Profile Pipeline
-- Built-in **CSV** and **Excel** importer plugins
+- Built-in **CSV**, **Excel**, and **Safari `.webarchive`** importer plugins
 - External plugin packages under `plugins/` (`eurogirls`, `eros`, `custom`)
 - Header-alias extractors → SQLite upsert
 - Completeness scoring (0–100)
 - Local profile search and compare
 - Excel workbook export
 - Console dashboard
-- CLI: `migrate`, `import`, `search`, `compare`, `export`, `dashboard`
+- CLI: `migrate`, `import`, `list`, `search`, `compare`, `export`, `dashboard`
 
 ## Quick start
 
@@ -29,15 +29,12 @@ python -m venv .venv
 source .venv/bin/activate
 
 pip install -U pip
-pip install -e ".[dev]"
+pip install -e .
 
 pip-app migrate
-pip-app import samples/profiles.csv
-pip-app search Lovelace
-pip-app compare 1 2
-pip-app export
-pip-app dashboard
-pytest
+pip-app import samples/profile.webarchive
+pip-app list
+pip-app search melinda
 ```
 
 See [docs/getting-started.md](docs/getting-started.md) and [docs/milestones.md](docs/milestones.md).

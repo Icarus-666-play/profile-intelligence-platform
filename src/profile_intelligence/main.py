@@ -33,6 +33,7 @@ logger = get_logger(__name__)
 _PRIMARY_COMMANDS = (
     "migrate",
     "import",
+    "list",
     "search",
     "compare",
     "export",
@@ -52,6 +53,7 @@ def build_parser() -> argparse.ArgumentParser:
             "primary commands:\n"
             "  pip-app migrate\n"
             "  pip-app import <path>\n"
+            "  pip-app list\n"
             "  pip-app search <query>\n"
             "  pip-app compare <id_a> <id_b>\n"
             "  pip-app export\n"

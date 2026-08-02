@@ -175,6 +175,6 @@ def test_import_result_failure() -> None:
 def test_discover_builtin_plugins() -> None:
     registry = ImporterRegistry()
     count = registry.discover_builtin()
-    assert count == 2
+    assert count == 3
     names = {plugin.name for plugin in registry.list_plugins()}
-    assert names == {"csv", "excel"}
+    assert names == {"csv", "excel", "webarchive"}

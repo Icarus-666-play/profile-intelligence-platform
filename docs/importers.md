@@ -17,6 +17,7 @@ end-to-end. Parser uses a `ProfileImporter` plugin; later stages live under
 |--------|------------|-------|
 | `csv` | `.csv` | UTF-8 CSV with header row |
 | `excel` | `.xlsx` | First worksheet (or `--` sheet via options) |
+| `webarchive` | `.webarchive` | Safari webarchive → HTML profile fields |
 
 ## Interface
 

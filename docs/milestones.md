@@ -31,10 +31,11 @@ Deliver a complete local import → extract → persist → search → score →
 ### Acceptance
 
 1. `pip-app migrate` applies schema migrations
-2. `pip-app import sample.csv` persists profiles to SQLite
-3. `pip-app search <term>` finds matching profiles
-4. `pip-app compare <id_a> <id_b>` diffs two profiles
-5. `pip-app export` writes an `.xlsx` report under `exports/`
-6. `pip-app dashboard` prints a local summary
+2. `pip-app import profile.webarchive` (or `.csv` / `.xlsx`) persists profiles
+3. `pip-app list` shows stored profiles
+4. `pip-app search melinda` finds matching profiles
+5. `pip-app compare <id_a> <id_b>` diffs two profiles
+6. `pip-app export` writes an `.xlsx` report under `exports/`
+7. `pip-app dashboard` prints a local summary
 4. Profiles receive a completeness score on import
 5. Tests and static checks pass
