@@ -33,7 +33,9 @@ from profile_intelligence.infrastructure.database.connection import (
     create_database,
 )
 from profile_intelligence.infrastructure.database.repository import (
+    PostgreSQLProfileRepository,
     SQLiteProfileRepository,
+    create_profile_repository,
 )
 from profile_intelligence.infrastructure.database.seed import DatabaseSeeder
 from profile_intelligence.infrastructure.excel.exporter import ExcelExporter
@@ -71,14 +73,22 @@ def build_container(
     container.register_instance(ImporterRegistry, importers, name="importers")
 
     container.register(
-        SQLiteProfileRepository,
-        lambda: SQLiteProfileRepository(container.resolve(Database)),
-        name="profiles",
+        IProfileRepository,
+        lambda: create_profile_repository(
+            container.resolve(Database),
+            driver=container.resolve(AppConfig).database.driver,
+        ),
+        name="iprofile",
     )
     container.register(
-        IProfileRepository,
-        lambda: container.resolve(SQLiteProfileRepository),
-        name="iprofile",
+        SQLiteProfileRepository,
+        lambda: SQLiteProfileRepository(container.resolve(Database)),
+        name="sqlite_profiles",
+    )
+    container.register(
+        PostgreSQLProfileRepository,
+        lambda: PostgreSQLProfileRepository(container.resolve(Database)),
+        name="postgres_profiles",
     )
     container.register(
         IRateRepository,

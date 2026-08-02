@@ -32,10 +32,15 @@ Relative paths resolve against the repository / install root.
 
 ### `database`
 
+- `driver` — `sqlite` (default) or `postgresql`
+- `url` — SQLAlchemy URL (required for PostgreSQL, e.g. `postgresql+psycopg://…`)
 - `echo_sql` — SQLAlchemy engine echo
 - `timeout_seconds` — SQLite busy timeout
 - `check_same_thread` — sqlite3 connect arg
-- `foreign_keys` — enable `PRAGMA foreign_keys=ON`
+- `foreign_keys` — enable `PRAGMA foreign_keys=ON` (SQLite)
+
+Profile repository adapter is selected by `driver`:
+`SQLiteProfileRepository` or `PostgreSQLProfileRepository`.
 
 ### `importers`
 

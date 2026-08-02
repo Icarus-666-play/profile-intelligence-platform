@@ -61,34 +61,44 @@ IReviewRepository
 IPhotoRepository
 ```
 
-SQLite adapters:
+Adapters:
 
-| Port | Adapter |
-|------|---------|
-| `IProfileRepository` | `SQLiteProfileRepository` |
-| `IRateRepository` | `SQLiteRateRepository` |
-| `IServiceRepository` | `SQLiteServiceRepository` |
-| `IReviewRepository` | `SQLiteReviewRepository` |
-| `IPhotoRepository` | `SQLitePhotoRepository` |
+| Port | SQLite | PostgreSQL |
+|------|--------|------------|
+| `IProfileRepository` | `SQLiteProfileRepository` | `PostgreSQLProfileRepository` |
+| `IRateRepository` | `SQLiteRateRepository` | — |
+| `IServiceRepository` | `SQLiteServiceRepository` | — |
+| `IReviewRepository` | `SQLiteReviewRepository` | — |
+| `IPhotoRepository` | `SQLitePhotoRepository` | — |
 
-`SQLiteProfileRepository.upsert_draft` upserts the parent and replaces child collections in one session (delegating to the child session helpers). `SQLiteRepository` and `ProfileRepository` remain compatibility aliases.
+Both profile adapters share `SqlAlchemyProfileRepository`. `create_profile_repository(database, driver=…)` selects the adapter from `database.driver`. `SQLiteRepository` / `ProfileRepository` remain compatibility aliases for SQLite.
 
 ```
 Domain ProfileDraft
  ↓
-IProfileRepository  (SQLiteProfileRepository)
- ↓
-SQLite
+IProfileRepository
+  ├─ SQLiteProfileRepository → SQLite
+  └─ PostgreSQLProfileRepository → PostgreSQL
 ```
+
+Configure PostgreSQL in `settings.yaml` (or local overlay):
+
+```yaml
+database:
+  driver: postgresql
+  url: postgresql+psycopg://user:pass@localhost:5432/pip
+```
+
+Install driver: `pip install -e ".[postgres]"`.
 
 ## Package layout
 
 ```
 src/profile_intelligence/infrastructure/database/
-  connection.py              # engine + session management
+  connection.py              # SQLite / PostgreSQL engine + session
   models.py                  # Base, Profile, MediaAsset
   models_profile_children.py # Rate / Service / Review / Photo / Availability
-  repository.py              # SQLiteProfileRepository (IProfileRepository)
+  repository.py              # SQLiteProfileRepository / PostgreSQLProfileRepository
   child_repositories.py      # Rate / Service / Review / Photo adapters
   migrate.py                 # migration framework + versions
   seed.py                    # demo data seeder

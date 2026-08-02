@@ -85,8 +85,10 @@ class PathsSection:
 
 @dataclass(frozen=True, slots=True)
 class DatabaseSection:
-    """SQLite / SQLAlchemy connection settings."""
+    """SQLAlchemy connection settings (SQLite or PostgreSQL)."""
 
+    driver: str = "sqlite"
+    url: str | None = None
     echo_sql: bool = False
     timeout_seconds: float = 30.0
     check_same_thread: bool = False
@@ -450,6 +452,13 @@ def _parse_weights(raw_weights: object, defaults: Mapping[str, int]) -> dict[str
     return weights
 
 
+def _optional_str(value: object | None) -> str | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
+
+
 def _build_config(
     settings_raw: Mapping[str, Any],
     logging_raw: Mapping[str, Any],
@@ -515,6 +524,8 @@ def _build_config(
             plugins_dir=str(paths_raw.get("plugins_dir", paths_defaults.plugins_dir)),
         ),
         database=DatabaseSection(
+            driver=str(database_raw.get("driver", database_defaults.driver)),
+            url=_optional_str(database_raw.get("url", database_defaults.url)),
             echo_sql=bool(database_raw.get("echo_sql", database_defaults.echo_sql)),
             timeout_seconds=float(
                 database_raw.get(

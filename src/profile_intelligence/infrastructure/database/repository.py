@@ -3,14 +3,19 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import cast
 
 from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
-from profile_intelligence.core.exceptions import RepositoryError
+from profile_intelligence.core.exceptions import ConfigurationError, RepositoryError
 from profile_intelligence.core.logging import get_logger
 from profile_intelligence.domain.entities.profile import ProfileDraft
-from profile_intelligence.domain.interfaces.repositories import Repository
+from profile_intelligence.domain.interfaces.repositories import (
+    IProfileRepository,
+    ProfileEntity,
+    Repository,
+)
 from profile_intelligence.infrastructure.database.child_repositories import (
     replace_photos_in_session,
     replace_rates_in_session,
@@ -27,21 +32,25 @@ logger = get_logger(__name__)
 
 
 class DatabaseRepository[T](Repository[T]):
-    """SQLAlchemy-backed repository base for SQLite persistence."""
+    """SQLAlchemy-backed repository base."""
 
     def __init__(self, database: Database) -> None:
         self._database = database
 
 
-class SQLiteProfileRepository(DatabaseRepository[Profile]):
-    """SQLite adapter for ``IProfileRepository``.
+class SqlAlchemyProfileRepository(DatabaseRepository[Profile]):
+    """Shared SQLAlchemy implementation of ``IProfileRepository``.
+
+    Used by backend-specific adapters (SQLite / PostgreSQL).
 
     Persists ``Profile`` and child collections::
 
         Profile → Rate → Service → Review → Photo → Availability
     """
 
-    def get_by_id(self, entity_id: int) -> Profile | None:
+    backend: str = "sqlalchemy"
+
+    def get_by_id(self, entity_id: int) -> ProfileEntity | None:
         try:
             with self._database.session() as session:
                 return session.get(Profile, entity_id)
@@ -51,7 +60,9 @@ class SQLiteProfileRepository(DatabaseRepository[Profile]):
                 cause=exc,
             ) from exc
 
-    def list_all(self, *, limit: int = 100, offset: int = 0) -> Sequence[Profile]:
+    def list_all(
+        self, *, limit: int = 100, offset: int = 0
+    ) -> Sequence[ProfileEntity]:
         if limit < 0 or offset < 0:
             raise RepositoryError("limit and offset must be non-negative")
         try:
@@ -121,7 +132,7 @@ class SQLiteProfileRepository(DatabaseRepository[Profile]):
                 cause=exc,
             ) from exc
 
-    def find_existing(self, draft: ProfileDraft) -> Profile | None:
+    def find_existing(self, draft: ProfileDraft) -> ProfileEntity | None:
         """Return an existing profile matching *draft*, if any.
 
         Match order: ``external_id``, then ``display_name`` + ``source``.
@@ -139,7 +150,7 @@ class SQLiteProfileRepository(DatabaseRepository[Profile]):
                 cause=exc,
             ) from exc
 
-    def upsert_draft(self, draft: ProfileDraft) -> tuple[Profile, bool]:
+    def upsert_draft(self, draft: ProfileDraft) -> tuple[ProfileEntity, bool]:
         """Insert or update a profile and replace its child collections.
 
         Match order: ``external_id``, then ``display_name`` + ``source``.
@@ -165,15 +176,17 @@ class SQLiteProfileRepository(DatabaseRepository[Profile]):
                 session.expunge(profile)
                 if created:
                     logger.debug(
-                        "Created profile %r (source=%s)",
+                        "Created profile %r (source=%s) via %s",
                         profile.display_name,
                         profile.source,
+                        self.backend,
                     )
                 else:
                     logger.debug(
-                        "Updated profile id=%s (%r)",
+                        "Updated profile id=%s (%r) via %s",
                         profile.id,
                         profile.display_name,
+                        self.backend,
                     )
                 return profile, created
         except RepositoryError:
@@ -240,6 +253,35 @@ class SQLiteProfileRepository(DatabaseRepository[Profile]):
                     notes=slot.notes,
                 )
             )
+
+
+class SQLiteProfileRepository(SqlAlchemyProfileRepository):
+    """SQLite adapter for ``IProfileRepository``."""
+
+    backend = "sqlite"
+
+
+class PostgreSQLProfileRepository(SqlAlchemyProfileRepository):
+    """PostgreSQL adapter for ``IProfileRepository``."""
+
+    backend = "postgresql"
+
+
+def create_profile_repository(
+    database: Database,
+    *,
+    driver: str = "sqlite",
+) -> IProfileRepository:
+    """Return the profile repository adapter for *driver*."""
+    normalized = driver.strip().lower()
+    if normalized in {"sqlite", "sqlite3"}:
+        return cast(IProfileRepository, SQLiteProfileRepository(database))
+    if normalized in {"postgresql", "postgres", "pgsql"}:
+        return cast(IProfileRepository, PostgreSQLProfileRepository(database))
+    raise ConfigurationError(
+        f"Unsupported database driver: {driver!r} "
+        "(expected sqlite or postgresql)"
+    )
 
 
 def _draft_to_columns(draft: ProfileDraft) -> dict[str, object | None]:
