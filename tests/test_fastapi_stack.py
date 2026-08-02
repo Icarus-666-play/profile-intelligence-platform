@@ -86,6 +86,27 @@ def test_create_api_context_and_fastapi_app(temp_root: Path) -> None:
     assert ctx.database is not None
 
 
+def test_uvicorn_main_app_entry(
+    temp_root: Path, monkeypatch: object
+) -> None:
+    """``uvicorn profile_intelligence.api.main:app`` resolves a FastAPI app."""
+    import profile_intelligence.api.main as main_mod
+    from profile_intelligence.api.context import create_api_context
+
+    monkeypatch.setattr(main_mod, "_app", None)
+    monkeypatch.setattr(
+        main_mod,
+        "create_default_app",
+        lambda: main_mod.create_app(
+            create_api_context(root_dir=temp_root),
+            serve_spa=False,
+        ),
+    )
+    loaded = getattr(main_mod, "app")
+    client = TestClient(loaded)
+    assert client.get("/api/health").json()["stack"] == "fastapi"
+
+
 def test_fastapi_health_and_dashboard(temp_root: Path) -> None:
     ctx, app_svc = _api_context(temp_root)
     try:

@@ -24,6 +24,12 @@ ctx = create_api_context()
 app = create_fastapi_app(ctx)
 ```
 
+Or:
+
+```bash
+uvicorn profile_intelligence.api.main:app --reload
+```
+
 Handlers live in `profile_intelligence.api.routes` and are shared with the
 legacy WSGI `ApiApp`.
 

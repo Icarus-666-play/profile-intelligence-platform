@@ -28,6 +28,10 @@ Typical wiring::
     ctx = create_api_context()
     app = create_fastapi_app(ctx)
 
+Or with uvicorn::
+
+    uvicorn profile_intelligence.api.main:app --reload
+
 Handlers reuse :mod:`profile_intelligence.api.routes` so WSGI and FastAPI
 share one implementation.
 """
@@ -35,7 +39,7 @@ share one implementation.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from fastapi import FastAPI, Query, Request
 from fastapi.exception_handlers import request_validation_exception_handler
@@ -347,4 +351,33 @@ async def _json_body(request: Request) -> dict[str, Any]:
 # Backward-compatible alias used across CLI / tests.
 create_fastapi_app = create_app
 
-__all__ = ["REACT_DIST", "create_app", "create_fastapi_app"]
+_app: FastAPI | None = None
+
+
+def create_default_app() -> FastAPI:
+    """Build the process-default ASGI app (fresh :func:`create_api_context`)."""
+    from profile_intelligence.api.context import create_api_context
+
+    return create_app(create_api_context())
+
+
+def __getattr__(name: str) -> Any:
+    """Lazy ``app`` for ``uvicorn profile_intelligence.api.main:app``."""
+    global _app
+    if name == "app":
+        if _app is None:
+            _app = create_default_app()
+        return _app
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+if TYPE_CHECKING:
+    app: FastAPI
+
+__all__ = [
+    "REACT_DIST",
+    "app",
+    "create_app",
+    "create_default_app",
+    "create_fastapi_app",
+]

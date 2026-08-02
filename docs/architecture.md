@@ -68,6 +68,10 @@ ctx = create_api_context()
 app = create_fastapi_app(ctx)
 ```
 
+```bash
+uvicorn profile_intelligence.api.main:app --reload
+```
+
 Source for the SPA: `frontend/` (Vite + React). Rebuild with
 `cd frontend && npm install && npm run build`.
 

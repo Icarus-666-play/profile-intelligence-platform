@@ -91,6 +91,8 @@ pip-app compare 1 2
 pip-app export
 pip-app dashboard
 pip-app ui
+# or:
+uvicorn profile_intelligence.api.main:app --reload
 ```
 
 | Command | Purpose |
@@ -103,6 +105,7 @@ pip-app ui
 | `export` | Write Excel report under `exports/` |
 | `dashboard` | Console dashboard summary |
 | `ui` | Local Dashboard UI (Dashboard…About) |
+| `uvicorn …main:app` | Same FastAPI + React stack with `--reload` |
 
 Additional utilities: `seed`, `score`, `importers`.
 
