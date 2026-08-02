@@ -5,21 +5,20 @@ Browser → **React** → REST → FastAPI.
 ## Develop
 
 ```bash
-# terminal 1 — API + built SPA (or API-only while iterating)
-pip-app ui --no-browser
+# terminal 1 — API
+make backend
+# or: uvicorn profile_intelligence.api.main:app --reload
 
-# terminal 2 — Vite dev server (proxies /api → :8765)
-cd frontend
-npm install
-npm run dev
+# terminal 2 — Vite React (proxies /api → :8765)
+make frontend
+# or: cd frontend && npm run dev
 ```
 
 ## Build (commit the output)
 
 ```bash
-cd frontend
-npm install
-npm run build
+make build-ui
+# or: cd frontend && npm run build
 ```
 
-Output: `src/profile_intelligence/web/dist/` (served by FastAPI).
+Output: `src/profile_intelligence/web/dist/` (served by FastAPI / `make run`).
