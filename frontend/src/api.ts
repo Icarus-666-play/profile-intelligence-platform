@@ -18,7 +18,9 @@ export type Profile = {
   photo: string | null
   age: string | null
   country: string | null
+  nationality?: string | null
   languages: string[]
+  services?: string[]
   rating: number | null
   average_price: number | null
   average_price_currency: string | null
@@ -384,13 +386,37 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({}),
     }),
-  profiles: (params?: { q?: string; limit?: number; offset?: number }) => {
+  profiles: (params?: {
+    q?: string
+    limit?: number
+    offset?: number
+    country?: string
+    nationality?: string
+    language?: string
+    service?: string
+    max_price?: number
+    min_rating?: number
+    currency?: string
+  }) => {
     const query = new URLSearchParams()
     if (params?.q) query.set('q', params.q)
     if (params?.limit != null) query.set('limit', String(params.limit))
     if (params?.offset != null) query.set('offset', String(params.offset))
+    if (params?.country) query.set('country', params.country)
+    if (params?.nationality) query.set('nationality', params.nationality)
+    if (params?.language) query.set('language', params.language)
+    if (params?.service) query.set('service', params.service)
+    if (params?.max_price != null) query.set('max_price', String(params.max_price))
+    if (params?.min_rating != null) {
+      query.set('min_rating', String(params.min_rating))
+    }
+    if (params?.currency) query.set('currency', params.currency)
     const suffix = query.toString() ? `?${query}` : ''
-    return request<{ total: number; items: Profile[] }>(`/api/profiles${suffix}`)
+    return request<{
+      total: number
+      items: Profile[]
+      filters?: Record<string, string | number>
+    }>(`/api/profiles${suffix}`)
   },
   profile: (id: number) => request<Profile>(`/api/profiles/${id}`),
   compare: (leftId: number, rightId: number) =>

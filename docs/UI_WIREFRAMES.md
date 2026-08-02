@@ -70,7 +70,10 @@ Daily: `GET /api/daily`, `POST /api/daily/run` → `DailyPipeline`.
 
 ```
 Search
-Find profiles in the local SQLite database.
+Show me profiles that match your filters.
+
+Show me
+[ Brazilian ] [ under €300 ] [ Massage ] [ English ] [ Rating > 4.5 ]
 
 [ query ________________________ ]  [ Search ]
 
@@ -82,7 +85,8 @@ Results
            Compare ☑
 ```
 
-Select up to two rows, then open Compare with `?left=&right=`.
+Toggle chips map to `GET /api/profiles` filters (`country`, `max_price`, `service`,
+`language`, `min_rating`). Select up to two rows, then open Compare with `?left=&right=`.
 
 ### Import `/import`
 

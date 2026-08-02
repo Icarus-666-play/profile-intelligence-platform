@@ -11,6 +11,10 @@ from urllib.parse import urlparse
 
 from profile_intelligence.api.context import ApiContext
 from profile_intelligence.api.http import ApiError
+from profile_intelligence.api.profile_filters import (
+    ProfileListFilters,
+    apply_profile_filters,
+)
 from profile_intelligence.api.profile_list import enrich_list_fields_from_database
 from profile_intelligence.api.serializers import (
     comparison_to_dict,
@@ -523,22 +527,38 @@ def import_files(ctx: ApiContext, body: dict[str, Any]) -> dict[str, Any]:
 
 
 def list_profiles(ctx: ApiContext, query: dict[str, str]) -> dict[str, Any]:
-    """GET /api/profiles."""
+    """GET /api/profiles — optional ``q`` plus Show me filters."""
     limit = _int_param(query, "limit", default=50, minimum=1, maximum=10_000)
     offset = _int_param(query, "offset", default=0, minimum=0, maximum=1_000_000)
     q = (query.get("q") or "").strip()
+    filters = ProfileListFilters.from_query(query)
+
+    # When filters are active, scan a wider candidate set then filter/page
+    # in memory (local-first; profile volumes stay modest).
+    fetch_limit = max(limit + offset, 10_000) if filters.active else limit
+    fetch_offset = 0 if filters.active else offset
+
     if q:
-        rows = list(ctx.profiles.search(q, limit=limit))
-        total = len(rows)
+        rows = list(ctx.profiles.search(q, limit=fetch_limit))
     else:
-        rows = list(ctx.profiles.list_profiles(limit=limit, offset=offset))
-        total = ctx.profiles.count()
+        rows = list(
+            ctx.profiles.list_profiles(limit=fetch_limit, offset=fetch_offset)
+        )
     items = [profile_to_dict(row) for row in rows]
     enrich_list_fields_from_database(rows, ctx.database, items)
+    if filters.active:
+        items = apply_profile_filters(items, filters)
+        total = len(items)
+        items = items[offset : offset + limit]
+    elif q:
+        total = len(items)
+    else:
+        total = ctx.profiles.count()
     return {
         "total": total,
         "limit": limit,
         "offset": offset,
+        "filters": filters.to_mapping(),
         "items": items,
     }
 

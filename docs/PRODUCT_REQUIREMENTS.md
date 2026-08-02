@@ -24,6 +24,7 @@ Requirements for Profile Intelligence Platform through Milestone 2 (shipped) and
 | FR-2.1 | List stored profiles with limit/offset | Done |
 | FR-2.2 | Search profiles by text query | Done |
 | FR-2.3 | Search rows show photo, age, country, languages, rating, average price, imported, and Compare selection | Done |
+| FR-2.4 | Show me filters: Brazilian, under €300, Massage, English, Rating > 4.5 | Done |
 
 ### FR-3 Compare & analysis
 

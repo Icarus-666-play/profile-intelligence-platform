@@ -130,13 +130,23 @@ Response:
 
 ### `GET /api/profiles`
 
-Query: `limit`, `offset`, optional `q` (search).
+Query: `limit`, `offset`, optional `q` (search), plus Show me filters:
+
+| Param | Meaning |
+|-------|---------|
+| `country` / `nationality` | Match country, nationality, or location (substring) |
+| `language` | Match languages list |
+| `service` | Match services list |
+| `max_price` | Average price ≤ value |
+| `currency` | Currency for `max_price` (e.g. `EUR`) |
+| `min_rating` | Average rating ≥ value |
 
 ```json
 {
   "total": 12,
   "limit": 50,
   "offset": 0,
+  "filters": { "country": "Brazilian", "max_price": 300 },
   "items": [
     {
       "id": 1,

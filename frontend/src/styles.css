@@ -540,6 +540,55 @@ a {
   letter-spacing: 0.06em;
 }
 
+.show-me {
+  margin: 0 0 1.25rem;
+}
+
+.show-me-label {
+  margin: 0 0 0.55rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.show-me-chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.show-me-chip {
+  border: 1px solid var(--line);
+  background: rgba(247, 249, 252, 0.9);
+  color: var(--ink);
+  padding: 0.45rem 0.85rem;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.show-me-chip:hover {
+  border-color: var(--teal);
+  transform: translateY(-1px);
+}
+
+.show-me-chip--active {
+  background: rgba(13, 110, 106, 0.12);
+  border-color: var(--teal-deep);
+  color: var(--teal-deep);
+}
+
 .form-row {
   display: flex;
   flex-wrap: wrap;

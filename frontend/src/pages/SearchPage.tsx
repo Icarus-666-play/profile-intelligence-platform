@@ -1,9 +1,45 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { api, type Profile } from '../api'
 
 const MAX_COMPARE = 2
+
+type ShowMeFilterId =
+  | 'brazilian'
+  | 'under_300'
+  | 'massage'
+  | 'english'
+  | 'rating_45'
+
+type ShowMeFilter = {
+  id: ShowMeFilterId
+  label: string
+  params: {
+    country?: string
+    language?: string
+    service?: string
+    max_price?: number
+    min_rating?: number
+    currency?: string
+  }
+}
+
+const SHOW_ME_FILTERS: ShowMeFilter[] = [
+  { id: 'brazilian', label: 'Brazilian', params: { country: 'Brazilian' } },
+  {
+    id: 'under_300',
+    label: 'under €300',
+    params: { max_price: 300, currency: 'EUR' },
+  },
+  { id: 'massage', label: 'Massage', params: { service: 'Massage' } },
+  { id: 'english', label: 'English', params: { language: 'English' } },
+  {
+    id: 'rating_45',
+    label: 'Rating > 4.5',
+    params: { min_rating: 4.5 },
+  },
+]
 
 function formatImported(value: string | null | undefined) {
   if (!value) return '—'
@@ -29,6 +65,22 @@ function formatRating(value: number | null | undefined) {
   return value.toFixed(2)
 }
 
+function mergeFilterParams(active: Set<ShowMeFilterId>) {
+  const params: {
+    country?: string
+    language?: string
+    service?: string
+    max_price?: number
+    min_rating?: number
+    currency?: string
+  } = {}
+  for (const filter of SHOW_ME_FILTERS) {
+    if (!active.has(filter.id)) continue
+    Object.assign(params, filter.params)
+  }
+  return params
+}
+
 export default function SearchPage() {
   const [query, setQuery] = useState('')
   const [items, setItems] = useState<Profile[]>([])
@@ -36,14 +88,26 @@ export default function SearchPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [selected, setSelected] = useState<number[]>([])
+  const [activeFilters, setActiveFilters] = useState<Set<ShowMeFilterId>>(
+    () => new Set(),
+  )
 
-  async function runSearch(nextQuery: string) {
+  const filterParams = useMemo(
+    () => mergeFilterParams(activeFilters),
+    [activeFilters],
+  )
+
+  async function runSearch(
+    nextQuery: string,
+    nextFilters: typeof filterParams = filterParams,
+  ) {
     setLoading(true)
     setError(null)
     try {
       const result = await api.profiles({
         q: nextQuery.trim() || undefined,
         limit: 50,
+        ...nextFilters,
       })
       setItems(result.items)
       setTotal(result.total)
@@ -59,11 +123,24 @@ export default function SearchPage() {
 
   useEffect(() => {
     void runSearch('')
+    // Initial load only; filter toggles call runSearch explicitly.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
     await runSearch(query)
+  }
+
+  function toggleFilter(id: ShowMeFilterId) {
+    setActiveFilters((current) => {
+      const next = new Set(current)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      const params = mergeFilterParams(next)
+      void runSearch(query, params)
+      return next
+    })
   }
 
   function toggleCompare(id: number) {
@@ -86,7 +163,31 @@ export default function SearchPage() {
   return (
     <section className="search-page">
       <h1 className="page-title">Search</h1>
-      <p className="page-lead">Find profiles in the local database.</p>
+      <p className="page-lead">Show me profiles that match your filters.</p>
+
+      <div className="show-me" aria-label="Show me filters">
+        <p className="show-me-label">Show me</p>
+        <ul className="show-me-chips">
+          {SHOW_ME_FILTERS.map((filter) => {
+            const active = activeFilters.has(filter.id)
+            return (
+              <li key={filter.id}>
+                <button
+                  type="button"
+                  className={
+                    active ? 'show-me-chip show-me-chip--active' : 'show-me-chip'
+                  }
+                  aria-pressed={active}
+                  onClick={() => toggleFilter(filter.id)}
+                >
+                  {filter.label}
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      </div>
+
       <form className="form-row" onSubmit={onSubmit}>
         <label>
           Query

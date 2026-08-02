@@ -157,6 +157,13 @@ def create_fastapi_app(
         q: str | None = None,
         limit: int = Query(default=50, ge=1, le=10_000),
         offset: int = Query(default=0, ge=0, le=1_000_000),
+        country: str | None = None,
+        nationality: str | None = None,
+        language: str | None = None,
+        service: str | None = None,
+        max_price: float | None = None,
+        min_rating: float | None = None,
+        currency: str | None = None,
     ) -> dict[str, Any]:
         query = {
             "limit": str(limit),
@@ -164,6 +171,20 @@ def create_fastapi_app(
         }
         if q is not None:
             query["q"] = q
+        if country is not None:
+            query["country"] = country
+        if nationality is not None:
+            query["nationality"] = nationality
+        if language is not None:
+            query["language"] = language
+        if service is not None:
+            query["service"] = service
+        if max_price is not None:
+            query["max_price"] = str(max_price)
+        if min_rating is not None:
+            query["min_rating"] = str(min_rating)
+        if currency is not None:
+            query["currency"] = currency
         return list_profiles(ctx, query)
 
     @app.get("/api/profiles/{profile_id}")

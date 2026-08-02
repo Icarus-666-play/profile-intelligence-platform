@@ -29,7 +29,11 @@ def list_fields_from_profile(profile: ProfileEntity) -> dict[str, Any]:
         "photo": _photo_from_raw(raw),
         "age": _as_optional_text(raw.get("age")),
         "country": _country_from_raw(raw, profile.location),
+        "nationality": _as_optional_text(
+            raw.get("nationality") or raw.get("origin")
+        ),
         "languages": list(_languages_from_raw(raw)),
+        "services": list(_services_from_raw(raw)),
         "rating": _average_rating_from_raw(raw),
         "average_price": price,
         "average_price_currency": currency,
@@ -58,6 +62,7 @@ def enrich_list_fields_from_database(
     photos = _batch_photos(database, ids)
     ratings = _batch_ratings(database, ids)
     prices = _batch_prices(database, ids)
+    services = _batch_services(database, ids)
     for profile_id, index in by_id.items():
         item = items[index]
         if not item.get("photo") and profile_id in photos:
@@ -68,6 +73,9 @@ def enrich_list_fields_from_database(
             price, currency = prices[profile_id]
             item["average_price"] = price
             item["average_price_currency"] = currency
+        existing_services = item.get("services")
+        if not existing_services and profile_id in services:
+            item["services"] = services[profile_id]
 
 
 def _raw_mapping(raw_json: str | None) -> dict[str, Any]:
@@ -131,6 +139,17 @@ def _languages_from_raw(raw: dict[str, Any]) -> tuple[str, ...]:
     value = raw.get("languages")
     if value is None:
         value = raw.get("language") or raw.get("speaks")
+    return _string_list(value)
+
+
+def _services_from_raw(raw: dict[str, Any]) -> tuple[str, ...]:
+    value = raw.get("services")
+    if value is None:
+        value = raw.get("service") or raw.get("offers")
+    return _string_list(value)
+
+
+def _string_list(value: object) -> tuple[str, ...]:
     if value is None:
         return ()
     if isinstance(value, str):
@@ -141,7 +160,12 @@ def _languages_from_raw(raw: dict[str, Any]) -> tuple[str, ...]:
         items: list[str] = []
         for item in value:
             if isinstance(item, dict):
-                name = item.get("name") or item.get("language")
+                name = (
+                    item.get("name")
+                    or item.get("language")
+                    or item.get("service")
+                    or item.get("title")
+                )
                 if name:
                     items.append(str(name).strip())
             else:
@@ -271,6 +295,30 @@ def _batch_prices(
         currency = max(set(codes), key=codes.count)
         out[profile_id] = (round(sum(values) / len(values), 0), currency)
     return out
+
+
+def _batch_services(database: Database, ids: list[int]) -> dict[int, list[str]]:
+    placeholders = ", ".join(f":id{i}" for i in range(len(ids)))
+    params = {f"id{i}": profile_id for i, profile_id in enumerate(ids)}
+    try:
+        with database.session() as session:
+            rows = session.execute(
+                text(
+                    "SELECT profile_id, name FROM profile_services "
+                    f"WHERE profile_id IN ({placeholders}) "
+                    "ORDER BY id"
+                ),
+                params,
+            ).all()
+    except Exception as exc:  # noqa: BLE001 — list UI must stay soft
+        logger.debug("Batch service lookup failed: %s", exc)
+        return {}
+    buckets: dict[int, list[str]] = defaultdict(list)
+    for profile_id, name in rows:
+        text_value = str(name or "").strip()
+        if text_value:
+            buckets[int(profile_id)].append(text_value)
+    return dict(buckets)
 
 
 def _parse_number(raw: str, pattern: re.Pattern[str]) -> float | None:
